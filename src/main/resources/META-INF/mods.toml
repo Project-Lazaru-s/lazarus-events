@@ -1,0 +1,38 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="All Rights Reserved"
+
+[[mods]]
+modId="lazarusevents"
+version="0.3.5"
+displayName="Lazarus Events"
+authors="Project Lazarus"
+description='''Emergent apocalypse encounters for Project Lazarus.'''
+
+[[dependencies.lazarusevents]]
+modId="forge"
+mandatory=true
+versionRange="[47,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.lazarusevents]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.20.1,1.21)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.lazarusevents]]
+modId="apocalypsenow"
+mandatory=true
+versionRange="[3.0.5,)"
+ordering="AFTER"
+side="BOTH"
+
+[[dependencies.lazarusevents]]
+modId="dyairdrop"
+mandatory=true
+versionRange="[1.0.0,)"
+ordering="AFTER"
+side="BOTH"
