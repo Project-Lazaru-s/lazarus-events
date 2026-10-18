@@ -2,7 +2,7 @@ plugins {
     id 'net.minecraftforge.gradle' version '[6.0,6.2)'
 }
 
-version = '0.3.5'
+version = '0.6.0'
 group = 'com.lazarus.events'
 base.archivesName = 'lazarusevents'
 
@@ -12,8 +12,14 @@ minecraft {
     mappings channel: 'official', version: '1.20.1'
 }
 
+repositories {
+    // libs/lazarusnpcs-<version>.jar: the published Lazarus NPCs JAR, for compiling against its API only.
+    flatDir { dirs 'libs' }
+}
+
 dependencies {
     minecraft 'net.minecraftforge:forge:1.20.1-47.4.10'
+    compileOnly fg.deobf("blank:lazarusnpcs:1.6.0")
 }
 
 tasks.named('jar', Jar).configure {

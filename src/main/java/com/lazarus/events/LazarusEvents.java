@@ -52,7 +52,8 @@ import org.slf4j.Logger;
 public final class LazarusEvents {
     static final String ID = "lazarusevents";
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final String[] TYPES = {"cache", "gunfire", "flare", "military"};
+    private static final String[] TYPES = {"cache", "gunfire", "flare", "military", RescueEncounter.TYPE,
+            LastDefenseEncounter.TYPE, FalseRadioEncounter.TYPE};
     private static final ResourceLocation RADIO_ID = new ResourceLocation("ifreq", "walkie_talkie");
     private static final ForgeConfigSpec CONFIG;
     private static final ForgeConfigSpec.BooleanValue ENABLED;
@@ -64,6 +65,9 @@ public final class LazarusEvents {
     private static final ForgeConfigSpec.BooleanValue GUNFIRE_ENABLED;
     private static final ForgeConfigSpec.BooleanValue FLARE_ENABLED;
     private static final ForgeConfigSpec.BooleanValue MILITARY_ENABLED;
+    private static final ForgeConfigSpec.BooleanValue RESCUE_ENABLED;
+    private static final ForgeConfigSpec.BooleanValue LAST_DEFENSE_ENABLED;
+    private static final ForgeConfigSpec.BooleanValue FALSE_RADIO_ENABLED;
 
     static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
@@ -77,12 +81,29 @@ public final class LazarusEvents {
         GUNFIRE_ENABLED = builder.define("enableGunfire", true);
         FLARE_ENABLED = builder.define("enableFlare", true);
         MILITARY_ENABLED = builder.define("enableMilitary", true);
+        RESCUE_ENABLED = builder.comment("Wounded survivor who asks for bandages and an escort (needs Lazarus NPCs).")
+                .define("enableRescue", true);
+        LAST_DEFENSE_ENABLED = builder.comment("Survivors holding a barricade against waves (needs Lazarus NPCs).")
+                .define("enableLastDefense", true);
+        FALSE_RADIO_ENABLED = builder.comment("A fake distress call that is a looter ambush; from day 6, like looters (needs Lazarus NPCs).")
+                .define("enableFalseRadio", true);
         CONFIG = builder.build();
     }
 
     public LazarusEvents() {
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, CONFIG);
         MinecraftForge.EVENT_BUS.register(this);
+        MinecraftForge.EVENT_BUS.register(new RescueEncounter.Listener());
+        MinecraftForge.EVENT_BUS.register(new LastDefenseEncounter.Listener());
+        MinecraftForge.EVENT_BUS.register(new FalseRadioEncounter.Listener());
+        MinecraftForge.EVENT_BUS.register(new MilitaryBaseEncounter.Listener());
+        net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext.get().getModEventBus().addListener(
+                (net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent event) -> event.enqueueWork(() -> {
+                    RescueEncounter.register();
+                    LastDefenseEncounter.register();
+                    FalseRadioEncounter.register();
+                    MilitaryBaseEncounter.register();
+                }));
     }
 
     @SubscribeEvent
@@ -99,7 +120,7 @@ public final class LazarusEvents {
                 if (player.isSpectator() || player.distanceToSqr(Vec3.atCenterOf(encounter.pos)) > 24 * 24) continue;
                 encounter.discovered = true;
                 data.setDirty();
-                player.sendSystemMessage(Component.literal("You found signs of a recent " + encounter.type + " encounter."));
+                player.sendSystemMessage(Component.literal("You found signs of a recent " + label(encounter.type) + "."));
                 break;
             }
         }
@@ -145,6 +166,9 @@ public final class LazarusEvents {
         if (CACHE_ENABLED.get()) for (int i = 0; i < 9; i++) choices.add("cache");
         if (GUNFIRE_ENABLED.get()) for (int i = 0; i < 6; i++) choices.add("gunfire");
         if (FLARE_ENABLED.get()) for (int i = 0; i < 4; i++) choices.add("flare");
+        if (RESCUE_ENABLED.get()) for (int i = 0; i < 4; i++) choices.add(RescueEncounter.TYPE);
+        if (LAST_DEFENSE_ENABLED.get() && now / 24000 >= 3) for (int i = 0; i < 3; i++) choices.add(LastDefenseEncounter.TYPE);
+        if (FALSE_RADIO_ENABLED.get() && now / 24000 >= 6) for (int i = 0; i < 3; i++) choices.add(FalseRadioEncounter.TYPE);
         if (MILITARY_ENABLED.get() && now / 24000 >= MILITARY_DAY.get()) choices.add("military");
         return choices.isEmpty() ? null : choices.get(ThreadLocalRandom.current().nextInt(choices.size()));
     }
@@ -211,6 +235,7 @@ public final class LazarusEvents {
         for (EventData.Encounter encounter : List.copyOf(data.encounters)) {
             if (encounter.id.toString().startsWith(id)) {
                 data.remove(encounter.id);
+                ApiSupport.failTasks(level, encounter.id, ApiSupport.CANCELLED);
                 removeActors(level, encounter.id, encounter.pos);
                 source.sendSuccess(() -> Component.literal("Cancelled " + encounter.id
                         + ". Event actors removed; loot and blocks remain in the world."), false);
@@ -265,9 +290,10 @@ public final class LazarusEvents {
             int rotation = ThreadLocalRandom.current().nextInt(4);
             BlockPos actors = EncounterScenery.offset(pos, rotation, EncounterScenery.RADIUS + 1, 1);
             BlockPos signal = EncounterScenery.offset(pos, rotation, 2, 1);
+            String scenery = scenery(type);
             if (!safe(level, pos) || !type.equals("military") && !safe(level, actors)
-                    || type.equals("flare") && !safe(level, signal)
-                    || !EncounterScenery.canPlace(level, pos, type, rotation)) {
+                    || scenery.equals("flare") && !safe(level, signal)
+                    || !EncounterScenery.canPlace(level, pos, scenery, rotation)) {
                 failures.merge(Reject.GROUND, 1, Integer::sum);
                 continue;
             }
@@ -299,6 +325,8 @@ public final class LazarusEvents {
         int day = (int) (level.getDayTime() / 24000);
         int tier = Math.min(5, 1 + day / 10);
         BlockPos actors = EncounterScenery.offset(pos, rotation, EncounterScenery.RADIUS + 1, 1);
+        if (type.equals(RescueEncounter.TYPE)) return RescueEncounter.place(level, pos, rotation, id);
+        if (type.equals(LastDefenseEncounter.TYPE)) return LastDefenseEncounter.place(level, pos, rotation, id);
         if (type.equals("gunfire")) {
             if (!spawn(level, pos, "apocalypsenow:soldiers", id)) return false;
             int spawned = 0;
@@ -340,18 +368,24 @@ public final class LazarusEvents {
             return false;
         }
         chest.setLootTable(table, ThreadLocalRandom.current().nextLong());
+        if (type.equals(FalseRadioEncounter.TYPE)) {
+            if (FalseRadioEncounter.place(level, pos, rotation, id)) return true;
+            level.removeBlock(pos, false);
+            return false;
+        }
         if (type.equals("military")) {
             if (!EncounterScenery.build(level, pos, type, rotation)) {
                 level.removeBlock(pos, false);
                 return false;
             }
             stockMilitaryCheckpoint(level, pos, rotation, tier);
-            int stationed = 0;
-            stationed += spawnMilitary(level, pos, rotation, 5, 9, "apocalypsenow:military_01", id);
-            stationed += spawnMilitary(level, pos, rotation, 10, 9, "apocalypsenow:military_02", id);
-            stationed += spawnMilitary(level, pos, rotation, 15, 4, "apocalypsenow:military_01", id);
-            stationed += spawnMilitary(level, pos, rotation, 17, 4, "apocalypsenow:military_medic", id);
-            if (stationed == 0) LOGGER.warn("Military checkpoint at {} has no stationed soldiers", pos);
+            List<Mob> staff = new ArrayList<>();
+            spawnMilitary(level, pos, rotation, 5, 9, "apocalypsenow:military_01", id, staff);
+            spawnMilitary(level, pos, rotation, 10, 9, "apocalypsenow:military_02", id, staff);
+            spawnMilitary(level, pos, rotation, 15, 4, "apocalypsenow:military_01", id, staff);
+            spawnMilitary(level, pos, rotation, 17, 4, "apocalypsenow:military_medic", id, staff);
+            if (staff.isEmpty()) LOGGER.warn("Military checkpoint at {} has no stationed soldiers", pos);
+            else MilitaryBaseEncounter.station(level, MilitaryBaseEncounter.center(pos, rotation), id, staff);
             return true;
         }
         int count = 2;
@@ -402,22 +436,23 @@ public final class LazarusEvents {
         } else LOGGER.warn("Military generator inventory unavailable at {}", generatorPos);
     }
 
-    private static int spawnMilitary(ServerLevel level, BlockPos origin, int rotation,
-            int x, int z, String entityId, UUID encounterId) {
+    private static void spawnMilitary(ServerLevel level, BlockPos origin, int rotation,
+            int x, int z, String entityId, UUID encounterId, List<Mob> staff) {
         BlockPos at = EncounterScenery.militaryPosition(origin, rotation, x, 1, z);
-        return spawn(level, at, entityId, encounterId, true) ? 1 : 0;
+        if (spawn(level, at, entityId, encounterId, true) instanceof Mob mob) staff.add(mob);
     }
 
     private static boolean spawn(ServerLevel level, BlockPos pos, String id, UUID encounterId) {
-        return spawn(level, pos, id, encounterId, false);
+        return spawn(level, pos, id, encounterId, false) != null;
     }
 
-    private static boolean spawn(ServerLevel level, BlockPos pos, String id, UUID encounterId, boolean persistent) {
-        if (!level.isLoaded(pos)) return false;
+    /** Creates a tagged encounter actor; null when it could not be placed. */
+    static Entity spawn(ServerLevel level, BlockPos pos, String id, UUID encounterId, boolean persistent) {
+        if (!level.isLoaded(pos)) return null;
         EntityType<?> type = ForgeRegistries.ENTITY_TYPES.getValue(new ResourceLocation(id));
-        if (type == null) return false;
+        if (type == null) return null;
         Entity entity = type.create(level);
-        if (entity == null) return false;
+        if (entity == null) return null;
         entity.moveTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5,
                 ThreadLocalRandom.current().nextFloat(360), 0);
         if (entity instanceof Mob mob) {
@@ -425,7 +460,7 @@ public final class LazarusEvents {
             if (persistent) mob.setPersistenceRequired();
         }
         entity.addTag(ID + ":" + encounterId);
-        return level.addFreshEntity(entity);
+        return level.addFreshEntity(entity) ? entity : null;
     }
 
     private static void removeActors(ServerLevel level, UUID id, BlockPos pos) {
@@ -446,9 +481,36 @@ public final class LazarusEvents {
                     break;
                 }
             }
-            if (radio) player.sendSystemMessage(Component.literal("[Radio] " + type + " signal near X "
+            if (radio) player.sendSystemMessage(Component.literal("[Radio] " + radioLine(type) + " near X "
                     + Math.round(pos.getX() / 25f) * 25 + ", Z " + Math.round(pos.getZ() / 25f) * 25 + "."));
         }
+    }
+
+    /** Template used by each type; the API scenarios reuse the captured ones. */
+    static String scenery(String type) {
+        return switch (type) {
+            case RescueEncounter.TYPE -> "flare";
+            case LastDefenseEncounter.TYPE -> "gunfire";
+            case FalseRadioEncounter.TYPE -> "cache";
+            default -> type;
+        };
+    }
+
+    /** What the discovery message calls the encounter; the false radio must not give itself away. */
+    static String label(String type) {
+        return switch (type) {
+            case RescueEncounter.TYPE, FalseRadioEncounter.TYPE -> "distress call";
+            case LastDefenseEncounter.TYPE -> "last stand";
+            default -> type + " encounter";
+        };
+    }
+
+    private static String radioLine(String type) {
+        return switch (type) {
+            case RescueEncounter.TYPE, FalseRadioEncounter.TYPE -> "Someone is begging for help";
+            case LastDefenseEncounter.TYPE -> "Defenders under attack, asking for anyone with a gun,";
+            default -> type + " signal";
+        };
     }
 
     private enum Reject { UNLOADED, HEIGHT, RECENT, GROUND, VISIBLE }

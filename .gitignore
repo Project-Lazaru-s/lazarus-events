@@ -5,3 +5,4 @@ run/
 *.log
 profile-jar-backups/
 tools/__pycache__/
+libs/
