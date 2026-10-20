@@ -1,0 +1,53 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "apocalypsenow:gas_mask_helmet_helmet",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:gasmask_helmet",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:mcu2p_gasmask_helmet",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:mo4_gas_mask_helmet",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:orange_visor_gas_mask_helmet",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:pbf_hamstergasmask_helmet",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:pkm_4gasmask_helmet",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:plague_mask_helmet",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:un_gas_mask_helmet_helmet",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:hazmat_suit_helmet",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:advanced_hazmat_suit_helmet",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:level_a_hazmatsuit_helmet",
+      "required": false
+    }
+  ]
+}

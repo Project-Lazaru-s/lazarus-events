@@ -64,19 +64,21 @@ final class BuildingHideout {
     }
 
     /** The room containing {@code start}, or null when it is not inside a building. */
-    static Room room(ServerLevel level, BlockPos start) {
+    static Room room(ServerLevel level, BlockPos start) { return room(level, start, MAX_CELLS, REACH); }
+
+    static Room room(ServerLevel level, BlockPos start, int maxCells, int reach) {
         if (!floorCell(level, start) || !roofed(level, start)) return null;
         List<BlockPos> cells = new ArrayList<>();
         Set<BlockPos> seen = new HashSet<>(), openings = new HashSet<>();
         ArrayDeque<BlockPos> queue = new ArrayDeque<>();
         queue.add(start);
         seen.add(start);
-        while (!queue.isEmpty() && cells.size() < MAX_CELLS) {
+        while (!queue.isEmpty() && cells.size() < maxCells) {
             BlockPos cell = queue.poll();
             cells.add(cell);
             for (Direction side : Direction.Plane.HORIZONTAL) {
                 BlockPos next = cell.relative(side);
-                if (!seen.add(next) || Math.abs(next.getX() - start.getX()) > REACH || Math.abs(next.getZ() - start.getZ()) > REACH)
+                if (!seen.add(next) || Math.abs(next.getX() - start.getX()) > reach || Math.abs(next.getZ() - start.getZ()) > reach)
                     continue;
                 if (!floorCell(level, next)) continue;
                 if (!roofed(level, next)) openings.add(next); // a doorway or window to the street

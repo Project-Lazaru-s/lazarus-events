@@ -6,7 +6,7 @@
   <img alt="Minecraft 1.20.1" src="https://img.shields.io/badge/Minecraft-1.20.1-3c8527">
   <img alt="Forge 47.x" src="https://img.shields.io/badge/Forge-47.x-dd7d2b">
   <img alt="Java 17" src="https://img.shields.io/badge/Java-17-b07219">
-  <img alt="Versão 0.20.1" src="https://img.shields.io/badge/vers%C3%A3o-0.20.1-6b5b3e">
+  <img alt="Versão 0.21.0" src="https://img.shields.io/badge/vers%C3%A3o-0.21.0-6b5b3e">
 </p>
 
 # Lazarus Events
@@ -131,6 +131,17 @@ Enquanto o ninho vive, os **64 blocos** em volta viram zona infestada:
 - **Aviso:** ao entrar pela primeira vez, uma mensagem de rádio avisa da zona e da direção do ninho.
 - Tudo acaba quando o ninho morre; os infectados que já estavam na rua ficam como zumbis comuns.
 
+## Zonas de infecção (gás)
+
+A partir do **dia 12**, um vazamento químico pode encher de **gás verde** um espaço fechado, de preferência subterrâneo: porão, esgoto ou cisterna do CityWorld, ou um cômodo de prédio. O rádio avisa: *"Military band: chemical leak detected underground, masks mandatory"*. A nuvem é visível (partículas verdes) e chia de vez em quando.
+
+- **Sem proteção**, a cada segundo dentro do gás: náusea e tosse; depois de 5 s, veneno; depois de 15 s, **1 coração de dano por segundo** (mata em cerca de 25 s). A cada 10 s há 25% de chance de pegar a **infecção do The Hordes** (o soro experimental protege).
+- **Máscara de gás** na cabeça (tag `lazarusevents:gas_masks`: as máscaras e capacetes hazmat do Apocalypse Now) bloqueia tudo, mas **perde 1 de durabilidade a cada 2 s** no gás. Usar um **Breathing Filter Module** com a máscara posta a deixa nova.
+- **Roupa hazmat completa** (tag `lazarusevents:hazmat`) bloqueia sem gastar nada.
+- Zumbis não são afetados.
+- No ponto mais fundo, longe das saídas, há um **barril com loot médico** do tier atual e 30% de chance de um **soro experimental**.
+- O gás dura **2 dias de jogo** e se dissipa com aviso no rádio. A opção `enableInfectionZones` desliga.
+
 ## Refúgio do Haven
 
 O **Haven** também tem uma base permanente, o **refúgio**: paliçada de toras, cabana do líder, alojamento com camas, tenda de enfermaria, horta com poço, fogueira central e a banca do comerciante junto ao portão. O Haven **não tem rivais**: o refúgio nunca é alvo de roubo, reconhecimento ou confronto, e o Haven não manda expedições armadas.
@@ -237,7 +248,7 @@ Os comandos exigem permissão de operador, e os testes de colocação devem ser 
 | `/lazarusskirmish test` | Inicia confronto no local do operador se houver área aberta e carregada. |
 | `/lazarusskirmish clear` | Encerra apenas o confronto criado pelo comando de teste. |
 
-`<tipo>` pode ser `cache`, `gunfire`, `flare`, `military`, `abandoned`, `deserter_camp`, `gang_hideout`, `gang_building_hideout`, `hollow_den`, `zombie_nest`, `rescue`, `lastdefense` ou `falseradio`. Os comandos de teste criam encontros reais no mundo, mas **não alteram o horário** do próximo evento natural. `gang_building_hideout near`, `hollow_den near` e `zombie_nest near` precisam ser usados **dentro de um prédio**: o grupo ocupa o cômodo em volta do jogador.
+`<tipo>` pode ser `cache`, `gunfire`, `flare`, `military`, `abandoned`, `deserter_camp`, `gang_hideout`, `gang_building_hideout`, `hollow_den`, `zombie_nest`, `infection_zone`, `rescue`, `lastdefense` ou `falseradio`. Os comandos de teste criam encontros reais no mundo, mas **não alteram o horário** do próximo evento natural. `gang_building_hideout near`, `hollow_den near`, `zombie_nest near` e `infection_zone near` precisam ser usados **dentro de um prédio**: o grupo ocupa o cômodo em volta do jogador.
 
 ---
 
@@ -262,7 +273,7 @@ O Immersive Frequencies é usado apenas para as mensagens opcionais de rádio.
 
 ### Jogadores e servidores
 
-1. Compile `lazarusevents-0.20.1.jar` em `build/libs/` ou [compile o projeto](#compilar-a-partir-do-código).
+1. Compile `lazarusevents-0.21.0.jar` em `build/libs/` ou [compile o projeto](#compilar-a-partir-do-código).
 2. Coloque o JAR na pasta `mods` do perfil. No CurseForge, clique com o botão direito no perfil e escolha **Open Folder**.
 3. Em multiplayer, instale o **mesmo JAR** no servidor e em todos os clientes.
 4. Remova versões antigas de `lazarusevents` e reinicie o jogo ou servidor após a troca.

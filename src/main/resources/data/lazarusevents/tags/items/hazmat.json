@@ -1,0 +1,53 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "apocalypsenow:hazmat_suit_helmet",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:hazmat_suit_chestplate",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:hazmat_suit_leggings",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:hazmat_suit_boots",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:advanced_hazmat_suit_helmet",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:advanced_hazmat_suit_chestplate",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:advanced_hazmat_suit_leggings",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:advanced_hazmat_suit_boots",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:level_a_hazmatsuit_helmet",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:level_a_hazmatsuit_chestplate",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:level_a_hazmatsuit_leggings",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:level_a_hazmatsuit_boots",
+      "required": false
+    }
+  ]
+}

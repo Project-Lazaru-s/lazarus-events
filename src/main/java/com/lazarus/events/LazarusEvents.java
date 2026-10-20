@@ -54,7 +54,8 @@ public final class LazarusEvents {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final String[] TYPES = {"cache", "gunfire", "flare", "military", RescueEncounter.TYPE,
             LastDefenseEncounter.TYPE, FalseRadioEncounter.TYPE, MilitaryCollapse.ABANDONED,
-            HostileHideouts.DESERTER_CAMP, HostileHideouts.GANG_HIDEOUT, BuildingHideout.TYPE, HollowDen.TYPE, ZombieNest.TYPE};
+            HostileHideouts.DESERTER_CAMP, HostileHideouts.GANG_HIDEOUT, BuildingHideout.TYPE, HollowDen.TYPE, ZombieNest.TYPE,
+            GasZone.TYPE};
     private static final ResourceLocation RADIO_ID = new ResourceLocation("ifreq", "walkie_talkie");
     private static final ForgeConfigSpec CONFIG;
     private static final ForgeConfigSpec.BooleanValue ENABLED;
@@ -74,6 +75,7 @@ public final class LazarusEvents {
     private static final ForgeConfigSpec.BooleanValue FACTION_EXPEDITIONS_ENABLED;
     private static final ForgeConfigSpec.BooleanValue HIDEOUTS_ENABLED;
     private static final ForgeConfigSpec.BooleanValue NESTS_ENABLED;
+    private static final ForgeConfigSpec.BooleanValue GAS_ENABLED;
     private static final ForgeConfigSpec.IntValue FACTION_EXPEDITION_DAYS;
     private static final ForgeConfigSpec.IntValue BASE_FALLBACK_DAY;
 
@@ -103,6 +105,8 @@ public final class LazarusEvents {
                 .define("enableHostileHideouts", true);
         NESTS_ENABLED = builder.comment("Zombie nests in buildings (from day 8): flesh pustules that spawn infected until destroyed.")
                 .define("enableZombieNests", true);
+        GAS_ENABLED = builder.comment("Infection zones (from day 12): green gas in enclosed spaces; a gas mask or hazmat suit is required.")
+                .define("enableInfectionZones", true);
         FACTION_EXPEDITIONS_ENABLED = builder.comment("Rare Rovers or Wardens patrols outside faction bases.")
                 .define("enableFactionExpeditions", true);
         FACTION_EXPEDITION_DAYS = builder.comment("Minimum days between faction patrol attempts.")
@@ -126,6 +130,7 @@ public final class LazarusEvents {
         MinecraftForge.EVENT_BUS.register(new HostilePrisoners.Listener());
         MinecraftForge.EVENT_BUS.register(new ZombieNest.Listener());
         MinecraftForge.EVENT_BUS.register(new InfestedZone.Listener());
+        MinecraftForge.EVENT_BUS.register(new GasZone.Listener());
         HostileLore.init(net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext.get().getModEventBus());
         VaccineProject.init(net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext.get().getModEventBus());
         MinecraftForge.EVENT_BUS.register(new FactionBases());
@@ -233,6 +238,7 @@ public final class LazarusEvents {
             if (day >= 10 && time >= 13000 && time < 23000) weights.put(HollowDen.TYPE, 1.5); // the Hollow moves at night
         }
         if (NESTS_ENABLED.get() && day >= 8) weights.put(ZombieNest.TYPE, 1.5);
+        if (GAS_ENABLED.get() && day >= 12) weights.put(GasZone.TYPE, 1.5);
         if (weights.isEmpty()) return null;
         double roll = ThreadLocalRandom.current().nextDouble(weights.values().stream().mapToDouble(Double::doubleValue).sum());
         for (Map.Entry<String, Double> entry : weights.entrySet())
@@ -319,7 +325,7 @@ public final class LazarusEvents {
 
     private static Outcome attempt(ServerLevel level, ServerPlayer player, String type, boolean near,
             boolean testing, EventData data) {
-        if (BuildingHideout.TYPE.equals(type) || HollowDen.TYPE.equals(type) || ZombieNest.TYPE.equals(type))
+        if (BuildingHideout.TYPE.equals(type) || HollowDen.TYPE.equals(type) || ZombieNest.TYPE.equals(type) || GasZone.TYPE.equals(type))
             return attemptBuilding(level, player, type, near, data);
         Search search = findSpot(level, player, type, near, data);
         if (search.pos == null) return new Outcome(false, "No valid location (" + search.failures + ")");
@@ -338,23 +344,24 @@ public final class LazarusEvents {
 
     /** Building hideouts use a room: the one the player stands in for the test command, a random roofed one otherwise. */
     private static Outcome attemptBuilding(ServerLevel level, ServerPlayer player, String type, boolean near, EventData data) {
-        BuildingHideout.Room room = near ? BuildingHideout.room(level, player.blockPosition()) : BuildingHideout.find(level, player, data);
+        boolean gas = GasZone.TYPE.equals(type);
+        BuildingHideout.Room room = gas ? (near ? GasZone.space(level, player.blockPosition()) : GasZone.find(level, player, data))
+                : near ? BuildingHideout.room(level, player.blockPosition()) : BuildingHideout.find(level, player, data);
         if (room == null) return new Outcome(false, near ? "Stand inside a building: no enclosed room around you"
                 : "No building interior found nearby");
         UUID id = UUID.randomUUID();
         int tier = Math.min(5, 1 + (int) (level.getDayTime() / 24000) / 10);
         List<BlockPos> pustules = ZombieNest.TYPE.equals(type) ? ZombieNest.place(level, room) : null;
-        boolean placed = ZombieNest.TYPE.equals(type) ? pustules != null
+        boolean placed = gas ? GasZone.place(level, room) : ZombieNest.TYPE.equals(type) ? pustules != null
                 : HollowDen.TYPE.equals(type) ? HollowDen.place(level, room, id) : BuildingHideout.place(level, room, tier, id);
         if (!placed) {
             removeActors(level, id, room.center());
             return new Outcome(false, "Could not furnish the room at " + room.center().toShortString());
         }
         EventData.Encounter encounter = data.add(id, type, room.center(), level.getGameTime());
-        if (pustules != null) {
-            ZombieNest.record(encounter, pustules, level.getGameTime());
-            data.setDirty();
-        }
+        if (pustules != null) ZombieNest.record(encounter, pustules, level.getGameTime());
+        if (gas) GasZone.record(encounter, room, level.getGameTime());
+        data.setDirty();
         String message = "Placed " + type + " " + encounter.id + " at " + room.center().toShortString();
         radioMessage(level, room.center(), type);
         return new Outcome(true, message);
@@ -624,6 +631,11 @@ public final class LazarusEvents {
     }
 
     private static void radioMessage(ServerLevel level, BlockPos pos, String type) {
+        radio(level, pos, HostileHideouts.is(type) ? HostileHideouts.radio(level, pos, type) : radioLine(type));
+    }
+
+    /** A radio line for everyone within 192 blocks carrying a walkie-talkie. */
+    static void radio(ServerLevel level, BlockPos pos, String line) {
         for (ServerPlayer player : level.players()) {
             if (player.isSpectator() || player.distanceToSqr(Vec3.atCenterOf(pos)) > 192 * 192) continue;
             boolean radio = false;
@@ -634,7 +646,7 @@ public final class LazarusEvents {
                 }
             }
             if (!radio) continue;
-            player.sendSystemMessage(radioText(HostileHideouts.is(type) ? HostileHideouts.radio(level, pos, type) : radioLine(type), pos));
+            player.sendSystemMessage(radioText(line, pos));
             player.playNotifySound(net.minecraft.sounds.SoundEvents.NOTE_BLOCK_BIT.value(), SoundSource.PLAYERS, 0.5f, 1.6f);
         }
     }
@@ -669,6 +681,7 @@ public final class LazarusEvents {
             case MilitaryCollapse.ABANDONED -> "abandoned checkpoint";
             case HostileHideouts.DESERTER_CAMP, HostileHideouts.GANG_HIDEOUT, BuildingHideout.TYPE, HollowDen.TYPE -> HostileHideouts.label(type);
             case ZombieNest.TYPE -> "zombie nest";
+            case GasZone.TYPE -> "chemical leak";
             default -> type + " encounter";
         };
     }
@@ -683,6 +696,7 @@ public final class LazarusEvents {
             case "military" -> "Military checkpoint on the emergency band, still operational";
             case MilitaryCollapse.ABANDONED -> "An automated military beacon is still transmitting";
             case ZombieNest.TYPE -> "Military band: biological growth reported inside a building, avoid the area";
+            case GasZone.TYPE -> "Military band: chemical leak detected underground, masks mandatory";
             default -> type + " signal";
         };
     }
