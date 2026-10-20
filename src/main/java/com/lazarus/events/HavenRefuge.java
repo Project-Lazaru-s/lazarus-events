@@ -114,12 +114,29 @@ final class HavenRefuge {
 
     /** Records a rescued survivor as a guest of the refuge; false when there is no refuge or no free bunk. */
     static boolean welcome(ServerLevel level, Mob survivor) {
+        ResourceLocation type = ForgeRegistries.ENTITY_TYPES.getKey(survivor.getType());
+        if (type == null || !type.getPath().startsWith("survivor_")) return false;
+        return welcome(level, NpcApi.identity(survivor).map(view -> view.name()).orElse(""), type);
+    }
+
+    /** A former looter or deserter starts over at the refuge in ordinary survivor clothes, under a new name. */
+    static boolean welcomeFormer(ServerLevel level) {
+        int variant = 1 + java.util.concurrent.ThreadLocalRandom.current().nextInt(8);
+        return welcome(level, "", new ResourceLocation("apocalypsenow", "survivor_" + variant));
+    }
+
+    static boolean hasRoom(ServerLevel level) {
+        FactionBaseData.Base base = FactionBaseData.get(level).faction(FACTION);
+        if (base == null) return false;
+        for (BaseRoster.Slot slot : BaseRoster.layout(base).slots())
+            if (GUEST.equals(slot.profession()) && !base.guests.containsKey(slot.id())) return true;
+        return false;
+    }
+
+    private static boolean welcome(ServerLevel level, String name, ResourceLocation type) {
         FactionBaseData data = FactionBaseData.get(level);
         FactionBaseData.Base base = data.faction(FACTION);
         if (base == null) return false;
-        ResourceLocation type = ForgeRegistries.ENTITY_TYPES.getKey(survivor.getType());
-        if (type == null || !type.getPath().startsWith("survivor_")) return false;
-        String name = NpcApi.identity(survivor).map(view -> view.name()).orElse("");
         for (BaseRoster.Slot slot : BaseRoster.layout(base).slots()) {
             if (!GUEST.equals(slot.profession()) || base.guests.containsKey(slot.id())) continue;
             CompoundTag guest = new CompoundTag();
@@ -135,6 +152,7 @@ final class HavenRefuge {
 
     /** Gives a newly spawned guest the rescued survivor's name; Lazarus NPCs keeps it as the NPC's identity. */
     static void name(Mob guest, CompoundTag entry) {
+        if (entry.getString("Name").isEmpty()) return; // a newcomer keeps the name Lazarus NPCs gives them
         CompoundTag identity = guest.getPersistentData().getCompound("LazarusNpcsIdentity");
         identity.putString("Name", entry.getString("Name"));
         guest.getPersistentData().put("LazarusNpcsIdentity", identity);
@@ -174,6 +192,12 @@ final class HavenRefuge {
             if (event.getEntity().level() instanceof ServerLevel level && event.getEntity().getTags().contains("lazarusevents:base_guest"))
                 guestDied(level, event.getEntity().getUUID());
         }
+    }
+
+    /** The survivor walks off a little later (to the refuge, or just away to safety). */
+    static void sendOff(Mob survivor) {
+        if (survivor.getPersistentData().getLong(LEAVE_AT) == 0)
+            survivor.getPersistentData().putLong(LEAVE_AT, survivor.level().getGameTime() + 200);
     }
 
     /** Called when a rescue succeeds: counts it for the player and sends the survivor to the refuge when there is room. */

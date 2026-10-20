@@ -46,7 +46,7 @@ final class BuildingHideout {
 
     private BuildingHideout() {}
 
-    private static boolean passable(ServerLevel level, BlockPos pos) {
+    static boolean passable(ServerLevel level, BlockPos pos) {
         return level.getBlockState(pos).getCollisionShape(level, pos).isEmpty() && level.getFluidState(pos).isEmpty();
     }
 
@@ -92,10 +92,12 @@ final class BuildingHideout {
     }
 
     /** A random roofed room 30-80 blocks from the player, away from recent encounters and out of their reach. */
-    static Room find(ServerLevel level, ServerPlayer player, EventData data) {
+    static Room find(ServerLevel level, ServerPlayer player, EventData data) { return find(level, player, data, 30, 80); }
+
+    static Room find(ServerLevel level, ServerPlayer player, EventData data, int minDistance, int maxDistance) {
         ThreadLocalRandom random = ThreadLocalRandom.current();
         for (int attempt = 0; attempt < 96; attempt++) {
-            double angle = random.nextDouble(Math.PI * 2), distance = random.nextDouble(30, 80);
+            double angle = random.nextDouble(Math.PI * 2), distance = random.nextDouble(minDistance, maxDistance);
             int x = (int) Math.floor(player.getX() + Math.cos(angle) * distance);
             int z = (int) Math.floor(player.getZ() + Math.sin(angle) * distance);
             if (level.getChunkSource().getChunkNow(x >> 4, z >> 4) == null) continue;
@@ -114,10 +116,10 @@ final class BuildingHideout {
     }
 
     /** Furnishes the room and stations the gang; false when nothing could be placed. */
-    static boolean place(ServerLevel level, Room room, int tier, UUID id) {
-        ThreadLocalRandom random = ThreadLocalRandom.current();
-        String gang = HostileGroups.gang(level, room.center());
-        // Furniture goes against walls and never in front of a way out.
+    /** Room cells against a wall (for furniture) and in the open, leaving every doorway clear. */
+    record Cells(List<BlockPos> walls, List<BlockPos> free) {}
+
+    static Cells cells(ServerLevel level, Room room) {
         List<BlockPos> walls = new ArrayList<>(), free = new ArrayList<>();
         for (BlockPos cell : room.cells()) {
             boolean doorway = false, wall = false;
@@ -129,6 +131,14 @@ final class BuildingHideout {
             if (doorway) continue;
             (wall ? walls : free).add(cell);
         }
+        return new Cells(walls, free);
+    }
+
+    static boolean place(ServerLevel level, Room room, int tier, UUID id) {
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+        String gang = HostileGroups.gang(level, room.center());
+        Cells cells = cells(level, room);
+        List<BlockPos> walls = new ArrayList<>(cells.walls()), free = cells.free();
         if (walls.size() < 4) return false;
         Collections.shuffle(walls, random);
         BlockPos stash = walls.get(0);
@@ -163,7 +173,7 @@ final class BuildingHideout {
         return true;
     }
 
-    private static void put(ServerLevel level, BlockPos pos, BlockState state) {
+    static void put(ServerLevel level, BlockPos pos, BlockState state) {
         if (passable(level, pos)) level.setBlock(pos, state, 3);
     }
 

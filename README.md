@@ -6,7 +6,7 @@
   <img alt="Minecraft 1.20.1" src="https://img.shields.io/badge/Minecraft-1.20.1-3c8527">
   <img alt="Forge 47.x" src="https://img.shields.io/badge/Forge-47.x-dd7d2b">
   <img alt="Java 17" src="https://img.shields.io/badge/Java-17-b07219">
-  <img alt="Versão 0.18.0" src="https://img.shields.io/badge/vers%C3%A3o-0.18.0-6b5b3e">
+  <img alt="Versão 0.19.0" src="https://img.shields.io/badge/vers%C3%A3o-0.19.0-6b5b3e">
 </p>
 
 # Lazarus Events
@@ -65,7 +65,7 @@ Não há troca amigável. A mensagem de descoberta e o rádio não revelam que �
 
 ### Military
 
-Os soldados **guardam a base** e o médico fica no posto. A recepção depende da reputação com os **Military**: abaixo de 10, área restrita, mas é possível oferecer ajuda; a partir de 10, boas-vindas; com -20 ou menos, o jogador é mandado embora. A tarefa **Secure the perimeter** traz três ondas de infectados contra a cerca: mate **12 atacantes** e volte ao soldado que deu a ordem para receber **30 munições 5.56, 2 bandagens e +3 Military**.
+Os militares do Lazarus NPCs usam skins próprias: três soldados (atirador, operador de rádio e soldado de quarentena com máscara de gás) e o médico de campo, com farda alinhada e insígnia olive, ao contrário dos desertores. Os soldados **guardam a base** e o médico fica no posto. A recepção depende da reputação com os **Military**: abaixo de 10, área restrita, mas é possível oferecer ajuda; a partir de 10, boas-vindas; com -20 ou menos, o jogador é mandado embora. A tarefa **Secure the perimeter** traz três ondas de infectados contra a cerca: mate **12 atacantes** e volte ao soldado que deu a ordem para receber **30 munições 5.56, 2 bandagens e +3 Military**.
 
 Com Military **10 ou mais**, o soldado aceita um **pedido de suprimento aéreo**: por **3 comidas enlatadas e -4 Military**, entrega uma pistola sinalizadora do **dyairdrop** (recarga de 3 dias por jogador). Disparada em área aberta, ela chama um airdrop real, que atrai infectados.
 
@@ -85,9 +85,9 @@ Os humanos hostis têm identidade própria e deixam provas quando o jogador os m
 
 | Grupo | Quem são | Prova | Quem paga |
 |---|---|---|---|
-| **Desertores** (Soldiers) | Soldados que abandonaram os postos durante o colapso | **Placas de identificação** (60%) | Soldado ou médico de um posto militar ativo: **3 placas** dão +2 Military e 30 munições 5.56 |
+| **Desertores** (Soldiers) | Soldados que abandonaram os postos durante o colapso; usam uma de três skins próprias do Lazarus NPCs (farda suja, trapo vermelho no braço) | **Placas de identificação** (60%) | Soldado ou médico de um posto militar ativo: **3 placas** dão +2 Military e 30 munições 5.56 |
 | **Gangues** (Looters) | Gangues de rua com território: o nome muda a cada 512 blocos (Rust Dogs, Lantern Boys, Crowbar Saints, Red Tape, Gutter Kings, Static, Tin Men, Black Pine) | **Insígnia** com o nome da gangue (30%) | Líder ou guarda dos Wardens: **3 insígnias** dão +2 Wardens, 2 comidas enlatadas e 1 bandagem |
-| **The Hollow** (Cannibals) | Um culto noturno que some com sobreviventes | **Amuleto de osso** (40%) | Líder do refúgio do Haven: **2 amuletos** dão +3 Haven e 1 antibiótico |
+| **The Hollow** (Cannibals) | Um culto noturno que some com sobreviventes; usam três skins próprias (o pregador, o açougueiro e o de olhos vazados) | **Amuleto de osso** (40%) | Líder do refúgio do Haven: **2 amuletos** dão +3 Haven e 1 antibiótico |
 
 O aviso e a tela de negociação dos saqueadores citam a gangue do lugar. Qualquer hostil morto pode deixar um **bilhete** (15%): são cinco textos por grupo, como cartas de desertores, listas de pedágio das gangues e rabiscos do culto. Quem carrega provas suficientes é recebido primeiro com a oferta de pagamento; a opção "Something else" deixa conversar normalmente por um minuto.
 
@@ -101,9 +101,17 @@ Dois encontros novos mostram onde os hostis vivem. Quem tem walkie-talkie ouve a
 |---|:---:|---|---|
 | **Deserter camp** | dia 21 (mais comum a partir do 36) | O posto militar ocupado por 3 ou 4 desertores **armados**, barril de suprimentos militares e um bilhete de desertor no atril | +2 Military |
 | **Gang hideout** | dia 6 | Acampamento de 3 ou 4 saqueadores da gangue local, com o "caixa" da gangue: loot de suprimentos e uma insígnia garantida | +2 Wardens |
+| **Hollow den** | dia 10, **só à noite** | Um cômodo de prédio tomado pelo culto: ossos, crânio, velas acesas, fogueira apagada, 2 ou 3 canibais e um **sobrevivente preso** numa jaula de grades no canto. O rádio do Haven pede ajuda por alguém que não voltou | +2 Haven; o cativo é libertado e vai para o refúgio se houver vaga |
 | **Gang building hideout** | dia 6 | Um cômodo de um prédio já existente (CityWorld ou qualquer construção coberta) tomado pela gangue local: barril do "caixa" com insígnia, caixotes, colchonetes, um lampião e uma placa "TURF / KEEP OUT" com o nome da gangue, sem mexer nas paredes | +2 Wardens |
 
 O esconderijo conta como limpo quando um jogador viu os ocupantes e nenhum restou vivo; quem estiver a até 32 blocos recebe a reputação, uma vez só. A opção `enableHostileHideouts` desliga os dois.
+
+### Prisioneiros
+
+Quando um saqueador ou desertor se rende, a tela de rendição ganha duas opções além de **tomar o que carrega** e **soltar** (que agora dá +1 Haven):
+
+- **Interrogate:** uma vez por prisioneiro. Ele entrega o esconderijo do grupo, que é criado agora a 80–160 blocos em área já carregada: acampamento de desertores para soldados; esconderijo de gangue ou cômodo de prédio tomado pela gangue para saqueadores. O prisioneiro diz a direção e a distância, e uma tarefa **Find the hideout** vai para o diário com o destino. Se não houver lugar válido por perto, ele não diz nada útil.
+- **Send to refuge:** só aparece se o refúgio do Haven tiver um beliche de hóspede livre. O prisioneiro deixa as cores da gangue e vai recomeçar no refúgio, com roupa de sobrevivente e nome novo. Dá +2 Haven.
 
 ## Refúgio do Haven
 
@@ -211,7 +219,7 @@ Os comandos exigem permissão de operador, e os testes de colocação devem ser 
 | `/lazarusskirmish test` | Inicia confronto no local do operador se houver área aberta e carregada. |
 | `/lazarusskirmish clear` | Encerra apenas o confronto criado pelo comando de teste. |
 
-`<tipo>` pode ser `cache`, `gunfire`, `flare`, `military`, `abandoned`, `deserter_camp`, `gang_hideout`, `gang_building_hideout`, `rescue`, `lastdefense` ou `falseradio`. Os comandos de teste criam encontros reais no mundo, mas **não alteram o horário** do próximo evento natural. `gang_building_hideout near` precisa ser usado **dentro de um prédio**: a gangue ocupa o cômodo em volta do jogador.
+`<tipo>` pode ser `cache`, `gunfire`, `flare`, `military`, `abandoned`, `deserter_camp`, `gang_hideout`, `gang_building_hideout`, `hollow_den`, `rescue`, `lastdefense` ou `falseradio`. Os comandos de teste criam encontros reais no mundo, mas **não alteram o horário** do próximo evento natural. `gang_building_hideout near` e `hollow_den near` precisam ser usados **dentro de um prédio**: o grupo ocupa o cômodo em volta do jogador.
 
 ---
 
@@ -236,7 +244,7 @@ O Immersive Frequencies é usado apenas para as mensagens opcionais de rádio.
 
 ### Jogadores e servidores
 
-1. Compile `lazarusevents-0.18.0.jar` em `build/libs/` ou [compile o projeto](#compilar-a-partir-do-código).
+1. Compile `lazarusevents-0.19.0.jar` em `build/libs/` ou [compile o projeto](#compilar-a-partir-do-código).
 2. Coloque o JAR na pasta `mods` do perfil. No CurseForge, clique com o botão direito no perfil e escolha **Open Folder**.
 3. Em multiplayer, instale o **mesmo JAR** no servidor e em todos os clientes.
 4. Remova versões antigas de `lazarusevents` e reinicie o jogo ou servidor após a troca.

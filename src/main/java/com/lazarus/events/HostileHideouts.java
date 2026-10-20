@@ -36,7 +36,9 @@ final class HostileHideouts {
 
     private HostileHideouts() {}
 
-    static boolean is(String type) { return DESERTER_CAMP.equals(type) || GANG_HIDEOUT.equals(type) || GANG_BUILDING.equals(type); }
+    static boolean is(String type) {
+        return DESERTER_CAMP.equals(type) || GANG_HIDEOUT.equals(type) || GANG_BUILDING.equals(type) || HollowDen.TYPE.equals(type);
+    }
 
     /** Draw weights of {deserter camp, gang hideout, gang building} for a world day (an ordinary encounter weighs 1). */
     static double[] weights(int day, int declineDay, int collapseDay) {
@@ -81,11 +83,14 @@ final class HostileHideouts {
     /** Intercepted radio chatter that gives the hideout away. */
     static String radio(ServerLevel level, BlockPos pos, String type) {
         if (DESERTER_CAMP.equals(type)) return "Intercepted on an old military channel: deserters arguing over rations at a camp";
+        if (HollowDen.TYPE.equals(type)) return "Haven calling: another one of ours didn't come back tonight. Candles were seen in a building";
         return "Intercepted chatter: the " + HostileGroups.gang(level, pos) + " are holed up "
                 + (GANG_BUILDING.equals(type) ? "inside a building" : "at their stash");
     }
 
-    static String label(String type) { return DESERTER_CAMP.equals(type) ? "deserter camp" : "gang hideout"; }
+    static String label(String type) {
+        return DESERTER_CAMP.equals(type) ? "deserter camp" : HollowDen.TYPE.equals(type) ? "Hollow den" : "gang hideout";
+    }
 
     /** Every 100 ticks: pays the players present when a seen hideout has no occupant left, and ends it. */
     static void tick(ServerLevel level, EventData data) {
@@ -97,19 +102,22 @@ final class HostileHideouts {
             if (present.isEmpty()) continue;
             String tag = LazarusEvents.ID + ":" + encounter.id;
             int alive = level.getEntitiesOfClass(Mob.class, new AABB(encounter.pos).inflate(40),
-                    mob -> mob.isAlive() && mob.getTags().contains(tag)).size();
+                    mob -> mob.isAlive() && mob.getTags().contains(tag) && !mob.getTags().contains(HollowDen.CAPTIVE)).size();
             if (alive > 0) {
                 SEEN_ALIVE.add(encounter.id);
                 continue;
             }
             if (!SEEN_ALIVE.remove(encounter.id)) continue;
-            boolean camp = DESERTER_CAMP.equals(encounter.type);
+            boolean camp = DESERTER_CAMP.equals(encounter.type), den = HollowDen.TYPE.equals(encounter.type);
             for (ServerPlayer player : present) {
                 if (camp) NpcApi.adjustReputation(player, "military", 2, CLEARED, encounter.id);
+                else if (den) NpcApi.adjustReputation(player, "haven", 2, CLEARED, encounter.id);
                 else NpcApi.adjustPoliticalReputation(player, "wardens", 2, CLEARED, encounter.id);
-                player.sendSystemMessage(Component.literal((camp ? "Deserter camp" : "Gang hideout") + " cleared. "
-                        + (camp ? "The military" : "The Wardens") + " will hear of it.").withStyle(style -> style.withColor(0xD4C068)));
+                player.sendSystemMessage(Component.literal((camp ? "Deserter camp" : den ? "Hollow den" : "Gang hideout") + " cleared. "
+                        + (camp ? "The military" : den ? "The Haven" : "The Wardens") + " will hear of it.")
+                        .withStyle(style -> style.withColor(0xD4C068)));
             }
+            if (den) HollowDen.free(level, encounter.pos, encounter.id, present.get(0));
             data.remove(encounter.id);
         }
     }

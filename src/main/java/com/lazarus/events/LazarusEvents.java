@@ -54,7 +54,7 @@ public final class LazarusEvents {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final String[] TYPES = {"cache", "gunfire", "flare", "military", RescueEncounter.TYPE,
             LastDefenseEncounter.TYPE, FalseRadioEncounter.TYPE, MilitaryCollapse.ABANDONED,
-            HostileHideouts.DESERTER_CAMP, HostileHideouts.GANG_HIDEOUT, BuildingHideout.TYPE};
+            HostileHideouts.DESERTER_CAMP, HostileHideouts.GANG_HIDEOUT, BuildingHideout.TYPE, HollowDen.TYPE};
     private static final ResourceLocation RADIO_ID = new ResourceLocation("ifreq", "walkie_talkie");
     private static final ForgeConfigSpec CONFIG;
     private static final ForgeConfigSpec.BooleanValue ENABLED;
@@ -120,6 +120,7 @@ public final class LazarusEvents {
         MinecraftForge.EVENT_BUS.register(new VaccineProject.Listener());
         MinecraftForge.EVENT_BUS.register(new HavenRefuge.Listener());
         MinecraftForge.EVENT_BUS.register(new HostileLore.Listener());
+        MinecraftForge.EVENT_BUS.register(new HostilePrisoners.Listener());
         HostileLore.init(net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext.get().getModEventBus());
         VaccineProject.init(net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext.get().getModEventBus());
         MinecraftForge.EVENT_BUS.register(new FactionBases());
@@ -135,6 +136,7 @@ public final class LazarusEvents {
                     VaccineProject.register();
                     HavenRefuge.register();
                     HostileLore.register();
+                    HostilePrisoners.register();
                     FactionMissions.register();
                     FactionExpeditions.register();
                 }));
@@ -221,6 +223,8 @@ public final class LazarusEvents {
             if (hideouts[0] > 0) weights.put(HostileHideouts.DESERTER_CAMP, hideouts[0]);
             if (hideouts[1] > 0) weights.put(HostileHideouts.GANG_HIDEOUT, hideouts[1]);
             if (hideouts[2] > 0) weights.put(BuildingHideout.TYPE, hideouts[2]);
+            long time = now % 24000;
+            if (day >= 10 && time >= 13000 && time < 23000) weights.put(HollowDen.TYPE, 1.5); // the Hollow moves at night
         }
         if (weights.isEmpty()) return null;
         double roll = ThreadLocalRandom.current().nextDouble(weights.values().stream().mapToDouble(Double::doubleValue).sum());
@@ -308,7 +312,7 @@ public final class LazarusEvents {
 
     private static Outcome attempt(ServerLevel level, ServerPlayer player, String type, boolean near,
             boolean testing, EventData data) {
-        if (BuildingHideout.TYPE.equals(type)) return attemptBuilding(level, player, near, data);
+        if (BuildingHideout.TYPE.equals(type) || HollowDen.TYPE.equals(type)) return attemptBuilding(level, player, type, near, data);
         Search search = findSpot(level, player, type, near, data);
         if (search.pos == null) return new Outcome(false, "No valid location (" + search.failures + ")");
         BlockPos pos = search.pos;
@@ -325,29 +329,63 @@ public final class LazarusEvents {
     }
 
     /** Building hideouts use a room: the one the player stands in for the test command, a random roofed one otherwise. */
-    private static Outcome attemptBuilding(ServerLevel level, ServerPlayer player, boolean near, EventData data) {
+    private static Outcome attemptBuilding(ServerLevel level, ServerPlayer player, String type, boolean near, EventData data) {
         BuildingHideout.Room room = near ? BuildingHideout.room(level, player.blockPosition()) : BuildingHideout.find(level, player, data);
         if (room == null) return new Outcome(false, near ? "Stand inside a building: no enclosed room around you"
                 : "No building interior found nearby");
         UUID id = UUID.randomUUID();
         int tier = Math.min(5, 1 + (int) (level.getDayTime() / 24000) / 10);
-        if (!BuildingHideout.place(level, room, tier, id)) {
+        boolean placed = HollowDen.TYPE.equals(type) ? HollowDen.place(level, room, id) : BuildingHideout.place(level, room, tier, id);
+        if (!placed) {
             removeActors(level, id, room.center());
             return new Outcome(false, "Could not furnish the room at " + room.center().toShortString());
         }
-        EventData.Encounter encounter = data.add(id, BuildingHideout.TYPE, room.center(), level.getGameTime());
-        String message = "Placed " + BuildingHideout.TYPE + " " + encounter.id + " at " + room.center().toShortString();
-        radioMessage(level, room.center(), BuildingHideout.TYPE);
+        EventData.Encounter encounter = data.add(id, type, room.center(), level.getGameTime());
+        String message = "Placed " + type + " " + encounter.id + " at " + room.center().toShortString();
+        radioMessage(level, room.center(), type);
         return new Outcome(true, message);
     }
 
     private static Search findSpot(ServerLevel level, ServerPlayer player, String type, boolean near, EventData data) {
+        return near ? findSpot(level, player, type, 14, 34, true, data) : findSpot(level, player, type, 40, 78, false, data);
+    }
+
+    /** A hideout given away by a prisoner: placed now, farther out than usual; null when nothing fits loaded chunks. */
+    record Revealed(UUID id, BlockPos pos) {}
+
+    static Revealed reveal(ServerLevel level, ServerPlayer player, String type, int minDistance, int maxDistance) {
+        EventData data = EventData.get(level);
+        UUID id = UUID.randomUUID();
+        int tier = Math.min(5, 1 + (int) (level.getDayTime() / 24000) / 10);
+        BlockPos pos;
+        if (BuildingHideout.TYPE.equals(type)) {
+            BuildingHideout.Room room = BuildingHideout.find(level, player, data, minDistance, maxDistance);
+            if (room == null) return null;
+            if (!BuildingHideout.place(level, room, tier, id)) {
+                removeActors(level, id, room.center());
+                return null;
+            }
+            pos = room.center();
+        } else {
+            Search search = findSpot(level, player, type, minDistance, maxDistance, true, data);
+            if (search.pos == null) return null;
+            if (!place(level, search.pos, type, search.rotation, false, id)) {
+                removeActors(level, id, search.pos);
+                return null;
+            }
+            pos = search.pos;
+        }
+        data.add(id, type, pos, level.getGameTime());
+        return new Revealed(id, pos);
+    }
+
+    private static Search findSpot(ServerLevel level, ServerPlayer player, String type, int minDistance, int maxDistance,
+            boolean seenAllowed, EventData data) {
         Map<Reject, Integer> failures = new EnumMap<>(Reject.class);
         int attempts = 1024;
         for (int i = 0; i < attempts; i++) {
             double angle = ThreadLocalRandom.current().nextDouble(Math.PI * 2);
-            double radius = near ? ThreadLocalRandom.current().nextDouble(14, 34)
-                    : ThreadLocalRandom.current().nextDouble(40, 78);
+            double radius = ThreadLocalRandom.current().nextDouble(minDistance, maxDistance);
             int x = (int) Math.floor(player.getX() + Math.cos(angle) * radius);
             int z = (int) Math.floor(player.getZ() + Math.sin(angle) * radius);
             if (level.getChunkSource().getChunkNow(x >> 4, z >> 4) == null) {
@@ -375,7 +413,7 @@ public final class LazarusEvents {
                 failures.merge(Reject.GROUND, 1, Integer::sum);
                 continue;
             }
-            if (!near) {
+            if (!seenAllowed) {
                 Vec3 toward = Vec3.atCenterOf(pos).subtract(player.getEyePosition()).normalize();
                 if (player.getLookAngle().dot(toward) > 0.25) {
                     failures.merge(Reject.VISIBLE, 1, Integer::sum);
@@ -615,7 +653,7 @@ public final class LazarusEvents {
             case RescueEncounter.TYPE, FalseRadioEncounter.TYPE -> "distress call";
             case LastDefenseEncounter.TYPE -> "last stand";
             case MilitaryCollapse.ABANDONED -> "abandoned checkpoint";
-            case HostileHideouts.DESERTER_CAMP, HostileHideouts.GANG_HIDEOUT, BuildingHideout.TYPE -> HostileHideouts.label(type);
+            case HostileHideouts.DESERTER_CAMP, HostileHideouts.GANG_HIDEOUT, BuildingHideout.TYPE, HollowDen.TYPE -> HostileHideouts.label(type);
             default -> type + " encounter";
         };
     }
