@@ -6,12 +6,12 @@
   <img alt="Minecraft 1.20.1" src="https://img.shields.io/badge/Minecraft-1.20.1-3c8527">
   <img alt="Forge 47.x" src="https://img.shields.io/badge/Forge-47.x-dd7d2b">
   <img alt="Java 17" src="https://img.shields.io/badge/Java-17-b07219">
-  <img alt="Versão 0.21.0" src="https://img.shields.io/badge/vers%C3%A3o-0.21.0-6b5b3e">
+  <img alt="Versão 0.22.0" src="https://img.shields.io/badge/vers%C3%A3o-0.22.0-6b5b3e">
 </p>
 
 # Lazarus Events
 
-**Lazarus Events** é um mod para Minecraft Forge 1.20.1 criado para o modpack **Project Lazarus**. Ele espalha pequenos encontros pelo mundo enquanto o jogador explora: acampamentos abandonados, barricadas após disparos, pedidos de socorro (verdadeiros ou não), defesas contra hordas e bases militares. Cada cenário tem uma construção própria, personagens ou infectados e recursos que fazem sentido para o local.
+**Lazarus Events** é um mod para Minecraft Forge 1.20.1 criado para o modpack **Project Lazarus**. Ele espalha pequenos encontros pelo mundo enquanto o jogador explora: acampamentos abandonados, barricadas após disparos, pedidos de socorro (verdadeiros ou não), defesas contra hordas, bases militares, esconderijos de hostis, ninhos de zumbis, zonas de gás de infecção e quarentenas militares. Cada cenário tem uma construção própria, personagens ou infectados e recursos que fazem sentido para o local. Também mantém as bases permanentes das facções Rovers e Wardens, o refúgio do Haven, o projeto vacina e o colapso militar ao longo dos dias.
 
 Os encontros são colocados em áreas já carregadas do *Overworld*. O mod não força a geração de chunks, não depende dos antigos scripts de eventos do KubeJS e guarda o progresso separadamente em cada mundo. As novas bases de facção usam apenas chunks recém-gerados. Os textos dentro do jogo estão em inglês, seguindo o padrão do modpack.
 
@@ -20,11 +20,17 @@ Os encontros são colocados em áreas já carregadas do *Overworld*. O mod não 
 ## Sumário
 
 - [Encontros](#encontros)
+- [Hostis na história do mundo](#hostis-na-história-do-mundo)
+- [Ninhos de zumbis](#ninhos-de-zumbis)
+- [Zonas de infecção (gás)](#zonas-de-infecção-gás)
+- [Refúgio do Haven](#refúgio-do-haven)
 - [Bases e rivalidade de facções](#bases-e-rivalidade-de-facções)
+- [Territórios (CityWorld)](#territórios-cityworld)
 - [Como aparecem](#como-aparecem)
 - [Comandos para testar](#comandos-para-testar)
 - [Configuração](#configuração)
 - [Instalação](#instalação)
+- [Documentação do projeto](#documentação-do-projeto)
 - [Créditos e licença](#créditos-e-licença)
 
 ---
@@ -41,8 +47,14 @@ Os encontros são colocados em áreas já carregadas do *Overworld*. O mod não 
 | **False Radio** | 6 | Um pedido de socorro pelo rádio que é uma emboscada de saqueadores em volta de um acampamento com carga. |
 | **Military** | 10 | Base militar guardada por quatro militares, com barris de suprimentos, geladeira e gerador ligado. Fica mais rara a partir do dia 21 e rara a partir do dia 36. |
 | **Abandoned** | 21 | O mesmo posto militar sem soldados: barril de suprimentos, infectados de farda e um diário de serviço num atril. Comum a partir do dia 36. |
+| **Gang hideout** / **Gang building hideout** | 6 | Esconderijo de gangue ao ar livre ou num cômodo de prédio do CityWorld, com saqueadores guardando o loot. |
+| **Hollow den** | 10 (à noite) | Covil dos canibais do Hollow num prédio, com um prisioneiro do Haven para libertar. |
+| **Zombie nest** | 8 | Pústulas num prédio que geram infectados até serem destruídas; em volta, uma zona infestada. |
+| **Deserter camp** | 21 | Posto militar tomado por desertores. |
+| **Infection zone** | 12 | Gás verde num espaço fechado; máscara ou hazmat obrigatórios. |
+| **Military quarantine** | 21 | Uma quarentena militar que falhou, com perímetro, tenda de descontaminação e gás no prédio. |
 
-Rescue, Last Defense, False Radio e Military usam a API do **Lazarus NPCs**: ordens aos personagens (esperar, seguir, guardar, recuar), conversa com escolhas, tarefa no diário (aba **Encounters**) e recompensa. Só um jogador por vez pode aceitar a tarefa de um mesmo personagem.
+Os detalhes dos hostis, ninhos, zonas de gás e quarentena estão nas seções abaixo. Rescue, Last Defense, False Radio e Military usam a API do **Lazarus NPCs**: ordens aos personagens (esperar, seguir, guardar, recuar), conversa com escolhas, tarefa no diário (aba **Encounters**) e recompensa. Só um jogador por vez pode aceitar a tarefa de um mesmo personagem.
 
 ### Rescue
 
@@ -217,7 +229,7 @@ O cache usa uma tabela de suprimentos; os barris militares usam tabelas de armas
 ## Como aparecem
 
 - Após a primeira entrada no mundo, a primeira tentativa natural é programada para cerca de **um dia de jogo** depois. Após um encontro bem-sucedido, a próxima tentativa ocorre em **1 a 2 dias**, por padrão.
-- Cache, Gunfire, Flare e Rescue podem aparecer desde o começo; Last Defense a partir do **dia 3**; False Radio a partir do **dia 6**, junto com os saqueadores; e Military a partir do **dia 10**, por padrão. Pesos de sorteio entre os tipos liberados: Cache 9, Gunfire 6, Flare 4, Rescue 4, Last Defense 3, False Radio 3 e Military 1.
+- Cache, Gunfire, Flare e Rescue podem aparecer desde o começo; Last Defense a partir do **dia 3**; False Radio a partir do **dia 6**, junto com os saqueadores; e Military a partir do **dia 10**, por padrão. Pesos de sorteio entre os tipos liberados: Cache 9, Gunfire 6, Flare 4, Rescue 4, Last Defense 3, False Radio 3, Military 1 (0,5 a partir do dia 21 e 0,15 a partir do dia 36), Abandoned 1 (1,5 a partir do dia 36), Gang hideout 2 e Gang building hideout 2 (dia 6), Deserter camp 1 (1,5 a partir do dia 36), Hollow den 1,5 (dia 10, só à noite), Zombie nest 1,5 (dia 8), Infection zone 1,5 (dia 12) e Military quarantine 1 (dia 21).
 - O mod procura um local adequado em chunks carregados, de 40 a 78 blocos do jogador, fora da direção para a qual ele está olhando. O terreno precisa ser seguro para a construção.
 - Um local inválido adia a tentativa em vez de consumir o intervalo inteiro. O limite padrão é de **quatro encontros acompanhados** ao mesmo tempo; registros antigos expiram depois de sete dias de jogo.
 - Ao chegar a 24 blocos de um encontro, o jogador recebe uma mensagem de descoberta. Quem carrega o *walkie-talkie* do Immersive Frequencies no inventário pode receber pelo rádio coordenadas aproximadas de um encontro recém-criado, se estiver a até 192 blocos.
@@ -226,7 +238,15 @@ O cache usa uma tabela de suprimentos; os barris militares usam tabelas de armas
   - **Mundos já explorados:** a partir do dia 3 (configurável), uma facção sem base também tenta, a cada dois minutos, um local em chunks já carregados a 72–128 blocos de um jogador, fora do campo de visão dele e a pelo menos 56 blocos de qualquer jogador.
   - **Terreno:** flores, grama, mudas, neve, tapetes, lajes, folhas naturais e **árvores naturais** (troncos e cogumelos gigantes, inclusive a copa acima do telhado) são removidos; desníveis de até 3 blocos acima ou 4 abaixo do piso são cortados ou aterrados com terra. Contêineres, água, gelo e blocos construídos (tábuas, troncos descascados etc.) continuam impedindo a base. Os comandos permitem testá-las sem esperar a geração natural.
 
-Essas distâncias e condições explicam por que um comando de teste pode responder **No valid location**. O modo `near` procura entre 14 e 34 blocos e dispensa a regra da direção da câmera; ele continua exigindo terreno e chunks válidos.
+Essas distâncias e condições explicam por que um comando de teste pode responder **No valid location**. O modo `near` procura entre 14 e 34 blocos e dispensa a regra da direção da câmera; ele continua exigindo terreno e chunks válidos. Os eventos de interior (esconderijo em prédio, covil do Hollow, ninho, zona de gás e quarentena) usam o cômodo em volta do jogador no modo `near`, e um cômodo de prédio ou espaço subterrâneo próximo no modo natural.
+
+---
+
+## Territórios (CityWorld)
+
+A partir da versão 0.22.0, o mod conversa com a API pública do **CityWorld** (`CityWorldAPI`) por reflexão: sem o CityWorld instalado, nada quebra e os eventos de território ficam desligados. Com ele, cada posição é classificada como **superfície**, **estação de metrô**, **túnel de metrô**, **mina**, **bunker**, **esgoto** (até 16 blocos abaixo da rua, já que esgotos não são lotes próprios na API) ou **caverna**.
+
+Essa é a base da update de **eventos por território** (metrô, cavernas, esgotos e superfície). Por enquanto só o comando `/lazarusevents where` usa a classificação; os eventos de cada área estão planejados em [docs/PLANO_EVENTOS_TERRITORIOS_V1.md](docs/PLANO_EVENTOS_TERRITORIOS_V1.md).
 
 ---
 
@@ -266,7 +286,7 @@ Os comandos exigem permissão de operador, e os testes de colocação devem ser 
 
 ## Configuração
 
-O arquivo `config/lazarusevents-common.toml` é criado pelo Forge. Nele é possível ativar ou desativar o sistema e cada tipo de encontro, alterar o intervalo entre encontros, definir o primeiro dia de Military e os dias do colapso militar (`militaryDeclineDay` 21, `militaryCollapseDay` 36), ajustar o limite de encontros acompanhados e escolher a partir de que dia as bases podem surgir em áreas já exploradas (`factionBaseFallbackDay`, 0 desliga). O estado dos encontros e o resultado da última tentativa são salvos por mundo.
+O arquivo `config/lazarusevents-common.toml` é criado pelo Forge. Nele é possível ativar ou desativar o sistema e cada tipo de encontro, alterar o intervalo entre encontros, definir o primeiro dia de Military e os dias do colapso militar (`militaryDeclineDay` 21, `militaryCollapseDay` 36), ligar ou desligar os grupos novos (`enableHostileHideouts`, `enableZombieNests`, `enableInfectionZones`, `enableQuarantines`, `enableFactionExpeditions`), ajustar o limite de encontros acompanhados e escolher a partir de que dia as bases podem surgir em áreas já exploradas (`factionBaseFallbackDay`, 0 desliga). O estado dos encontros e o resultado da última tentativa são salvos por mundo.
 
 ---
 
@@ -279,13 +299,13 @@ O arquivo `config/lazarusevents-common.toml` é criado pelo Forge. Nele é poss�
 - **Java 17**
 - **Apocalypse Now 3.0.5 ou superior**
 - **Dyairdrop 1.0.0 ou superior**
-- **Lazarus NPCs 1.13.0 ou superior**
+- **Lazarus NPCs 1.16.0 ou superior**
 
-O Immersive Frequencies é usado apenas para as mensagens opcionais de rádio.
+Opcionais: o **Immersive Frequencies** (mensagens de rádio, com o walkie-talkie no inventário), o **CityWorld** (prédios, esgotos, metrô e minas usados pelos eventos; ver [Territórios](#territórios-cityworld)), o **The Hordes** (infecção pelo gás) e o **The Undead Revamped** (infectados especiais dos ninhos).
 
 ### Jogadores e servidores
 
-1. Compile `lazarusevents-0.21.0.jar` em `build/libs/` ou [compile o projeto](#compilar-a-partir-do-código).
+1. Compile `lazarusevents-0.22.0.jar` em `build/libs/` ou [compile o projeto](#compilar-a-partir-do-código).
 2. Coloque o JAR na pasta `mods` do perfil. No CurseForge, clique com o botão direito no perfil e escolha **Open Folder**.
 3. Em multiplayer, instale o **mesmo JAR** no servidor e em todos os clientes.
 4. Remova versões antigas de `lazarusevents` e reinicie o jogo ou servidor após a troca.
@@ -300,7 +320,15 @@ Com JDK 17 instalado, execute na raiz do projeto:
 
 No Windows, use `gradlew.bat build`. O JAR gerado fica em `build/libs/`.
 
-A compilação usa a API do Lazarus NPCs sem embuti-la: copie `lazarusnpcs-1.13.0.jar` para `libs/` antes de compilar. Os testes de ponta a ponta dos encontros ficam no projeto Lazarus NPCs.
+A compilação usa a API do Lazarus NPCs sem embuti-la: copie `lazarusnpcs-1.16.0.jar` para `libs/` antes de compilar. Os testes de ponta a ponta dos encontros ficam no projeto Lazarus NPCs.
+
+---
+
+## Documentação do projeto
+
+- [docs/PENDENCIAS_E_TASKS.md](docs/PENDENCIAS_E_TASKS.md): estado das fases, tasks a implementar, pendências e testes instáveis.
+- [docs/PLANO_EVENTOS_TERRITORIOS_V1.md](docs/PLANO_EVENTOS_TERRITORIOS_V1.md): plano da update de eventos por território.
+- [docs/LORE_ZONAS_INFECCAO.md](docs/LORE_ZONAS_INFECCAO.md): lore das zonas e do gás de infecção, para versões futuras.
 
 ---
 
