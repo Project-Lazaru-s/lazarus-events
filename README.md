@@ -6,7 +6,7 @@
   <img alt="Minecraft 1.20.1" src="https://img.shields.io/badge/Minecraft-1.20.1-3c8527">
   <img alt="Forge 47.x" src="https://img.shields.io/badge/Forge-47.x-dd7d2b">
   <img alt="Java 17" src="https://img.shields.io/badge/Java-17-b07219">
-  <img alt="Versão 0.17.0" src="https://img.shields.io/badge/vers%C3%A3o-0.17.0-6b5b3e">
+  <img alt="Versão 0.18.0" src="https://img.shields.io/badge/vers%C3%A3o-0.18.0-6b5b3e">
 </p>
 
 # Lazarus Events
@@ -90,6 +90,20 @@ Os humanos hostis têm identidade própria e deixam provas quando o jogador os m
 | **The Hollow** (Cannibals) | Um culto noturno que some com sobreviventes | **Amuleto de osso** (40%) | Líder do refúgio do Haven: **2 amuletos** dão +3 Haven e 1 antibiótico |
 
 O aviso e a tela de negociação dos saqueadores citam a gangue do lugar. Qualquer hostil morto pode deixar um **bilhete** (15%): são cinco textos por grupo, como cartas de desertores, listas de pedágio das gangues e rabiscos do culto. Quem carrega provas suficientes é recebido primeiro com a oferta de pagamento; a opção "Something else" deixa conversar normalmente por um minuto.
+
+### Esconderijos
+
+Dois encontros novos mostram onde os hostis vivem. Quem tem walkie-talkie ouve a conversa interceptada com a região aproximada.
+
+**Rádio.** Todo encontro novo, natural ou criado por comando de teste, é anunciado a quem estiver a até 192 blocos com um **walkie-talkie** (`ifreq:walkie_talkie`) em qualquer lugar do inventário. A mensagem aparece no chat com a etiqueta **[RADIO]** em verde, um chiado, o texto em itálico e a região aproximada em amarelo, acompanhada de um bipe. Ela não depende da frequência do aparelho.
+
+| Esconderijo | Desde | O que há | Ao limpar |
+|---|:---:|---|---|
+| **Deserter camp** | dia 21 (mais comum a partir do 36) | O posto militar ocupado por 3 ou 4 desertores **armados**, barril de suprimentos militares e um bilhete de desertor no atril | +2 Military |
+| **Gang hideout** | dia 6 | Acampamento de 3 ou 4 saqueadores da gangue local, com o "caixa" da gangue: loot de suprimentos e uma insígnia garantida | +2 Wardens |
+| **Gang building hideout** | dia 6 | Um cômodo de um prédio já existente (CityWorld ou qualquer construção coberta) tomado pela gangue local: barril do "caixa" com insígnia, caixotes, colchonetes, um lampião e uma placa "TURF / KEEP OUT" com o nome da gangue, sem mexer nas paredes | +2 Wardens |
+
+O esconderijo conta como limpo quando um jogador viu os ocupantes e nenhum restou vivo; quem estiver a até 32 blocos recebe a reputação, uma vez só. A opção `enableHostileHideouts` desliga os dois.
 
 ## Refúgio do Haven
 
@@ -197,7 +211,7 @@ Os comandos exigem permissão de operador, e os testes de colocação devem ser 
 | `/lazarusskirmish test` | Inicia confronto no local do operador se houver área aberta e carregada. |
 | `/lazarusskirmish clear` | Encerra apenas o confronto criado pelo comando de teste. |
 
-`<tipo>` pode ser `cache`, `gunfire`, `flare`, `military`, `abandoned`, `rescue`, `lastdefense` ou `falseradio`. Os comandos de teste criam encontros reais no mundo, mas **não alteram o horário** do próximo evento natural.
+`<tipo>` pode ser `cache`, `gunfire`, `flare`, `military`, `abandoned`, `deserter_camp`, `gang_hideout`, `gang_building_hideout`, `rescue`, `lastdefense` ou `falseradio`. Os comandos de teste criam encontros reais no mundo, mas **não alteram o horário** do próximo evento natural. `gang_building_hideout near` precisa ser usado **dentro de um prédio**: a gangue ocupa o cômodo em volta do jogador.
 
 ---
 
@@ -222,7 +236,7 @@ O Immersive Frequencies é usado apenas para as mensagens opcionais de rádio.
 
 ### Jogadores e servidores
 
-1. Compile `lazarusevents-0.17.0.jar` em `build/libs/` ou [compile o projeto](#compilar-a-partir-do-código).
+1. Compile `lazarusevents-0.18.0.jar` em `build/libs/` ou [compile o projeto](#compilar-a-partir-do-código).
 2. Coloque o JAR na pasta `mods` do perfil. No CurseForge, clique com o botão direito no perfil e escolha **Open Folder**.
 3. Em multiplayer, instale o **mesmo JAR** no servidor e em todos os clientes.
 4. Remova versões antigas de `lazarusevents` e reinicie o jogo ou servidor após a troca.

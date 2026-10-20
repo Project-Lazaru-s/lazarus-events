@@ -104,13 +104,16 @@ final class HostileLore {
     static ItemStack proof(ServerLevel level, LivingEntity victim, String group) {
         return switch (group) {
             case DESERTER -> new ItemStack(DOG_TAGS.get());
-            case LOOTER -> {
-                ItemStack patch = new ItemStack(GANG_PATCH.get());
-                patch.getOrCreateTag().putString("Gang", HostileGroups.gang(level, victim.blockPosition()));
-                yield patch;
-            }
+            case LOOTER -> patch(level, victim.blockPosition());
             default -> new ItemStack(BONE_CHARM.get());
         };
+    }
+
+    /** A patch of the gang that holds {@code pos}. */
+    static ItemStack patch(ServerLevel level, net.minecraft.core.BlockPos pos) {
+        ItemStack patch = new ItemStack(GANG_PATCH.get());
+        patch.getOrCreateTag().putString("Gang", HostileGroups.gang(level, pos));
+        return patch;
     }
 
     static ItemStack note(String group, int index) {

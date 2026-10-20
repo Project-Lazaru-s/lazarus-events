@@ -53,7 +53,8 @@ public final class LazarusEvents {
     static final String ID = "lazarusevents";
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final String[] TYPES = {"cache", "gunfire", "flare", "military", RescueEncounter.TYPE,
-            LastDefenseEncounter.TYPE, FalseRadioEncounter.TYPE, MilitaryCollapse.ABANDONED};
+            LastDefenseEncounter.TYPE, FalseRadioEncounter.TYPE, MilitaryCollapse.ABANDONED,
+            HostileHideouts.DESERTER_CAMP, HostileHideouts.GANG_HIDEOUT, BuildingHideout.TYPE};
     private static final ResourceLocation RADIO_ID = new ResourceLocation("ifreq", "walkie_talkie");
     private static final ForgeConfigSpec CONFIG;
     private static final ForgeConfigSpec.BooleanValue ENABLED;
@@ -71,6 +72,7 @@ public final class LazarusEvents {
     private static final ForgeConfigSpec.BooleanValue LAST_DEFENSE_ENABLED;
     private static final ForgeConfigSpec.BooleanValue FALSE_RADIO_ENABLED;
     private static final ForgeConfigSpec.BooleanValue FACTION_EXPEDITIONS_ENABLED;
+    private static final ForgeConfigSpec.BooleanValue HIDEOUTS_ENABLED;
     private static final ForgeConfigSpec.IntValue FACTION_EXPEDITION_DAYS;
     private static final ForgeConfigSpec.IntValue BASE_FALLBACK_DAY;
 
@@ -96,6 +98,8 @@ public final class LazarusEvents {
                 .define("enableLastDefense", true);
         FALSE_RADIO_ENABLED = builder.comment("A fake distress call that is a looter ambush; from day 6, like looters (needs Lazarus NPCs).")
                 .define("enableFalseRadio", true);
+        HIDEOUTS_ENABLED = builder.comment("Deserter camps (from militaryDeclineDay) and gang hideouts (from day 6) held by hostiles.")
+                .define("enableHostileHideouts", true);
         FACTION_EXPEDITIONS_ENABLED = builder.comment("Rare Rovers or Wardens patrols outside faction bases.")
                 .define("enableFactionExpeditions", true);
         FACTION_EXPEDITION_DAYS = builder.comment("Minimum days between faction patrol attempts.")
@@ -150,6 +154,7 @@ public final class LazarusEvents {
         if (now % 100 != 0) return;
         EventData data = EventData.get(level);
         data.prune(now);
+        HostileHideouts.tick(level, data);
         for (EventData.Encounter encounter : data.encounters) {
             if (encounter.discovered) continue;
             for (ServerPlayer player : level.players()) {
@@ -210,6 +215,12 @@ public final class LazarusEvents {
             double[] military = militaryWeights(day);
             if (military[0] > 0) weights.put("military", military[0]);
             if (military[1] > 0) weights.put(MilitaryCollapse.ABANDONED, military[1]);
+        }
+        if (HIDEOUTS_ENABLED.get()) {
+            double[] hideouts = HostileHideouts.weights(day, MILITARY_DECLINE_DAY.get(), MILITARY_COLLAPSE_DAY.get());
+            if (hideouts[0] > 0) weights.put(HostileHideouts.DESERTER_CAMP, hideouts[0]);
+            if (hideouts[1] > 0) weights.put(HostileHideouts.GANG_HIDEOUT, hideouts[1]);
+            if (hideouts[2] > 0) weights.put(BuildingHideout.TYPE, hideouts[2]);
         }
         if (weights.isEmpty()) return null;
         double roll = ThreadLocalRandom.current().nextDouble(weights.values().stream().mapToDouble(Double::doubleValue).sum());
@@ -297,6 +308,7 @@ public final class LazarusEvents {
 
     private static Outcome attempt(ServerLevel level, ServerPlayer player, String type, boolean near,
             boolean testing, EventData data) {
+        if (BuildingHideout.TYPE.equals(type)) return attemptBuilding(level, player, near, data);
         Search search = findSpot(level, player, type, near, data);
         if (search.pos == null) return new Outcome(false, "No valid location (" + search.failures + ")");
         BlockPos pos = search.pos;
@@ -307,8 +319,25 @@ public final class LazarusEvents {
         }
         EventData.Encounter encounter = data.add(id, type, pos, level.getGameTime());
         String message = "Placed " + type + " " + encounter.id + " at " + pos.toShortString();
-        if (near) player.sendSystemMessage(Component.literal(message));
-        else radioMessage(level, pos, type);
+        // The test command reports the placement itself; the radio announces every encounter, test or natural.
+        radioMessage(level, pos, type);
+        return new Outcome(true, message);
+    }
+
+    /** Building hideouts use a room: the one the player stands in for the test command, a random roofed one otherwise. */
+    private static Outcome attemptBuilding(ServerLevel level, ServerPlayer player, boolean near, EventData data) {
+        BuildingHideout.Room room = near ? BuildingHideout.room(level, player.blockPosition()) : BuildingHideout.find(level, player, data);
+        if (room == null) return new Outcome(false, near ? "Stand inside a building: no enclosed room around you"
+                : "No building interior found nearby");
+        UUID id = UUID.randomUUID();
+        int tier = Math.min(5, 1 + (int) (level.getDayTime() / 24000) / 10);
+        if (!BuildingHideout.place(level, room, tier, id)) {
+            removeActors(level, id, room.center());
+            return new Outcome(false, "Could not furnish the room at " + room.center().toShortString());
+        }
+        EventData.Encounter encounter = data.add(id, BuildingHideout.TYPE, room.center(), level.getGameTime());
+        String message = "Placed " + BuildingHideout.TYPE + " " + encounter.id + " at " + room.center().toShortString();
+        radioMessage(level, room.center(), BuildingHideout.TYPE);
         return new Outcome(true, message);
     }
 
@@ -418,6 +447,11 @@ public final class LazarusEvents {
             return false;
         }
         chest.setLootTable(table, ThreadLocalRandom.current().nextLong());
+        if (HostileHideouts.is(type)) {
+            if (HostileHideouts.place(level, pos, type, rotation, tier, id)) return true;
+            level.removeBlock(pos, false);
+            return false;
+        }
         if (type.equals(FalseRadioEncounter.TYPE)) {
             if (FalseRadioEncounter.place(level, pos, rotation, id)) return true;
             level.removeBlock(pos, false);
@@ -463,6 +497,10 @@ public final class LazarusEvents {
     }
 
     /** An abandoned post keeps its supply barrel; the fridge is empty and the generator stays off. */
+    static void stockCheckpoint(ServerLevel level, BlockPos origin, int rotation, int tier, boolean abandoned) {
+        stockMilitaryCheckpoint(level, origin, rotation, tier, abandoned);
+    }
+
     private static void stockMilitaryCheckpoint(ServerLevel level, BlockPos origin, int rotation, int tier, boolean abandoned) {
         BlockPos supplies = EncounterScenery.militaryPosition(origin, rotation, 8, 3, 2);
         BlockEntity secondBarrel = level.getBlockEntity(supplies);
@@ -543,9 +581,20 @@ public final class LazarusEvents {
                     break;
                 }
             }
-            if (radio) player.sendSystemMessage(Component.literal("[Radio] " + radioLine(type) + " near X "
-                    + Math.round(pos.getX() / 25f) * 25 + ", Z " + Math.round(pos.getZ() / 25f) * 25 + "."));
+            if (!radio) continue;
+            player.sendSystemMessage(radioText(HostileHideouts.is(type) ? HostileHideouts.radio(level, pos, type) : radioLine(type), pos));
+            player.playNotifySound(net.minecraft.sounds.SoundEvents.NOTE_BLOCK_BIT.value(), SoundSource.PLAYERS, 0.5f, 1.6f);
         }
+    }
+
+    /** Radio chatter stands apart from ordinary chat: a bold green tag, static, the message and the rough location. */
+    static Component radioText(String line, BlockPos pos) {
+        return Component.empty()
+                .append(Component.literal("[RADIO] ").withStyle(style -> style.withColor(0x7FD47F).withBold(true)))
+                .append(Component.literal("kssh... ").withStyle(style -> style.withColor(0x5E7A5E).withItalic(true)))
+                .append(Component.literal(line).withStyle(style -> style.withColor(0xCDE8C8).withItalic(true)))
+                .append(Component.literal(" | near X " + Math.round(pos.getX() / 25f) * 25 + ", Z " + Math.round(pos.getZ() / 25f) * 25)
+                        .withStyle(style -> style.withColor(0xE8D27A)));
     }
 
     /** Template used by each type; the API scenarios reuse the captured ones. */
@@ -554,7 +603,8 @@ public final class LazarusEvents {
             case RescueEncounter.TYPE -> "flare";
             case LastDefenseEncounter.TYPE -> "gunfire";
             case FalseRadioEncounter.TYPE -> "cache";
-            case MilitaryCollapse.ABANDONED -> "military";
+            case MilitaryCollapse.ABANDONED, HostileHideouts.DESERTER_CAMP -> "military";
+            case HostileHideouts.GANG_HIDEOUT -> "cache";
             default -> type;
         };
     }
@@ -565,6 +615,7 @@ public final class LazarusEvents {
             case RescueEncounter.TYPE, FalseRadioEncounter.TYPE -> "distress call";
             case LastDefenseEncounter.TYPE -> "last stand";
             case MilitaryCollapse.ABANDONED -> "abandoned checkpoint";
+            case HostileHideouts.DESERTER_CAMP, HostileHideouts.GANG_HIDEOUT, BuildingHideout.TYPE -> HostileHideouts.label(type);
             default -> type + " encounter";
         };
     }
@@ -572,7 +623,11 @@ public final class LazarusEvents {
     private static String radioLine(String type) {
         return switch (type) {
             case RescueEncounter.TYPE, FalseRadioEncounter.TYPE -> "Someone is begging for help";
-            case LastDefenseEncounter.TYPE -> "Defenders under attack, asking for anyone with a gun,";
+            case LastDefenseEncounter.TYPE -> "Defenders under attack, asking for anyone with a gun";
+            case "cache" -> "Someone is talking about a supply cache left behind";
+            case "gunfire" -> "Shots fired, a soldier is holding a roadblock alone";
+            case "flare" -> "A red flare went up, medical drop on the ground";
+            case "military" -> "Military checkpoint on the emergency band, still operational";
             case MilitaryCollapse.ABANDONED -> "An automated military beacon is still transmitting";
             default -> type + " signal";
         };

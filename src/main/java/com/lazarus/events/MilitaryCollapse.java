@@ -60,12 +60,17 @@ final class MilitaryCollapse {
 
     /** Places a lectern with a random duty log in the middle of the post; false when there is no room for it. */
     static boolean log(ServerLevel level, BlockPos origin, int rotation) {
+        return log(level, origin, rotation, book(ThreadLocalRandom.current().nextInt(LOGS.size())));
+    }
+
+    /** Places a lectern holding {@code book} in the middle of the checkpoint template. */
+    static boolean log(ServerLevel level, BlockPos origin, int rotation, ItemStack book) {
         BlockPos at = EncounterScenery.militaryPosition(origin, rotation, 11, 1, 6);
         if (!level.getBlockState(at).isAir() || !EncounterScenery.supported(level, at.below())) return false;
         BlockState lectern = Blocks.LECTERN.defaultBlockState()
                 .setValue(LecternBlock.FACING, Direction.from2DDataValue(rotation));
         if (!level.setBlock(at, lectern, 3)) return false;
-        return LecternBlock.tryPlaceBook(null, level, at, lectern, book(ThreadLocalRandom.current().nextInt(LOGS.size())));
+        return LecternBlock.tryPlaceBook(null, level, at, lectern, book);
     }
 
     static ItemStack book(int index) { return written(LOGS.get(Math.floorMod(index, LOGS.size()))); }

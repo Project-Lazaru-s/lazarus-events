@@ -33,6 +33,12 @@ final class ApiSupport {
         return item == null ? ItemStack.EMPTY : new ItemStack(item, count);
     }
 
+    /** A block's default state by id, or {@code fallback} when its mod is missing. */
+    static net.minecraft.world.level.block.state.BlockState state(String id, net.minecraft.world.level.block.state.BlockState fallback) {
+        var block = ForgeRegistries.BLOCKS.getValue(new ResourceLocation(id));
+        return block == null || block == net.minecraft.world.level.block.Blocks.AIR ? fallback : block.defaultBlockState();
+    }
+
     /** Reward lists skip items whose mod is missing instead of failing registration. */
     static List<ItemStack> items(ItemStack... stacks) { return List.of(stacks).stream().filter(s -> !s.isEmpty()).toList(); }
 
