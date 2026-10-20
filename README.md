@@ -245,6 +245,7 @@ Os comandos exigem permissão de operador, e os testes de colocação devem ser 
 | `/lazarusevents test lastdefense near` | Procura um local próximo para a barricada defendida. |
 | `/lazarusevents test falseradio near` | Procura um local próximo para a emboscada do falso sinal. |
 | `/lazarusevents test <tipo> natural` | Usa a distância e a regra de direção dos encontros naturais; relata os motivos de rejeição. |
+| `/lazarusevents where` | Mostra o que o CityWorld diz sobre a sua posição: território (superfície, estação ou túnel de metrô, mina, bunker, esgoto ou caverna), lote, profundidade abaixo da rua, linhas de metrô e a estação mais próxima. Sem o CityWorld, só distingue superfície e caverna. |
 | `/lazarusevents locate <id>` | Mostra as coordenadas de um encontro registrado. O começo do ID é suficiente. |
 | `/lazarusevents cancel <id>` | Para de acompanhar o encontro e remove seus personagens identificados; blocos e loot permanecem. Tarefas abertas desse encontro falham sem recompensa para os jogadores online. |
 | `/lazarusbase list` | Lista as bases permanentes, guarnição e estoque. |

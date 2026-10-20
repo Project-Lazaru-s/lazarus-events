@@ -274,12 +274,38 @@ public final class LazarusEvents {
                                         StringArgumentType.getString(context, "type"), true)))
                                 .then(Commands.literal("natural").executes(context -> test(context.getSource(),
                                         StringArgumentType.getString(context, "type"), false)))))
+                .then(Commands.literal("where").executes(context -> where(context.getSource())))
                 .then(Commands.literal("locate")
                         .then(Commands.argument("id", StringArgumentType.word())
                                 .executes(context -> locate(context.getSource(), StringArgumentType.getString(context, "id")))))
                 .then(Commands.literal("cancel")
                         .then(Commands.argument("id", StringArgumentType.word())
                                 .executes(context -> cancel(context.getSource(), StringArgumentType.getString(context, "id"))))));
+    }
+
+    /** What CityWorld says about the player's position: territory, lot, depth, metro and the nearest station. */
+    private static int where(net.minecraft.commands.CommandSourceStack source) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        ServerLevel level = source.getLevel();
+        BlockPos pos = player.blockPosition();
+        if (!CityWorldSites.available()) {
+            source.sendFailure(Component.literal("CityWorld is not loaded: territory is " + CityWorldSites.territory(level, pos)));
+            return 0;
+        }
+        java.util.OptionalInt street = CityWorldSites.streetLevel(level);
+        List<String> lines = new java.util.ArrayList<>();
+        lines.add("Territory: " + CityWorldSites.territory(level, pos));
+        lines.add("Lot: " + CityWorldSites.lotClass(level, pos).orElse("none")
+                + (street.isPresent() ? " | street Y " + street.getAsInt() + ", depth " + (street.getAsInt() - pos.getY()) : " | not a CityWorld world"));
+        lines.add("Metro: " + CityWorldSites.subway(level, pos).map(s -> (s.station() ? "station" : "tunnel")
+                + (s.eastWest() ? ", E-W floor Y " + s.eastWestFloorY() : "") + (s.northSouth() ? ", N-S floor Y " + s.northSouthFloorY() : "")
+                + (CityWorldSites.inSubway(level, pos) ? " (you are inside)" : " (below you)")).orElse("none"));
+        List<BlockPos> stations = CityWorldSites.findLots(level, pos, "SubwayStationLot", 8, 1);
+        lines.add("Nearest station: " + (stations.isEmpty() ? "none within 8 chunks"
+                : stations.get(0).getX() + ", " + stations.get(0).getZ() + " (" + (int) Math.sqrt(stations.get(0).distSqr(pos)) + " blocks)"));
+        CityWorldSites.fullInfo(level, pos).forEach((key, value) -> lines.add("  " + key + ": " + value));
+        for (String line : lines) source.sendSuccess(() -> Component.literal(line), false);
+        return 1;
     }
 
     private static int test(net.minecraft.commands.CommandSourceStack source, String type, boolean near) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
