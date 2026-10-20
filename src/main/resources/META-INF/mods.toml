@@ -4,7 +4,7 @@ license="All Rights Reserved"
 
 [[mods]]
 modId="lazarusevents"
-version="0.20.0"
+version="0.20.1"
 displayName="Lazarus Events"
 authors="Project Lazarus"
 description='''Emergent apocalypse encounters for Project Lazarus.'''

@@ -125,6 +125,7 @@ public final class LazarusEvents {
         MinecraftForge.EVENT_BUS.register(new HostileLore.Listener());
         MinecraftForge.EVENT_BUS.register(new HostilePrisoners.Listener());
         MinecraftForge.EVENT_BUS.register(new ZombieNest.Listener());
+        MinecraftForge.EVENT_BUS.register(new InfestedZone.Listener());
         HostileLore.init(net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext.get().getModEventBus());
         VaccineProject.init(net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext.get().getModEventBus());
         MinecraftForge.EVENT_BUS.register(new FactionBases());

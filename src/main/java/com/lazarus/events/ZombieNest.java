@@ -130,6 +130,7 @@ final class ZombieNest {
                 destroyed(level, data, encounter);
                 continue;
             }
+            InfestedZone.tick(level, encounter);
             List<ServerPlayer> near = level.players().stream()
                     .filter(player -> !player.isSpectator() && player.distanceToSqr(center) < ACTIVE_RANGE * ACTIVE_RANGE).toList();
             if (near.isEmpty()) continue;
@@ -142,7 +143,8 @@ final class ZombieNest {
             data.setDirty();
             String tag = LazarusEvents.ID + ":" + encounter.id;
             if (level.getEntitiesOfClass(Mob.class, new AABB(encounter.pos).inflate(ACTIVE_RANGE),
-                    mob -> mob.isAlive() && mob.getTags().contains(tag)).size() >= MAX_ALIVE) continue;
+                    mob -> mob.isAlive() && mob.getTags().contains(tag) && !mob.getTags().contains(InfestedZone.EXTRA)).size() >= MAX_ALIVE)
+                continue;
             BlockPos source = alive.get(random.nextInt(alive.size()));
             BlockPos at = null;
             for (Direction side : Direction.Plane.HORIZONTAL) {

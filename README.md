@@ -6,7 +6,7 @@
   <img alt="Minecraft 1.20.1" src="https://img.shields.io/badge/Minecraft-1.20.1-3c8527">
   <img alt="Forge 47.x" src="https://img.shields.io/badge/Forge-47.x-dd7d2b">
   <img alt="Java 17" src="https://img.shields.io/badge/Java-17-b07219">
-  <img alt="Versão 0.20.0" src="https://img.shields.io/badge/vers%C3%A3o-0.20.0-6b5b3e">
+  <img alt="Versão 0.20.1" src="https://img.shields.io/badge/vers%C3%A3o-0.20.1-6b5b3e">
 </p>
 
 # Lazarus Events
@@ -121,6 +121,15 @@ A partir do **dia 8**, a infecção pode criar raiz num cômodo de prédio (ou p
 - Cada pústula quebrada solta uma **amostra infectada** (projeto vacina) e deixa o ninho mais lento.
 - Sem a última pústula, o ninho morre: **+2 Military e +2 Haven** para quem estiver a até 32 blocos.
 - O ninho **não some sozinho**: continua no mundo até ser destruído. A opção `enableZombieNests` desliga.
+
+### Zona infestada
+
+Enquanto o ninho vive, os **64 blocos** em volta viram zona infestada:
+
+- **Mais infectados nas ruas:** até 20 a mais por jogador presente (até 3 a cada 5 segundos), surgindo a 24–40 blocos, sempre fora da vista (atrás ou ao lado do jogador).
+- **Loot melhor:** contêineres de estrutura ainda fechados ganham **um item extra** de suprimentos do tier atual na primeira vez que são abertos.
+- **Aviso:** ao entrar pela primeira vez, uma mensagem de rádio avisa da zona e da direção do ninho.
+- Tudo acaba quando o ninho morre; os infectados que já estavam na rua ficam como zumbis comuns.
 
 ## Refúgio do Haven
 
@@ -253,7 +262,7 @@ O Immersive Frequencies é usado apenas para as mensagens opcionais de rádio.
 
 ### Jogadores e servidores
 
-1. Compile `lazarusevents-0.20.0.jar` em `build/libs/` ou [compile o projeto](#compilar-a-partir-do-código).
+1. Compile `lazarusevents-0.20.1.jar` em `build/libs/` ou [compile o projeto](#compilar-a-partir-do-código).
 2. Coloque o JAR na pasta `mods` do perfil. No CurseForge, clique com o botão direito no perfil e escolha **Open Folder**.
 3. Em multiplayer, instale o **mesmo JAR** no servidor e em todos os clientes.
 4. Remova versões antigas de `lazarusevents` e reinicie o jogo ou servidor após a troca.
