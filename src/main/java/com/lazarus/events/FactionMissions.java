@@ -148,6 +148,9 @@ final class FactionMissions {
         FactionBaseData.Base base = FactionBaseData.get(level).bases.stream()
                 .filter(b -> b.id.equals(c.encounterId()) && b.staff.contains(c.npc().getUUID())).findFirst().orElse(null);
         if (base == null) return Optional.empty();
+        // A resident who gave the player a task lets the task dialogue handle hand-overs and reports.
+        if (NpcApi.encounterTask(c.player()).filter(t -> t.state().open() && t.giverId().equals(c.npc().getUUID())).isPresent())
+            return Optional.empty();
         if (NpcApi.reputation(c.player(), base.faction) <= -20)
             return Optional.of(new DialoguePage(Component.literal("You're not welcome at this outpost."), List.of(
                     new DialogueOption("leave", Component.literal("Leave"), ctx -> {}))));
@@ -156,7 +159,7 @@ final class FactionMissions {
         String line = switch (profession) {
             case "leader" -> base.leaderReadyAt > level.getGameTime()
                     ? "I'm holding this place together. Give us a day to settle the succession."
-                    : refuge ? "Welcome to the refuge. Everyone here pulls their weight, and we're glad of any help."
+                    : refuge ? HavenRefuge.leaderLine(c.player())
                     : "I coordinate this outpost. Ask me about work against our rivals.";
             case "guard" -> refuge ? "I keep an eye on the gate. Walkers come out of the trees at dusk."
                     : "I watch the approaches. Speak to our leader about faction work.";
@@ -164,8 +167,15 @@ final class FactionMissions {
             case "trader" -> "Food, medicine and travel supplies are scarce. Have a look at what I can spare.";
             case "medic" -> "Bring bandages and clean water and I can patch you up. Check my services.";
             case "expedition_soldier" -> "We range out with the next patrol. Until then, we rest and keep our kit ready.";
-            default -> "State your business.";
+            default -> refuge ? "You got me out of there, " + c.player().getGameProfile().getName() + ". I won't forget it."
+                    : "State your business.";
         };
+        if (refuge && "leader".equals(profession) && base.leaderReadyAt <= level.getGameTime())
+            return Optional.of(new DialoguePage(Component.literal(line), List.of(
+                    new DialogueOption("request", Component.literal("What does the refuge need today?"),
+                            ctx -> HavenRefuge.offer(ctx.player(), ctx.npc(), base)),
+                    new DialogueOption("menu", Component.literal("Talk and services"),
+                            ctx -> NpcApi.openNpcMenu(ctx.player(), ctx.npc())))));
         return Optional.of(new DialoguePage(Component.literal(line), List.of(
                 new DialogueOption("menu", Component.literal("Talk and services"),
                         ctx -> NpcApi.openNpcMenu(ctx.player(), ctx.npc())))));

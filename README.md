@@ -6,7 +6,7 @@
   <img alt="Minecraft 1.20.1" src="https://img.shields.io/badge/Minecraft-1.20.1-3c8527">
   <img alt="Forge 47.x" src="https://img.shields.io/badge/Forge-47.x-dd7d2b">
   <img alt="Java 17" src="https://img.shields.io/badge/Java-17-b07219">
-  <img alt="Versão 0.15.0" src="https://img.shields.io/badge/vers%C3%A3o-0.15.0-6b5b3e">
+  <img alt="Versão 0.16.0" src="https://img.shields.io/badge/vers%C3%A3o-0.16.0-6b5b3e">
 </p>
 
 # Lazarus Events
@@ -83,7 +83,18 @@ Com o passar dos dias, os postos militares ativos ficam raros e os **abandonados
 
 O **Haven** também tem uma base permanente, o **refúgio**: paliçada de toras, cabana do líder, alojamento com camas, tenda de enfermaria, horta com poço, fogueira central e a banca do comerciante junto ao portão. O Haven **não tem rivais**: o refúgio nunca é alvo de roubo, reconhecimento ou confronto, e o Haven não manda expedições armadas.
 
-Moram ali **seis pessoas**: o líder, dois guardas (um faz a ronda, outro vigia o portão), um comerciante e dois médicos. À noite, o líder e um médico dormem; os demais se recolhem ou ficam de guarda. Com reputação Haven **10 ou mais**, o comerciante do refúgio dá **15% de desconto**, e sobreviventes Haven soltos pelo mundo aceitam **contrato de guarda**, como os Wardens. Os médicos estabilizam como nas outras bases.
+Moram ali **seis pessoas** fixas: o líder, dois guardas (um faz a ronda, outro vigia o portão), um comerciante e dois médicos. À noite, o líder e um médico dormem; os demais se recolhem ou ficam de guarda. Com reputação Haven **10 ou mais**, o comerciante do refúgio dá **15% de desconto**, e sobreviventes Haven soltos pelo mundo aceitam **contrato de guarda**, como os Wardens. Os médicos estabilizam como nas outras bases.
+
+**Pedido do dia.** O líder do refúgio pede uma coisa por dia, a mesma para todos os jogadores. Cada jogador pode atender **uma vez por dia**:
+
+| Pedido | Entregar | Recompensa |
+|---|---|---|
+| Comida | 4 comidas enlatadas | +3 Haven, 1 antibiótico |
+| Água | 3 águas enlatadas | +3 Haven, 2 bandagens |
+| Remédios | 2 bandagens e 1 kit médico | +4 Haven, 2 comidas enlatadas |
+| Tecido | 6 tecidos | +2 Haven, 8 sementes de trigo e 1 comida enlatada |
+
+**Resgatados viram moradores.** Quando um **Rescue** termina bem e o refúgio existe, o sobrevivente salvo vai morar lá, com o mesmo nome e aparência, se houver vaga: são **quatro beliches de hóspede**. Ele aparece perto da fogueira, agradece pelo nome a quem o salvou, e o líder conta quantas pessoas o jogador já trouxe com vida. Se um hóspede morre, a vaga fica livre para o próximo resgate.
 
 ## Bases e rivalidade de facções
 
@@ -199,7 +210,7 @@ O Immersive Frequencies é usado apenas para as mensagens opcionais de rádio.
 
 ### Jogadores e servidores
 
-1. Compile `lazarusevents-0.15.0.jar` em `build/libs/` ou [compile o projeto](#compilar-a-partir-do-código).
+1. Compile `lazarusevents-0.16.0.jar` em `build/libs/` ou [compile o projeto](#compilar-a-partir-do-código).
 2. Coloque o JAR na pasta `mods` do perfil. No CurseForge, clique com o botão direito no perfil e escolha **Open Folder**.
 3. Em multiplayer, instale o **mesmo JAR** no servidor e em todos os clientes.
 4. Remova versões antigas de `lazarusevents` e reinicie o jogo ou servidor após a troca.

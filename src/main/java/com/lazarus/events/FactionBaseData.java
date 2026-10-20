@@ -57,6 +57,8 @@ final class FactionBaseData extends SavedData {
                 }
                 legacySlot++;
             }
+            CompoundTag guests = saved.getCompound("Guests");
+            for (String slot : guests.getAllKeys()) base.guests.put(slot, guests.getCompound(slot).copy());
             if (base.staff.size() < BaseRoster.layout(base).slots().length) base.lastStaffCheck = 0;
             data.bases.add(base);
         }
@@ -124,6 +126,9 @@ final class FactionBaseData extends SavedData {
                 staff.add(member);
             }
             entry.put("Staff", staff);
+            CompoundTag guests = new CompoundTag();
+            base.guests.forEach((slot, guest) -> guests.put(slot, guest.copy()));
+            if (!guests.isEmpty()) entry.put("Guests", guests);
             list.add(entry);
         }
         for (CompoundTag unavailable : unavailableBases) list.add(unavailable.copy());
@@ -138,6 +143,8 @@ final class FactionBaseData extends SavedData {
         final int rotation;
         final String origin;
         final List<UUID> staff = new ArrayList<>();
+        /** Haven refuge guests by slot id: the rescued survivor's Name and entity Type. */
+        final java.util.Map<String, CompoundTag> guests = new java.util.LinkedHashMap<>();
         boolean discovered;
         long lastStaffCheck;
         long leaderReadyAt;

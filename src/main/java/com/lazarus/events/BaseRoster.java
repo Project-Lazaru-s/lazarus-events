@@ -63,6 +63,12 @@ final class BaseRoster {
                 new int[][] {{x, z}}, NightDuty.WATCH, null);
     }
 
+    /** A Haven guest bunk: only a rescued survivor fills it, without a profession. */
+    private static Slot guest(String id, int x, int z) {
+        return new Slot(id, HavenRefuge.GUEST, new int[] {x, z}, Duty.WAIT, null,
+                new int[][] {{x, z}, {x, z + 1}}, NightDuty.SHELTER, null);
+    }
+
     private static Slot patrol(String id, int x, int z, int[][] route) {
         return new Slot(id, "guard", new int[] {x, z}, Duty.PATROL, route,
                 route, NightDuty.WATCH, null);
@@ -111,14 +117,18 @@ final class BaseRoster {
             new int[] {2, 12}, new int[][] {{2, 12}, {10, 5}, {18, 11}, {23, 14}},
             new int[] {5, 4}, new int[][] {{12, 19}, {12, 8}});
 
-    /** A palisaded civilian refuge: medics, a trader and a light watch. Appended guest slots come later. */
+    /** A palisaded civilian refuge: medics, a trader, a light watch and four bunks for rescued guests. */
     private static final Layout HAVEN = new Layout(ApiSupport.id("haven_refuge"), 21, 19, 6, 10, 9, new Slot[] {
             sleep(waits("leader", "leader", 5, 4), 3, 4),
             patrol("guard_a", 10, 14, new int[][] {{10, 14}, {3, 16}, {10, 16}, {18, 8}}),
             sentry("guard_b", 10, 16),
             waits("trader", "trader", 16, 16),
             waits("medic", "medic", 15, 11),
-            sleep(waits("medic_b", "medic", 16, 12), 14, 4)},
+            sleep(waits("medic_b", "medic", 16, 12), 14, 4),
+            sleep(guest("guest_a", 9, 7), 17, 4),
+            guest("guest_b", 11, 7),
+            guest("guest_c", 9, 11),
+            guest("guest_d", 11, 11)},
             new int[] {6, 5}, new int[][] {{6, 5}, {14, 15}, {18, 15}, {16, 3}},
             new int[] {15, 4}, new int[][] {{10, 16}, {10, 14}});
 

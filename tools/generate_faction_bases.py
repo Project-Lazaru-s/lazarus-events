@@ -561,15 +561,15 @@ def haven_refuge():
     s.put(18, 1, 15, "barrel", facing="up")
 
     layout = {
-        # leader, guard_a, guard_b, trader, medic, medic_b
-        "posts": [(5, 4), (10, 14), (10, 16), (16, 16), (15, 11), (16, 12)],
+        # leader, guard_a, guard_b, trader, medic, medic_b, guest_a..guest_d
+        "posts": [(5, 4), (10, 14), (10, 16), (16, 16), (15, 11), (16, 12), (9, 7), (11, 7), (9, 11), (11, 11)],
         "patrols": [[(10, 14), (3, 16), (10, 16), (18, 8)]],
         "depot": (6, 5),
         "barrels": [(6, 5), (14, 15), (18, 15), (16, 3)],
         "anchor": (10, 9),
         "shelter": [(15, 4)],
         "defense": [(10, 16), (10, 14)],
-        "beds": [(3, 4), (14, 4)],
+        "beds": [(3, 4), (14, 4), (17, 4)],
     }
     validate(s, (10, 18), layout)
     return s, layout

@@ -185,6 +185,7 @@ final class RescueEncounter {
                     NpcApi.identity(survivor).map(view -> view.faction()).filter(f -> !"independent".equals(f))
                             .ifPresent(faction -> NpcApi.adjustReputation(player, faction, 5, REWARD_REASON, encounterId));
                     NpcApi.openDialogue(player, survivor, DialogueTrigger.TASK_COMPLETE);
+                    HavenRefuge.rescued(player, survivor);
                     LOGGER.info("Lazarus Events: rescue {} completed by {}", encounterId, player.getGameProfile().getName());
                 }
                 case ABANDONED, EXPIRED -> {

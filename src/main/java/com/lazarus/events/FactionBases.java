@@ -19,6 +19,7 @@ import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.GlobalPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -368,6 +369,11 @@ final class FactionBases {
         HashSet<UUID> seen = new HashSet<>();
         for (int i = 0; i < slots.length; i++) {
             UUID resident = base.staff.get(i);
+            CompoundTag guest = HavenRefuge.GUEST.equals(slots[i].profession()) ? base.guests.get(slots[i].id()) : null;
+            if (HavenRefuge.GUEST.equals(slots[i].profession()) && guest == null) {
+                base.staff.set(i, VACANT); // an empty guest bunk waits for the next rescue
+                continue;
+            }
             if (!VACANT.equals(resident)) {
                 if (seen.add(resident) && level.getEntity(resident) instanceof Mob mob && mob.isAlive()
                         && NpcApi.identity(mob).filter(identity -> base.faction.equals(identity.faction())).isPresent()) {
@@ -382,7 +388,8 @@ final class FactionBases {
             Mob mob = null;
             // A rejected spawn attempt must not leave a post vacant for a full day.
             for (int attempt = 0; attempt < 3 && mob == null; attempt++)
-                if (LazarusEvents.spawn(level, at, prefix + faction.variant(i), base.id, true) instanceof Mob spawned)
+                if (LazarusEvents.spawn(level, at, guest != null ? guest.getString("Type") : prefix + faction.variant(i),
+                        base.id, true) instanceof Mob spawned)
                     mob = spawned;
             if (mob == null) {
                 ApiSupport.LOGGER.warn("Could not spawn {} resident at {} in base {}", slots[i].id(), at, base.id);
@@ -395,10 +402,11 @@ final class FactionBases {
                 mob.discard();
                 continue;
             }
+            if (guest != null) HavenRefuge.name(mob, guest);
             base.staff.set(i, mob.getUUID());
             profession(base, mob, i);
             routine(base, mob, i);
-            mob.addTag("lazarusevents:base_" + (i == 0 ? "contact" : slots[i].profession()));
+            mob.addTag("lazarusevents:base_" + (i == 0 ? "contact" : guest != null ? "guest" : slots[i].profession()));
             order(level, base, mob);
         }
         base.lastStaffCheck = now;
@@ -424,6 +432,7 @@ final class FactionBases {
 
     private static void profession(FactionBaseData.Base base, Mob mob, int slot) {
         String profession = BaseRoster.layout(base).slots()[slot].profession();
+        if (HavenRefuge.GUEST.equals(profession)) return;
         ApiResult result = NpcApi.assignProfession(mob, new ResourceLocation("lazarusnpcs", profession), base.id);
         if (!result.ok()) ApiSupport.LOGGER.warn("Cannot assign {} to base {} member {}: {}",
                 profession, base.id, mob.getUUID(), result.message());
