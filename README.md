@@ -138,9 +138,20 @@ A partir do **dia 12**, um vazamento químico pode encher de **gás verde** um e
 - **Sem proteção**, a cada segundo dentro do gás: náusea e tosse; depois de 5 s, veneno; depois de 15 s, **1 coração de dano por segundo** (mata em cerca de 25 s). A cada 10 s há 25% de chance de pegar a **infecção do The Hordes** (o soro experimental protege).
 - **Máscara de gás** na cabeça (tag `lazarusevents:gas_masks`: as máscaras e capacetes hazmat do Apocalypse Now) bloqueia tudo, mas **perde 1 de durabilidade a cada 2 s** no gás. Usar um **Breathing Filter Module** com a máscara posta a deixa nova.
 - **Roupa hazmat completa** (tag `lazarusevents:hazmat`) bloqueia sem gastar nada.
-- Zumbis não são afetados.
+- Zumbis não são afetados. NPCs humanos sem máscara sofrem e fogem para a saída mais próxima.
 - No ponto mais fundo, longe das saídas, há um **barril com loot médico** do tier atual e 30% de chance de um **soro experimental**.
 - O gás dura **2 dias de jogo** e se dissipa com aviso no rádio. A opção `enableInfectionZones` desliga.
+
+### Quarentena militar
+
+A partir do **dia 21**, o rádio repete em loop: *"quarantine zone breached, containment team lost"*. Num prédio, uma zona de gás que o exército tentou isolar e perdeu:
+
+- **Na frente da porta para a rua** (o prédio precisa de uma; escadarias e átrios não contam): um perímetro em U de cerca de arame com 2 de altura e arame farpado em cima, postes com lanterna, portão de sacos de areia atrás de uma chicana de barreiras de concreto, placas (QUARANTINE, BIOHAZARD – LETHAL FORCE AUTHORIZED, DECON REQUIRED) e um trecho derrubado por onde a contenção rompeu;
+- **tenda de descontaminação** encostada na fachada: postes, teto branco e piso de concreto, com dois chuveiros (caldeirões com água), barril de lixo tóxico, uma maca e um barril de máscaras quase gastas;
+- **o fracasso:** sacos de corpo enfileirados, caixas militares reviradas, o baú de um soldado caído e um **rádio de campanha** que, com o jogador por perto, repete chamadas da unidade de contenção;
+- **2 ou 3 soldados infectados** de máscara e colete ainda no posto; as outras entradas ficam lacradas com arame e barreiras de concreto;
+- **dentro:** o cômodo é esvaziado antes (móveis, baús e enfeites saem; paredes, portas, janelas, escadas e luzes ficam); depois vêm o gás saindo de um barril tóxico vazando (fumaça mais densa), uma enfermaria improvisada (camas brancas, papéis e panos de corpo), **infectados de hazmat e pacientes**, um diário de serviço no atril e, no fundo, um **estoque militar** (loot de armas do tier atual, 40% de chance de máscara ou filtros);
+- matar todos os infectados, de fora e de dentro, dá **+2 Military** a quem estiver lá. O gás continua até expirar (2 dias). A opção `enableQuarantines` desliga.
 
 ## Refúgio do Haven
 
@@ -248,7 +259,7 @@ Os comandos exigem permissão de operador, e os testes de colocação devem ser 
 | `/lazarusskirmish test` | Inicia confronto no local do operador se houver área aberta e carregada. |
 | `/lazarusskirmish clear` | Encerra apenas o confronto criado pelo comando de teste. |
 
-`<tipo>` pode ser `cache`, `gunfire`, `flare`, `military`, `abandoned`, `deserter_camp`, `gang_hideout`, `gang_building_hideout`, `hollow_den`, `zombie_nest`, `infection_zone`, `rescue`, `lastdefense` ou `falseradio`. Os comandos de teste criam encontros reais no mundo, mas **não alteram o horário** do próximo evento natural. `gang_building_hideout near`, `hollow_den near`, `zombie_nest near` e `infection_zone near` precisam ser usados **dentro de um prédio**: o grupo ocupa o cômodo em volta do jogador.
+`<tipo>` pode ser `cache`, `gunfire`, `flare`, `military`, `abandoned`, `deserter_camp`, `gang_hideout`, `gang_building_hideout`, `hollow_den`, `zombie_nest`, `infection_zone`, `military_quarantine`, `rescue`, `lastdefense` ou `falseradio`. Os comandos de teste criam encontros reais no mundo, mas **não alteram o horário** do próximo evento natural. `gang_building_hideout near`, `hollow_den near`, `zombie_nest near`, `infection_zone near` e `military_quarantine near` precisam ser usados **dentro de um prédio**: o grupo ocupa o cômodo em volta do jogador.
 
 ---
 

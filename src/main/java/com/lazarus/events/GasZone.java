@@ -62,6 +62,9 @@ final class GasZone {
     /** The enclosed space around {@code start}, up to 400 floor cells so a sewer stretch fits. */
     static BuildingHideout.Room space(ServerLevel level, BlockPos start) { return BuildingHideout.room(level, start, MAX_CELLS, REACH); }
 
+    /** The gas-sized space around a building room's center, or null. */
+    static BuildingHideout.Room space(ServerLevel level, BuildingHideout.Room room) { return room == null ? null : space(level, room.center()); }
+
     /** An underground space 30-80 blocks from the player when possible, otherwise any roofed room. */
     static BuildingHideout.Room find(ServerLevel level, ServerPlayer player, EventData data) {
         ThreadLocalRandom random = ThreadLocalRandom.current();
@@ -79,30 +82,39 @@ final class GasZone {
                 return room;
             }
         }
-        BuildingHideout.Room room = BuildingHideout.find(level, player, data);
-        return room == null ? null : space(level, room.center());
+        return space(level, BuildingHideout.find(level, player, data));
     }
 
-    /** Puts the reward barrel in the cell farthest from every way out; false when the space has no wall to use. */
+    /** The medical reward barrel deep inside, with a chance of a serum; false when the space has no wall to use. */
     static boolean place(ServerLevel level, BuildingHideout.Room room) {
+        int tier = Math.min(5, 1 + (int) (level.getDayTime() / 24000) / 10);
+        BlockPos at = barrel(level, room, "medicalairdrop" + tier);
+        if (at == null) return false;
+        if (level.getBlockEntity(at) instanceof RandomizableContainerBlockEntity barrel && ThreadLocalRandom.current().nextFloat() < 0.3f)
+            barrel.setItem(barrel.getContainerSize() - 1, new ItemStack(VaccineProject.SERUM.get()));
+        return true;
+    }
+
+    /** A barrel of dyairdrop {@code loot} in the wall cell farthest from every way out, or null. */
+    static BlockPos barrel(ServerLevel level, BuildingHideout.Room room, String loot) {
         BuildingHideout.Cells cells = BuildingHideout.cells(level, room);
-        if (cells.walls().isEmpty()) return false;
+        if (cells.walls().isEmpty()) return null;
         BlockPos deepest = cells.walls().get(0);
         double best = -1;
         for (BlockPos cell : cells.walls()) {
             double nearestExit = room.openings().stream().mapToDouble(cell::distSqr).min().orElse(Double.MAX_VALUE);
             if (nearestExit > best) { best = nearestExit; deepest = cell; }
         }
-        if (!level.setBlock(deepest, Blocks.BARREL.defaultBlockState(), 3)) return false;
-        int tier = Math.min(5, 1 + (int) (level.getDayTime() / 24000) / 10);
-        ResourceLocation table = new ResourceLocation("dyairdrop", "chests/medicalairdrop" + tier);
-        if (level.getBlockEntity(deepest) instanceof RandomizableContainerBlockEntity barrel) {
-            if (level.getServer().getLootData().getLootTable(table) != LootTable.EMPTY) barrel.setLootTable(table, ThreadLocalRandom.current().nextLong());
-            if (ThreadLocalRandom.current().nextFloat() < 0.3f)
-                barrel.setItem(barrel.getContainerSize() - 1, new ItemStack(VaccineProject.SERUM.get()));
-        }
-        return true;
+        if (!level.setBlock(deepest, Blocks.BARREL.defaultBlockState(), 3)) return null;
+        ResourceLocation table = new ResourceLocation("dyairdrop", "chests/" + loot);
+        if (level.getBlockEntity(deepest) instanceof RandomizableContainerBlockEntity barrel
+                && level.getServer().getLootData().getLootTable(table) != LootTable.EMPTY)
+            barrel.setLootTable(table, ThreadLocalRandom.current().nextLong());
+        return deepest;
     }
+
+    /** Encounters that fill their space with gas. */
+    static boolean gassed(String type) { return TYPE.equals(type) || Quarantine.TYPE.equals(type); }
 
     static void record(EventData.Encounter encounter, BuildingHideout.Room room, long now) {
         encounter.data.putLongArray(CELLS, room.cells().stream().mapToLong(BlockPos::asLong).toArray());
@@ -171,7 +183,7 @@ final class GasZone {
             long now = level.getGameTime();
             Set<UUID> exposed = new HashSet<>();
             for (EventData.Encounter encounter : List.copyOf(data.encounters)) {
-                if (!TYPE.equals(encounter.type)) continue;
+                if (!gassed(encounter.type)) continue;
                 if (now >= encounter.data.getLong(EXPIRES)) {
                     LazarusEvents.radio(level, encounter.pos, "Military band: the chemical leak has dispersed, masks may come off");
                     data.remove(encounter.id);
@@ -189,6 +201,11 @@ final class GasZone {
                     level.sendParticles(i % 3 == 0 ? ParticleTypes.ITEM_SLIME : ParticleTypes.SNEEZE,
                             cell.getX() + random.nextDouble(), cell.getY() + random.nextDouble() * 1.8, cell.getZ() + random.nextDouble(),
                             2, 0.2, 0.2, 0.2, 0.01);
+                }
+                if (encounter.data.contains(Quarantine.LEAK)) { // the leaking barrel smokes thicker
+                    BlockPos leak = BlockPos.of(encounter.data.getLong(Quarantine.LEAK));
+                    level.sendParticles(ParticleTypes.ITEM_SLIME, leak.getX() + 0.5, leak.getY() + 1.1, leak.getZ() + 0.5, 10, 0.3, 0.4, 0.3, 0.02);
+                    level.sendParticles(ParticleTypes.SNEEZE, leak.getX() + 0.5, leak.getY() + 1.3, leak.getZ() + 0.5, 6, 0.2, 0.3, 0.2, 0.02);
                 }
                 if (random.nextInt(6) == 0) level.playSound(null, encounter.pos, SoundEvents.FIRE_EXTINGUISH, SoundSource.AMBIENT, 0.4f, 0.5f);
                 for (ServerPlayer player : near) {

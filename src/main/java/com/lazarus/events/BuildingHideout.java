@@ -159,7 +159,7 @@ final class BuildingHideout {
         put(level, walls.get(3), Blocks.LANTERN.defaultBlockState());
         for (int i = 4; i < Math.min(walls.size(), 7); i++) // sleeping mats
             put(level, walls.get(i), (i % 2 == 0 ? Blocks.RED_CARPET : Blocks.GRAY_CARPET).defaultBlockState());
-        sign(level, room.center(), gang);
+        sign(level, room.center(), gang.toUpperCase(), "TURF", "", "KEEP OUT");
         List<BlockPos> spawns = new ArrayList<>(free.isEmpty() ? walls.subList(Math.min(7, walls.size()), walls.size()) : free);
         spawns.remove(room.center());
         Collections.shuffle(spawns, random);
@@ -179,15 +179,15 @@ final class BuildingHideout {
         if (passable(level, pos)) level.setBlock(pos, state, 3);
     }
 
-    /** A standing sign claiming the room for the gang. */
-    private static void sign(ServerLevel level, BlockPos pos, String gang) {
+    /** A waxed standing sign with up to four lines. */
+    static void sign(ServerLevel level, BlockPos pos, String... lines) { sign(level, pos, ThreadLocalRandom.current().nextInt(16), lines); }
+
+    static void sign(ServerLevel level, BlockPos pos, int rotation, String... lines) {
         if (!passable(level, pos)) return;
-        level.setBlock(pos, Blocks.OAK_SIGN.defaultBlockState().setValue(StandingSignBlock.ROTATION,
-                ThreadLocalRandom.current().nextInt(16)), 3);
+        level.setBlock(pos, Blocks.OAK_SIGN.defaultBlockState().setValue(StandingSignBlock.ROTATION, rotation), 3);
         if (level.getBlockEntity(pos) instanceof SignBlockEntity sign) {
-            SignText text = new SignText().setMessage(0, Component.literal(gang.toUpperCase()))
-                    .setMessage(1, Component.literal("TURF"))
-                    .setMessage(3, Component.literal("KEEP OUT"));
+            SignText text = new SignText();
+            for (int i = 0; i < Math.min(4, lines.length); i++) text = text.setMessage(i, Component.literal(lines[i]));
             sign.setText(text, true);
             sign.setWaxed(true);
             sign.setChanged();

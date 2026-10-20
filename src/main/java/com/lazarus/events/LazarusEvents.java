@@ -55,7 +55,7 @@ public final class LazarusEvents {
     private static final String[] TYPES = {"cache", "gunfire", "flare", "military", RescueEncounter.TYPE,
             LastDefenseEncounter.TYPE, FalseRadioEncounter.TYPE, MilitaryCollapse.ABANDONED,
             HostileHideouts.DESERTER_CAMP, HostileHideouts.GANG_HIDEOUT, BuildingHideout.TYPE, HollowDen.TYPE, ZombieNest.TYPE,
-            GasZone.TYPE};
+            GasZone.TYPE, Quarantine.TYPE};
     private static final ResourceLocation RADIO_ID = new ResourceLocation("ifreq", "walkie_talkie");
     private static final ForgeConfigSpec CONFIG;
     private static final ForgeConfigSpec.BooleanValue ENABLED;
@@ -76,6 +76,7 @@ public final class LazarusEvents {
     private static final ForgeConfigSpec.BooleanValue HIDEOUTS_ENABLED;
     private static final ForgeConfigSpec.BooleanValue NESTS_ENABLED;
     private static final ForgeConfigSpec.BooleanValue GAS_ENABLED;
+    private static final ForgeConfigSpec.BooleanValue QUARANTINE_ENABLED;
     private static final ForgeConfigSpec.IntValue FACTION_EXPEDITION_DAYS;
     private static final ForgeConfigSpec.IntValue BASE_FALLBACK_DAY;
 
@@ -107,6 +108,8 @@ public final class LazarusEvents {
                 .define("enableZombieNests", true);
         GAS_ENABLED = builder.comment("Infection zones (from day 12): green gas in enclosed spaces; a gas mask or hazmat suit is required.")
                 .define("enableInfectionZones", true);
+        QUARANTINE_ENABLED = builder.comment("Military quarantines (from day 21): a fenced-off infection zone with hazmat infected and a military stash.")
+                .define("enableQuarantines", true);
         FACTION_EXPEDITIONS_ENABLED = builder.comment("Rare Rovers or Wardens patrols outside faction bases.")
                 .define("enableFactionExpeditions", true);
         FACTION_EXPEDITION_DAYS = builder.comment("Minimum days between faction patrol attempts.")
@@ -168,6 +171,7 @@ public final class LazarusEvents {
         data.prune(now);
         HostileHideouts.tick(level, data);
         ZombieNest.tick(level, data);
+        Quarantine.tick(level, data);
         for (EventData.Encounter encounter : data.encounters) {
             if (encounter.discovered) continue;
             for (ServerPlayer player : level.players()) {
@@ -239,6 +243,7 @@ public final class LazarusEvents {
         }
         if (NESTS_ENABLED.get() && day >= 8) weights.put(ZombieNest.TYPE, 1.5);
         if (GAS_ENABLED.get() && day >= 12) weights.put(GasZone.TYPE, 1.5);
+        if (QUARANTINE_ENABLED.get() && day >= 21) weights.put(Quarantine.TYPE, 1.0);
         if (weights.isEmpty()) return null;
         double roll = ThreadLocalRandom.current().nextDouble(weights.values().stream().mapToDouble(Double::doubleValue).sum());
         for (Map.Entry<String, Double> entry : weights.entrySet())
@@ -325,7 +330,7 @@ public final class LazarusEvents {
 
     private static Outcome attempt(ServerLevel level, ServerPlayer player, String type, boolean near,
             boolean testing, EventData data) {
-        if (BuildingHideout.TYPE.equals(type) || HollowDen.TYPE.equals(type) || ZombieNest.TYPE.equals(type) || GasZone.TYPE.equals(type))
+        if (BuildingHideout.TYPE.equals(type) || HollowDen.TYPE.equals(type) || ZombieNest.TYPE.equals(type) || GasZone.gassed(type))
             return attemptBuilding(level, player, type, near, data);
         Search search = findSpot(level, player, type, near, data);
         if (search.pos == null) return new Outcome(false, "No valid location (" + search.failures + ")");
@@ -344,15 +349,23 @@ public final class LazarusEvents {
 
     /** Building hideouts use a room: the one the player stands in for the test command, a random roofed one otherwise. */
     private static Outcome attemptBuilding(ServerLevel level, ServerPlayer player, String type, boolean near, EventData data) {
-        boolean gas = GasZone.TYPE.equals(type);
-        BuildingHideout.Room room = gas ? (near ? GasZone.space(level, player.blockPosition()) : GasZone.find(level, player, data))
+        boolean gas = GasZone.gassed(type);
+        BuildingHideout.Room room = gas ? (near ? GasZone.space(level, player.blockPosition())
+                : Quarantine.TYPE.equals(type) ? GasZone.space(level, BuildingHideout.find(level, player, data)) : GasZone.find(level, player, data))
                 : near ? BuildingHideout.room(level, player.blockPosition()) : BuildingHideout.find(level, player, data);
         if (room == null) return new Outcome(false, near ? "Stand inside a building: no enclosed room around you"
                 : "No building interior found nearby");
+        if (Quarantine.TYPE.equals(type)) {
+            if (Quarantine.streetDoor(level, room) == null) return new Outcome(false, "The quarantine needs a building with a door to the street");
+            Quarantine.clear(level, room); // the scene replaces the furniture
+            room = GasZone.space(level, room.center());
+            if (room == null) return new Outcome(false, "The room fell apart while clearing it");
+        }
         UUID id = UUID.randomUUID();
         int tier = Math.min(5, 1 + (int) (level.getDayTime() / 24000) / 10);
         List<BlockPos> pustules = ZombieNest.TYPE.equals(type) ? ZombieNest.place(level, room) : null;
-        boolean placed = gas ? GasZone.place(level, room) : ZombieNest.TYPE.equals(type) ? pustules != null
+        net.minecraft.nbt.CompoundTag quarantine = Quarantine.TYPE.equals(type) ? Quarantine.place(level, room, tier, id) : null;
+        boolean placed = Quarantine.TYPE.equals(type) ? quarantine != null : gas ? GasZone.place(level, room) : ZombieNest.TYPE.equals(type) ? pustules != null
                 : HollowDen.TYPE.equals(type) ? HollowDen.place(level, room, id) : BuildingHideout.place(level, room, tier, id);
         if (!placed) {
             removeActors(level, id, room.center());
@@ -361,6 +374,7 @@ public final class LazarusEvents {
         EventData.Encounter encounter = data.add(id, type, room.center(), level.getGameTime());
         if (pustules != null) ZombieNest.record(encounter, pustules, level.getGameTime());
         if (gas) GasZone.record(encounter, room, level.getGameTime());
+        if (quarantine != null) encounter.data.merge(quarantine);
         data.setDirty();
         String message = "Placed " + type + " " + encounter.id + " at " + room.center().toShortString();
         radioMessage(level, room.center(), type);
@@ -682,6 +696,7 @@ public final class LazarusEvents {
             case HostileHideouts.DESERTER_CAMP, HostileHideouts.GANG_HIDEOUT, BuildingHideout.TYPE, HollowDen.TYPE -> HostileHideouts.label(type);
             case ZombieNest.TYPE -> "zombie nest";
             case GasZone.TYPE -> "chemical leak";
+            case Quarantine.TYPE -> "military quarantine";
             default -> type + " encounter";
         };
     }
@@ -697,6 +712,7 @@ public final class LazarusEvents {
             case MilitaryCollapse.ABANDONED -> "An automated military beacon is still transmitting";
             case ZombieNest.TYPE -> "Military band: biological growth reported inside a building, avoid the area";
             case GasZone.TYPE -> "Military band: chemical leak detected underground, masks mandatory";
+            case Quarantine.TYPE -> "Military band, automated loop: quarantine zone breached, containment team lost. Do not enter";
             default -> type + " signal";
         };
     }

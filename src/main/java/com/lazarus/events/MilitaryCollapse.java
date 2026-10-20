@@ -51,7 +51,7 @@ final class MilitaryCollapse {
         return spawned;
     }
 
-    private static void equip(Mob mob, EquipmentSlot slot, String item) {
+    static void equip(Mob mob, EquipmentSlot slot, String item) {
         ItemStack stack = ApiSupport.stack(item, 1);
         if (stack.isEmpty()) return;
         mob.setItemSlot(slot, stack);
