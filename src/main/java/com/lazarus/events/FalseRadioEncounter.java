@@ -91,9 +91,25 @@ final class FalseRadioEncounter {
                 EncounterScenery.offset(pos, rotation, -EncounterScenery.RADIUS - 1, 2),
                 EncounterScenery.offset(pos, rotation, 1, -EncounterScenery.RADIUS - 1)};
         for (BlockPos spot : spots) {
-            Entity entity = LazarusEvents.spawn(level, spot, "apocalypsenow:looter_" + (1 + ThreadLocalRandom.current().nextInt(5)),
-                    encounterId, true);
-            if (!(entity instanceof Mob looter)) continue;
+            Mob looter = null;
+            // Keep the guard in the camp's loaded chunk: Forge may accept an entity in the adjacent
+            // partially loaded chunk yet omit it from area queries until that chunk starts ticking.
+            int minX = (pos.getX() >> 4) << 4, minZ = (pos.getZ() >> 4) << 4;
+            BlockPos inside = new BlockPos(Math.max(minX, Math.min(minX + 15, spot.getX())), spot.getY(),
+                    Math.max(minZ, Math.min(minZ + 15, spot.getZ())));
+            for (int step = 0; step < 5 && looter == null; step++) {
+                BlockPos at = step == 0 ? inside : inside.offset(step % 2 == 0 ? step / 2 : -step / 2,
+                        0, step % 2 == 0 ? 0 : 1);
+                if ((at.getX() >> 4) != (pos.getX() >> 4) || (at.getZ() >> 4) != (pos.getZ() >> 4)) continue;
+                Entity entity = LazarusEvents.spawn(level, at,
+                        "apocalypsenow:looter_" + (1 + ThreadLocalRandom.current().nextInt(5)), encounterId, true);
+                if (entity instanceof Mob mob) looter = mob;
+            }
+            if (looter == null) {
+                ApiSupport.LOGGER.warn("False radio could not spawn guard at {} near {} (loaded={})", spot, pos,
+                        level.isLoaded(spot));
+                continue;
+            }
             ApiResult order = guard(looter, encounterId, pos);
             if (order.ok()) guards++;
             else ApiSupport.LOGGER.warn("False radio: looter not assigned: {}", order.message());
@@ -127,8 +143,13 @@ final class FalseRadioEncounter {
             if (speaker.isPresent()) {
                 Mob looter = speaker.get();
                 boolean stillWalking = NpcApi.assignment(looter).filter(a -> a.order() == ScenarioOrder.FOLLOW_PLAYER).isPresent();
-                if (looter.distanceTo(player) <= 4 || !stillWalking) {
-                    if (looter.distanceTo(player) <= 4) NpcApi.openDialogue(player, looter, DialogueTrigger.THREAT);
+                if (looter.distanceTo(player) <= 5 || !stillWalking) {
+                    if (looter.distanceTo(player) > 5) {
+                        looter.removeTag(confronting);
+                        guard(looter, encounterId, cargo);
+                        continue;
+                    }
+                    NpcApi.openDialogue(player, looter, DialogueTrigger.THREAT);
                     group.forEach(member -> member.addTag(confronted));
                     looter.removeTag(confronting);
                     guard(looter, encounterId, cargo);

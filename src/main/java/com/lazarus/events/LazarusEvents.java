@@ -68,6 +68,9 @@ public final class LazarusEvents {
     private static final ForgeConfigSpec.BooleanValue RESCUE_ENABLED;
     private static final ForgeConfigSpec.BooleanValue LAST_DEFENSE_ENABLED;
     private static final ForgeConfigSpec.BooleanValue FALSE_RADIO_ENABLED;
+    private static final ForgeConfigSpec.BooleanValue FACTION_EXPEDITIONS_ENABLED;
+    private static final ForgeConfigSpec.IntValue FACTION_EXPEDITION_DAYS;
+    private static final ForgeConfigSpec.IntValue BASE_FALLBACK_DAY;
 
     static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
@@ -87,6 +90,13 @@ public final class LazarusEvents {
                 .define("enableLastDefense", true);
         FALSE_RADIO_ENABLED = builder.comment("A fake distress call that is a looter ambush; from day 6, like looters (needs Lazarus NPCs).")
                 .define("enableFalseRadio", true);
+        FACTION_EXPEDITIONS_ENABLED = builder.comment("Rare Rovers or Wardens patrols outside faction bases.")
+                .define("enableFactionExpeditions", true);
+        FACTION_EXPEDITION_DAYS = builder.comment("Minimum days between faction patrol attempts.")
+                .defineInRange("factionExpeditionDays", 5, 2, 30);
+        BASE_FALLBACK_DAY = builder.comment("From this world day, a faction without a base may also build it in already explored,",
+                        "loaded chunks 72-128 blocks from a player and out of their sight. 0 keeps bases in new chunks only.")
+                .defineInRange("factionBaseFallbackDay", 3, 0, 100);
         CONFIG = builder.build();
     }
 
@@ -97,14 +107,26 @@ public final class LazarusEvents {
         MinecraftForge.EVENT_BUS.register(new LastDefenseEncounter.Listener());
         MinecraftForge.EVENT_BUS.register(new FalseRadioEncounter.Listener());
         MinecraftForge.EVENT_BUS.register(new MilitaryBaseEncounter.Listener());
+        MinecraftForge.EVENT_BUS.register(new FactionBases());
+        MinecraftForge.EVENT_BUS.register(new FactionMissions());
+        MinecraftForge.EVENT_BUS.register(new FactionSkirmish());
+        MinecraftForge.EVENT_BUS.register(new FactionExpeditions());
         net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext.get().getModEventBus().addListener(
                 (net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent event) -> event.enqueueWork(() -> {
                     RescueEncounter.register();
                     LastDefenseEncounter.register();
                     FalseRadioEncounter.register();
                     MilitaryBaseEncounter.register();
+                    FactionMissions.register();
+                    FactionExpeditions.register();
                 }));
     }
+
+    static boolean expeditionsEnabled() { return FACTION_EXPEDITIONS_ENABLED.get(); }
+
+    static int baseFallbackDay() { return BASE_FALLBACK_DAY.get(); }
+
+    static long expeditionCooldown() { return FACTION_EXPEDITION_DAYS.get() * 24_000L; }
 
     @SubscribeEvent
     public void onTick(TickEvent.ServerTickEvent event) {
@@ -309,7 +331,7 @@ public final class LazarusEvents {
         return new Search(null, 0, failures);
     }
 
-    private static boolean safe(ServerLevel level, BlockPos pos) {
+    static boolean safe(ServerLevel level, BlockPos pos) {
         if (!level.isLoaded(pos) || !level.isLoaded(pos.above()) || !level.isLoaded(pos.below(2))) return false;
         var space = level.getBlockState(pos);
         var above = level.getBlockState(pos.above());
