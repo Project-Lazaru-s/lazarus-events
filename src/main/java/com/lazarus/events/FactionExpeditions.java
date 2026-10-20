@@ -159,7 +159,11 @@ final class FactionExpeditions {
 
     private static boolean spawn(ServerLevel level, FactionExpeditionData data, BlockPos center, List<BlockPos> route) {
         UUID id = UUID.randomUUID();
-        String faction = BaseRoster.factions().get(level.random.nextInt(BaseRoster.factions().size()));
+        // Only factions in a conflict send armed patrols; the Haven stays home.
+        List<String> factions = BaseRoster.factions().stream()
+                .filter(candidate -> NpcFactions.get(candidate) != null && !NpcFactions.get(candidate).rivals().isEmpty()).toList();
+        if (factions.isEmpty()) return false;
+        String faction = factions.get(level.random.nextInt(factions.size()));
         NpcFactions.Definition definition = NpcFactions.get(faction);
         if (definition == null || definition.survivorVariants().isEmpty()) return false;
         List<Mob> actors = new ArrayList<>();

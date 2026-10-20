@@ -1,4 +1,4 @@
-"""Regenerate the Rovers camp and Wardens fort structure templates (standard library only).
+"""Regenerate the Rovers camp, Wardens fort and Haven refuge structure templates (standard library only).
 
 Run: python tools/generate_faction_bases.py
 The layout constants printed at the end must match BaseRoster.Layout in the Java code; the script
@@ -473,8 +473,110 @@ def wardens_fort():
     return s, layout
 
 
+# ---- Haven: palisaded refuge (21 x 19) -----------------------------------------------------------
+
+def haven_refuge():
+    s = Scene("haven_refuge", 21, 19)
+    for x in range(21):
+        for z in range(19):
+            n = noise(x, z, 8) % 10
+            s.put(x, 0, z, "grass_block" if n < 6 else "dirt" if n < 8 else "coarse_dirt")
+    for x in range(9, 12):          # path from the gate to the fire (full blocks: residents stand on it)
+        for z in range(10, 19):
+            s.put(x, 0, z, "gravel" if noise(x, z, 10) % 3 else "coarse_dirt")
+
+    # Log palisade with a fence top; the gate opening faces south.
+    for x in range(21):
+        for z in range(19):
+            if x in (0, 20) or z in (0, 18):
+                if z == 18 and 9 <= x <= 11:
+                    continue
+                s.box(x, x, 1, 2, z, z, "stripped_oak_log" if noise(x, z, 9) % 3 else "oak_log", axis="y")
+                s.put(x, 3, z, "oak_fence")
+    for x in (8, 12):
+        s.box(x, x, 1, 4, 18, 18, "oak_log", axis="y")
+        s.put(x, 5, 18, "lantern")
+
+    # Leader's cabin (x 2-7, z 2-6), door to the south.
+    s.ring(2, 7, 1, 3, 2, 6, "oak_planks")
+    for x, z in ((2, 2), (7, 2), (2, 6), (7, 6)):
+        s.box(x, x, 1, 3, z, z, "oak_log", axis="y")
+    s.box(2, 7, 4, 4, 2, 6, "spruce_slab", type="bottom")
+    s.box(3, 6, 0, 0, 3, 5, "oak_planks")
+    s.clear(5, 1, 6)
+    s.clear(5, 2, 6)
+    s.put(3, 2, 2, "glass_pane")
+    s.put(6, 2, 2, "glass_pane")
+    s.put(3, 1, 3, "green_bed", facing="north", part="head")
+    s.put(3, 1, 4, "green_bed", facing="north", part="foot")
+    s.put(6, 1, 3, "lectern", facing="south")
+    s.put(6, 1, 5, "barrel", facing="up")         # refuge stores (depot)
+    s.put(4, 3, 4, "lantern", hanging=True)
+
+    # Bunkhouse (x 13-18, z 2-6), door to the south; the second bed is free for guests.
+    s.ring(13, 18, 1, 3, 2, 6, "spruce_planks")
+    for x, z in ((13, 2), (18, 2), (13, 6), (18, 6)):
+        s.box(x, x, 1, 3, z, z, "oak_log", axis="y")
+    s.box(13, 18, 4, 4, 2, 6, "spruce_slab", type="bottom")
+    s.box(14, 17, 0, 0, 3, 5, "spruce_planks")
+    s.clear(15, 1, 6)
+    s.clear(15, 2, 6)
+    s.put(14, 1, 3, "lime_bed", facing="north", part="head")
+    s.put(14, 1, 4, "lime_bed", facing="north", part="foot")
+    s.put(17, 1, 3, "lime_bed", facing="north", part="head")
+    s.put(17, 1, 4, "lime_bed", facing="north", part="foot")
+    s.put(16, 1, 3, "barrel", facing="up")
+    s.put(16, 3, 4, "lantern", hanging=True)
+
+    # Infirmary tent (x 13-18, z 9-13): white canvas roof on posts, open sides.
+    for x, z in ((13, 9), (18, 9), (13, 13), (18, 13)):
+        s.box(x, x, 1, 2, z, z, "spruce_fence")
+    s.box(13, 18, 3, 3, 9, 13, "white_wool")
+    s.put(17, 1, 10, "apocalypsenow:medical_box")
+    s.put(17, 1, 12, "brewing_stand")
+    s.put(14, 1, 12, "white_carpet")
+    s.put(14, 2, 10, "lantern", hanging=True)  # clear of the medics' posts
+
+    # Vegetable garden (x 2-7, z 9-14) around a well of water.
+    for x in range(2, 8):
+        for z in range(9, 15):
+            s.put(x, 0, z, "farmland", moisture=7)
+            s.put(x, 1, z, "wheat" if (x + z) % 3 else "carrots", age=7)
+    s.put(4, 0, 11, "water")
+    s.clear(4, 1, 11)
+
+    # Fire pit at the center with log benches.
+    s.put(10, 1, 9, "campfire", lit=True, facing="north", signal_fire=False)
+    s.put(10, 1, 7, "oak_stairs", facing="south")
+    s.put(8, 1, 9, "oak_stairs", facing="east")
+    s.put(12, 1, 9, "oak_stairs", facing="west")
+
+    # Trader's stall by the gate (x 14-18, z 15-16).
+    for x in (14, 18):
+        s.box(x, x, 1, 2, 16, 16, "spruce_fence")
+    s.box(14, 18, 3, 3, 15, 16, "spruce_slab", type="bottom")
+    s.put(14, 1, 15, "barrel", facing="up")
+    s.put(15, 1, 15, "apocalypsenow:pack_of_canned_food")
+    s.put(17, 1, 15, "apocalypsenow:cardboard_box")
+    s.put(18, 1, 15, "barrel", facing="up")
+
+    layout = {
+        # leader, guard_a, guard_b, trader, medic, medic_b
+        "posts": [(5, 4), (10, 14), (10, 16), (16, 16), (15, 11), (16, 12)],
+        "patrols": [[(10, 14), (3, 16), (10, 16), (18, 8)]],
+        "depot": (6, 5),
+        "barrels": [(6, 5), (14, 15), (18, 15), (16, 3)],
+        "anchor": (10, 9),
+        "shelter": [(15, 4)],
+        "defense": [(10, 16), (10, 14)],
+        "beds": [(3, 4), (14, 4)],
+    }
+    validate(s, (10, 18), layout)
+    return s, layout
+
+
 if __name__ == "__main__":
-    for build in (rovers_camp, wardens_fort):
+    for build in (rovers_camp, wardens_fort, haven_refuge):
         scene, layout = build()
         scene.write()
         print(scene.name, scene.width, scene.height(), scene.depth, len(scene.blocks), "blocks", layout)

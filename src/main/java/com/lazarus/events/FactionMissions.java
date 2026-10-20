@@ -152,11 +152,14 @@ final class FactionMissions {
             return Optional.of(new DialoguePage(Component.literal("You're not welcome at this outpost."), List.of(
                     new DialogueOption("leave", Component.literal("Leave"), ctx -> {}))));
         String profession = NpcApi.profession(c.npc()).map(ResourceLocation::getPath).orElse("");
+        boolean refuge = NpcFactions.get(base.faction) != null && NpcFactions.get(base.faction).rivals().isEmpty();
         String line = switch (profession) {
             case "leader" -> base.leaderReadyAt > level.getGameTime()
-                    ? "I'm holding this outpost together. Give us a day to settle the succession."
+                    ? "I'm holding this place together. Give us a day to settle the succession."
+                    : refuge ? "Welcome to the refuge. Everyone here pulls their weight, and we're glad of any help."
                     : "I coordinate this outpost. Ask me about work against our rivals.";
-            case "guard" -> "I watch the approaches. Speak to our leader about faction work.";
+            case "guard" -> refuge ? "I keep an eye on the gate. Walkers come out of the trees at dusk."
+                    : "I watch the approaches. Speak to our leader about faction work.";
             case "armorer" -> "I keep weapons and protection ready. Check my stock if you have supplies to trade.";
             case "trader" -> "Food, medicine and travel supplies are scarce. Have a look at what I can spare.";
             case "medic" -> "Bring bandages and clean water and I can patch you up. Check my services.";

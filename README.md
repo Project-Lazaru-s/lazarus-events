@@ -6,7 +6,7 @@
   <img alt="Minecraft 1.20.1" src="https://img.shields.io/badge/Minecraft-1.20.1-3c8527">
   <img alt="Forge 47.x" src="https://img.shields.io/badge/Forge-47.x-dd7d2b">
   <img alt="Java 17" src="https://img.shields.io/badge/Java-17-b07219">
-  <img alt="Versão 0.14.0" src="https://img.shields.io/badge/vers%C3%A3o-0.14.0-6b5b3e">
+  <img alt="Versão 0.15.0" src="https://img.shields.io/badge/vers%C3%A3o-0.15.0-6b5b3e">
 </p>
 
 # Lazarus Events
@@ -78,6 +78,12 @@ O soro é bebido como uma poção: **cura a infecção do The Hordes e impede um
 ### Colapso militar
 
 Com o passar dos dias, os postos militares ativos ficam raros e os **abandonados** tomam o lugar deles. Cada posto abandonado tem um dos seis diários de serviço (evacuação, ordens cortadas, deserção) no atril do centro.
+
+## Refúgio do Haven
+
+O **Haven** também tem uma base permanente, o **refúgio**: paliçada de toras, cabana do líder, alojamento com camas, tenda de enfermaria, horta com poço, fogueira central e a banca do comerciante junto ao portão. O Haven **não tem rivais**: o refúgio nunca é alvo de roubo, reconhecimento ou confronto, e o Haven não manda expedições armadas.
+
+Moram ali **seis pessoas**: o líder, dois guardas (um faz a ronda, outro vigia o portão), um comerciante e dois médicos. À noite, o líder e um médico dormem; os demais se recolhem ou ficam de guarda. Com reputação Haven **10 ou mais**, o comerciante do refúgio dá **15% de desconto**, e sobreviventes Haven soltos pelo mundo aceitam **contrato de guarda**, como os Wardens. Os médicos estabilizam como nas outras bases.
 
 ## Bases e rivalidade de facções
 
@@ -193,7 +199,7 @@ O Immersive Frequencies é usado apenas para as mensagens opcionais de rádio.
 
 ### Jogadores e servidores
 
-1. Compile `lazarusevents-0.14.0.jar` em `build/libs/` ou [compile o projeto](#compilar-a-partir-do-código).
+1. Compile `lazarusevents-0.15.0.jar` em `build/libs/` ou [compile o projeto](#compilar-a-partir-do-código).
 2. Coloque o JAR na pasta `mods` do perfil. No CurseForge, clique com o botão direito no perfil e escolha **Open Folder**.
 3. Em multiplayer, instale o **mesmo JAR** no servidor e em todos os clientes.
 4. Remova versões antigas de `lazarusevents` e reinicie o jogo ou servidor após a troca.
