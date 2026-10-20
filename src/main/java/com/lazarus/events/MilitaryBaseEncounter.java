@@ -98,8 +98,12 @@ final class MilitaryBaseEncounter {
         UUID encounterId = c.encounterId();
         Optional<TaskView> mine = NpcApi.encounterTask(c.player()).filter(t -> t.state().open() && t.encounterId().equals(encounterId));
         if (mine.isPresent()) {
-            if (mine.get().state() == TaskState.READY && mine.get().giverId().equals(c.npc().getUUID())) return Optional.empty(); // report
-            return Optional.of(new DialoguePage(Component.literal("Keep them off the fence! Report back when it's done."),
+            boolean giver = mine.get().giverId().equals(c.npc().getUUID());
+            boolean samples = mine.get().taskId().equals(VaccineProject.TASK);
+            // The task dialogue handles reports and the sample hand-over.
+            if (giver && (mine.get().state() == TaskState.READY || samples)) return Optional.empty();
+            return Optional.of(new DialoguePage(Component.literal(samples ? "Take the samples to whoever asked for them."
+                    : "Keep them off the fence! Report back when it's done."),
                     List.of(new DialogueOption("ok", Component.literal("On it"), ctx -> {}))));
         }
         int standing = NpcApi.reputation(c.player(), "military");
@@ -119,6 +123,8 @@ final class MilitaryBaseEncounter {
                             ctx.player().displayClientMessage(Component.literal(offer.message().contains("taken")
                                     ? "Someone is already on it." : "Finish or abandon your current encounter task first (journal)."), true);
                     }));
+            options.add(new DialogueOption("vaccine", Component.literal("Ask about the vaccine research"),
+                    ctx -> VaccineProject.offer(ctx.player(), ctx.npc(), encounterId, center)));
             if (standing >= FRIENDLY) options.add(new DialogueOption("supply",
                     Component.literal("Request a supply drop (" + DROP_FOOD + " canned food)"),
                     ctx -> ctx.player().displayClientMessage(requestDrop(ctx.player(), encounterId), false)));

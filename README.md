@@ -6,7 +6,7 @@
   <img alt="Minecraft 1.20.1" src="https://img.shields.io/badge/Minecraft-1.20.1-3c8527">
   <img alt="Forge 47.x" src="https://img.shields.io/badge/Forge-47.x-dd7d2b">
   <img alt="Java 17" src="https://img.shields.io/badge/Java-17-b07219">
-  <img alt="Versão 0.13.0" src="https://img.shields.io/badge/vers%C3%A3o-0.13.0-6b5b3e">
+  <img alt="Versão 0.14.0" src="https://img.shields.io/badge/vers%C3%A3o-0.14.0-6b5b3e">
 </p>
 
 # Lazarus Events
@@ -68,6 +68,12 @@ Não há troca amigável. A mensagem de descoberta e o rádio não revelam que �
 Os soldados **guardam a base** e o médico fica no posto. A recepção depende da reputação com os **Military**: abaixo de 10, área restrita, mas é possível oferecer ajuda; a partir de 10, boas-vindas; com -20 ou menos, o jogador é mandado embora. A tarefa **Secure the perimeter** traz três ondas de infectados contra a cerca: mate **12 atacantes** e volte ao soldado que deu a ordem para receber **30 munições 5.56, 2 bandagens e +3 Military**.
 
 Com Military **10 ou mais**, o soldado aceita um **pedido de suprimento aéreo**: por **3 comidas enlatadas e -4 Military**, entrega uma pistola sinalizadora do **dyairdrop** (recarga de 3 dias por jogador). Disparada em área aberta, ela chama um airdrop real, que atrai infectados.
+
+### Projeto vacina
+
+Os infectados especiais do **Undead Revamped** (Heavy, Bomber, Spitter, Hunter e outros) deixam uma **amostra infectada** com 6% de chance quando o jogador os mata. Qualquer soldado ou médico de um posto militar ativo oferece a tarefa **Samples for the lab**: entregar **3 amostras** paga **1 antibiótico, 2 bandagens e +3 Military**. A cada **3 entregas**, o jogador também recebe um **soro experimental**.
+
+O soro é bebido como uma poção: **cura a infecção do The Hordes e impede uma nova por um dia de jogo**, com 30 segundos de náusea. Como os antibióticos já curam a infecção, o valor do soro é a proteção, por exemplo antes de enfrentar uma horda.
 
 ### Colapso militar
 
@@ -187,7 +193,7 @@ O Immersive Frequencies é usado apenas para as mensagens opcionais de rádio.
 
 ### Jogadores e servidores
 
-1. Compile `lazarusevents-0.13.0.jar` em `build/libs/` ou [compile o projeto](#compilar-a-partir-do-código).
+1. Compile `lazarusevents-0.14.0.jar` em `build/libs/` ou [compile o projeto](#compilar-a-partir-do-código).
 2. Coloque o JAR na pasta `mods` do perfil. No CurseForge, clique com o botão direito no perfil e escolha **Open Folder**.
 3. Em multiplayer, instale o **mesmo JAR** no servidor e em todos os clientes.
 4. Remova versões antigas de `lazarusevents` e reinicie o jogo ou servidor após a troca.
