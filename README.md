@@ -6,7 +6,7 @@
   <img alt="Minecraft 1.20.1" src="https://img.shields.io/badge/Minecraft-1.20.1-3c8527">
   <img alt="Forge 47.x" src="https://img.shields.io/badge/Forge-47.x-dd7d2b">
   <img alt="Java 17" src="https://img.shields.io/badge/Java-17-b07219">
-  <img alt="Versão 0.19.0" src="https://img.shields.io/badge/vers%C3%A3o-0.19.0-6b5b3e">
+  <img alt="Versão 0.20.0" src="https://img.shields.io/badge/vers%C3%A3o-0.20.0-6b5b3e">
 </p>
 
 # Lazarus Events
@@ -112,6 +112,15 @@ Quando um saqueador ou desertor se rende, a tela de rendição ganha duas opçõ
 
 - **Interrogate:** uma vez por prisioneiro. Ele entrega o esconderijo do grupo, que é criado agora a 80–160 blocos em área já carregada: acampamento de desertores para soldados; esconderijo de gangue ou cômodo de prédio tomado pela gangue para saqueadores. O prisioneiro diz a direção e a distância, e uma tarefa **Find the hideout** vai para o diário com o destino. Se não houver lugar válido por perto, ele não diz nada útil.
 - **Send to refuge:** só aparece se o refúgio do Haven tiver um beliche de hóspede livre. O prisioneiro deixa as cores da gangue e vai recomeçar no refúgio, com roupa de sobrevivente e nome novo. Dá +2 Haven.
+
+## Ninhos de zumbis
+
+A partir do **dia 8**, a infecção pode criar raiz num cômodo de prédio (ou porão): **3 a 5 pústulas** (blocos vermelhos e carnudos, que os zumbis não comem) junto às paredes, teias, esporos no ar e gemidos. O rádio avisa: *"Military band: biological growth reported inside a building, avoid the area"*.
+
+- Enquanto houver pústulas e alguém a até 48 blocos, o ninho gera **um infectado a cada 20–30 segundos** (no máximo 6 vivos dele ao mesmo tempo): walkers, runners e zumbis comuns; do dia 20 em diante, às vezes um especial do Undead Revamped.
+- Cada pústula quebrada solta uma **amostra infectada** (projeto vacina) e deixa o ninho mais lento.
+- Sem a última pústula, o ninho morre: **+2 Military e +2 Haven** para quem estiver a até 32 blocos.
+- O ninho **não some sozinho**: continua no mundo até ser destruído. A opção `enableZombieNests` desliga.
 
 ## Refúgio do Haven
 
@@ -219,7 +228,7 @@ Os comandos exigem permissão de operador, e os testes de colocação devem ser 
 | `/lazarusskirmish test` | Inicia confronto no local do operador se houver área aberta e carregada. |
 | `/lazarusskirmish clear` | Encerra apenas o confronto criado pelo comando de teste. |
 
-`<tipo>` pode ser `cache`, `gunfire`, `flare`, `military`, `abandoned`, `deserter_camp`, `gang_hideout`, `gang_building_hideout`, `hollow_den`, `rescue`, `lastdefense` ou `falseradio`. Os comandos de teste criam encontros reais no mundo, mas **não alteram o horário** do próximo evento natural. `gang_building_hideout near` e `hollow_den near` precisam ser usados **dentro de um prédio**: o grupo ocupa o cômodo em volta do jogador.
+`<tipo>` pode ser `cache`, `gunfire`, `flare`, `military`, `abandoned`, `deserter_camp`, `gang_hideout`, `gang_building_hideout`, `hollow_den`, `zombie_nest`, `rescue`, `lastdefense` ou `falseradio`. Os comandos de teste criam encontros reais no mundo, mas **não alteram o horário** do próximo evento natural. `gang_building_hideout near`, `hollow_den near` e `zombie_nest near` precisam ser usados **dentro de um prédio**: o grupo ocupa o cômodo em volta do jogador.
 
 ---
 
@@ -244,7 +253,7 @@ O Immersive Frequencies é usado apenas para as mensagens opcionais de rádio.
 
 ### Jogadores e servidores
 
-1. Compile `lazarusevents-0.19.0.jar` em `build/libs/` ou [compile o projeto](#compilar-a-partir-do-código).
+1. Compile `lazarusevents-0.20.0.jar` em `build/libs/` ou [compile o projeto](#compilar-a-partir-do-código).
 2. Coloque o JAR na pasta `mods` do perfil. No CurseForge, clique com o botão direito no perfil e escolha **Open Folder**.
 3. Em multiplayer, instale o **mesmo JAR** no servidor e em todos os clientes.
 4. Remova versões antigas de `lazarusevents` e reinicie o jogo ou servidor após a troca.

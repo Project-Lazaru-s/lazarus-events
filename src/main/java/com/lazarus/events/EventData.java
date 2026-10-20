@@ -28,9 +28,11 @@ final class EventData extends SavedData {
         data.lastResult = tag.getString("LastResult");
         for (Tag entry : tag.getList("Encounters", Tag.TAG_COMPOUND)) {
             CompoundTag saved = (CompoundTag) entry;
-            data.encounters.add(new Encounter(saved.getUUID("Id"), saved.getString("Type"),
+            Encounter encounter = new Encounter(saved.getUUID("Id"), saved.getString("Type"),
                     BlockPos.of(saved.getLong("Pos")), saved.getLong("Created"),
-                    saved.getBoolean("Discovered")));
+                    saved.getBoolean("Discovered"));
+            encounter.data.merge(saved.getCompound("Data"));
+            data.encounters.add(encounter);
         }
         return data;
     }
@@ -52,7 +54,9 @@ final class EventData extends SavedData {
         boolean changed = false;
         Iterator<Encounter> iterator = encounters.iterator();
         while (iterator.hasNext()) {
-            if (now - iterator.next().created > 168000) {
+            Encounter next = iterator.next();
+            // Persistent encounters (nests) end only when resolved.
+            if (!next.data.getBoolean("Persistent") && now - next.created > 168000) {
                 iterator.remove();
                 changed = true;
             }
@@ -84,6 +88,7 @@ final class EventData extends SavedData {
             entry.putLong("Pos", encounter.pos.asLong());
             entry.putLong("Created", encounter.created);
             entry.putBoolean("Discovered", encounter.discovered);
+            if (!encounter.data.isEmpty()) entry.put("Data", encounter.data.copy());
             saved.add(entry);
         }
         tag.put("Encounters", saved);
@@ -96,6 +101,8 @@ final class EventData extends SavedData {
         final BlockPos pos;
         final long created;
         boolean discovered;
+        /** Type-specific saved state (a nest's pustules, for example). */
+        final CompoundTag data = new CompoundTag();
 
         Encounter(UUID id, String type, BlockPos pos, long created, boolean discovered) {
             this.id = id;

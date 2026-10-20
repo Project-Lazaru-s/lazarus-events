@@ -54,7 +54,7 @@ public final class LazarusEvents {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final String[] TYPES = {"cache", "gunfire", "flare", "military", RescueEncounter.TYPE,
             LastDefenseEncounter.TYPE, FalseRadioEncounter.TYPE, MilitaryCollapse.ABANDONED,
-            HostileHideouts.DESERTER_CAMP, HostileHideouts.GANG_HIDEOUT, BuildingHideout.TYPE, HollowDen.TYPE};
+            HostileHideouts.DESERTER_CAMP, HostileHideouts.GANG_HIDEOUT, BuildingHideout.TYPE, HollowDen.TYPE, ZombieNest.TYPE};
     private static final ResourceLocation RADIO_ID = new ResourceLocation("ifreq", "walkie_talkie");
     private static final ForgeConfigSpec CONFIG;
     private static final ForgeConfigSpec.BooleanValue ENABLED;
@@ -73,6 +73,7 @@ public final class LazarusEvents {
     private static final ForgeConfigSpec.BooleanValue FALSE_RADIO_ENABLED;
     private static final ForgeConfigSpec.BooleanValue FACTION_EXPEDITIONS_ENABLED;
     private static final ForgeConfigSpec.BooleanValue HIDEOUTS_ENABLED;
+    private static final ForgeConfigSpec.BooleanValue NESTS_ENABLED;
     private static final ForgeConfigSpec.IntValue FACTION_EXPEDITION_DAYS;
     private static final ForgeConfigSpec.IntValue BASE_FALLBACK_DAY;
 
@@ -100,6 +101,8 @@ public final class LazarusEvents {
                 .define("enableFalseRadio", true);
         HIDEOUTS_ENABLED = builder.comment("Deserter camps (from militaryDeclineDay) and gang hideouts (from day 6) held by hostiles.")
                 .define("enableHostileHideouts", true);
+        NESTS_ENABLED = builder.comment("Zombie nests in buildings (from day 8): flesh pustules that spawn infected until destroyed.")
+                .define("enableZombieNests", true);
         FACTION_EXPEDITIONS_ENABLED = builder.comment("Rare Rovers or Wardens patrols outside faction bases.")
                 .define("enableFactionExpeditions", true);
         FACTION_EXPEDITION_DAYS = builder.comment("Minimum days between faction patrol attempts.")
@@ -121,6 +124,7 @@ public final class LazarusEvents {
         MinecraftForge.EVENT_BUS.register(new HavenRefuge.Listener());
         MinecraftForge.EVENT_BUS.register(new HostileLore.Listener());
         MinecraftForge.EVENT_BUS.register(new HostilePrisoners.Listener());
+        MinecraftForge.EVENT_BUS.register(new ZombieNest.Listener());
         HostileLore.init(net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext.get().getModEventBus());
         VaccineProject.init(net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext.get().getModEventBus());
         MinecraftForge.EVENT_BUS.register(new FactionBases());
@@ -157,6 +161,7 @@ public final class LazarusEvents {
         EventData data = EventData.get(level);
         data.prune(now);
         HostileHideouts.tick(level, data);
+        ZombieNest.tick(level, data);
         for (EventData.Encounter encounter : data.encounters) {
             if (encounter.discovered) continue;
             for (ServerPlayer player : level.players()) {
@@ -226,6 +231,7 @@ public final class LazarusEvents {
             long time = now % 24000;
             if (day >= 10 && time >= 13000 && time < 23000) weights.put(HollowDen.TYPE, 1.5); // the Hollow moves at night
         }
+        if (NESTS_ENABLED.get() && day >= 8) weights.put(ZombieNest.TYPE, 1.5);
         if (weights.isEmpty()) return null;
         double roll = ThreadLocalRandom.current().nextDouble(weights.values().stream().mapToDouble(Double::doubleValue).sum());
         for (Map.Entry<String, Double> entry : weights.entrySet())
@@ -312,7 +318,8 @@ public final class LazarusEvents {
 
     private static Outcome attempt(ServerLevel level, ServerPlayer player, String type, boolean near,
             boolean testing, EventData data) {
-        if (BuildingHideout.TYPE.equals(type) || HollowDen.TYPE.equals(type)) return attemptBuilding(level, player, type, near, data);
+        if (BuildingHideout.TYPE.equals(type) || HollowDen.TYPE.equals(type) || ZombieNest.TYPE.equals(type))
+            return attemptBuilding(level, player, type, near, data);
         Search search = findSpot(level, player, type, near, data);
         if (search.pos == null) return new Outcome(false, "No valid location (" + search.failures + ")");
         BlockPos pos = search.pos;
@@ -335,12 +342,18 @@ public final class LazarusEvents {
                 : "No building interior found nearby");
         UUID id = UUID.randomUUID();
         int tier = Math.min(5, 1 + (int) (level.getDayTime() / 24000) / 10);
-        boolean placed = HollowDen.TYPE.equals(type) ? HollowDen.place(level, room, id) : BuildingHideout.place(level, room, tier, id);
+        List<BlockPos> pustules = ZombieNest.TYPE.equals(type) ? ZombieNest.place(level, room) : null;
+        boolean placed = ZombieNest.TYPE.equals(type) ? pustules != null
+                : HollowDen.TYPE.equals(type) ? HollowDen.place(level, room, id) : BuildingHideout.place(level, room, tier, id);
         if (!placed) {
             removeActors(level, id, room.center());
             return new Outcome(false, "Could not furnish the room at " + room.center().toShortString());
         }
         EventData.Encounter encounter = data.add(id, type, room.center(), level.getGameTime());
+        if (pustules != null) {
+            ZombieNest.record(encounter, pustules, level.getGameTime());
+            data.setDirty();
+        }
         String message = "Placed " + type + " " + encounter.id + " at " + room.center().toShortString();
         radioMessage(level, room.center(), type);
         return new Outcome(true, message);
@@ -654,6 +667,7 @@ public final class LazarusEvents {
             case LastDefenseEncounter.TYPE -> "last stand";
             case MilitaryCollapse.ABANDONED -> "abandoned checkpoint";
             case HostileHideouts.DESERTER_CAMP, HostileHideouts.GANG_HIDEOUT, BuildingHideout.TYPE, HollowDen.TYPE -> HostileHideouts.label(type);
+            case ZombieNest.TYPE -> "zombie nest";
             default -> type + " encounter";
         };
     }
@@ -667,6 +681,7 @@ public final class LazarusEvents {
             case "flare" -> "A red flare went up, medical drop on the ground";
             case "military" -> "Military checkpoint on the emergency band, still operational";
             case MilitaryCollapse.ABANDONED -> "An automated military beacon is still transmitting";
+            case ZombieNest.TYPE -> "Military band: biological growth reported inside a building, avoid the area";
             default -> type + " signal";
         };
     }
