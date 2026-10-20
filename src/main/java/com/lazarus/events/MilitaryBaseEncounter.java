@@ -42,6 +42,10 @@ final class MilitaryBaseEncounter {
     private static final ResourceLocation GATE = ApiSupport.id("military_gate");
     static final int KILLS = 12;
     static final int FRIENDLY = 10;
+    static final int DROP_FOOD = 3, DROP_COST = 4;
+    static final long DROP_COOLDOWN = 72_000L; // three days
+    private static final String DROP_KEY = "LazarusEventsSupplyDrop";
+    private static final ResourceLocation DROP_REASON = ApiSupport.id("supply_drop");
     private static final long ORDER_TICKS = 168_000L;
 
     private MilitaryBaseEncounter() {}
@@ -115,9 +119,43 @@ final class MilitaryBaseEncounter {
                             ctx.player().displayClientMessage(Component.literal(offer.message().contains("taken")
                                     ? "Someone is already on it." : "Finish or abandon your current encounter task first (journal)."), true);
                     }));
+            if (standing >= FRIENDLY) options.add(new DialogueOption("supply",
+                    Component.literal("Request a supply drop (" + DROP_FOOD + " canned food)"),
+                    ctx -> ctx.player().displayClientMessage(requestDrop(ctx.player(), encounterId), false)));
         }
         options.add(new DialogueOption("leave", Component.literal(standing <= -20 ? "Leave" : "Carry on"), ctx -> {}));
         return Optional.of(new DialoguePage(line, options));
+    }
+
+    /**
+     * Trades canned food and some Military standing for a dyairdrop flare gun; the airdrop itself (plane, crate,
+     * infected drawn to it) is dyairdrop's own. Nothing is taken unless the flare gun can be handed over.
+     */
+    static Component requestDrop(ServerPlayer player, UUID encounterId) {
+        CompoundTag persisted = player.getPersistentData().getCompound(ServerPlayer.PERSISTED_NBT_TAG);
+        long now = player.serverLevel().getGameTime(), ready = persisted.getLong(DROP_KEY);
+        if (now < ready)
+            return Component.literal("\"Command won't authorize another drop yet. Try again in "
+                    + Math.max(1, (ready - now + 23_999) / 24_000) + " day(s).\"");
+        if (NpcApi.reputation(player, "military") < FRIENDLY) return Component.literal("\"Drops are for friends of the outpost.\"");
+        ItemStack flare = ApiSupport.stack("dyairdrop:flaregun0", 1);
+        ItemStack food = ApiSupport.stack("apocalypsenow:canned_food", 1);
+        if (flare.isEmpty() || food.isEmpty()) return Component.literal("\"Radio's dead. No drops today.\"");
+        if (player.getInventory().countItem(food.getItem()) < DROP_FOOD)
+            return Component.literal("\"Bring " + DROP_FOOD + " canned food for the pilots and we'll talk.\"");
+        int owed = DROP_FOOD;
+        for (int slot = 0; slot < player.getInventory().getContainerSize() && owed > 0; slot++) {
+            ItemStack stack = player.getInventory().getItem(slot);
+            if (!stack.is(food.getItem())) continue;
+            int taken = Math.min(owed, stack.getCount());
+            stack.shrink(taken);
+            owed -= taken;
+        }
+        NpcApi.adjustReputation(player, "military", -DROP_COST, DROP_REASON, encounterId);
+        persisted.putLong(DROP_KEY, now + DROP_COOLDOWN);
+        player.getPersistentData().put(ServerPlayer.PERSISTED_NBT_TAG, persisted);
+        if (!player.getInventory().add(flare)) player.drop(flare, false);
+        return Component.literal("\"Fire this somewhere open. The crate draws the infected, so be quick.\"");
     }
 
     /** The base center from the giver's order, for waves. */

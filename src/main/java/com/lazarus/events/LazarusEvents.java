@@ -53,13 +53,15 @@ public final class LazarusEvents {
     static final String ID = "lazarusevents";
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final String[] TYPES = {"cache", "gunfire", "flare", "military", RescueEncounter.TYPE,
-            LastDefenseEncounter.TYPE, FalseRadioEncounter.TYPE};
+            LastDefenseEncounter.TYPE, FalseRadioEncounter.TYPE, MilitaryCollapse.ABANDONED};
     private static final ResourceLocation RADIO_ID = new ResourceLocation("ifreq", "walkie_talkie");
     private static final ForgeConfigSpec CONFIG;
     private static final ForgeConfigSpec.BooleanValue ENABLED;
     private static final ForgeConfigSpec.IntValue MIN_DAYS;
     private static final ForgeConfigSpec.IntValue MAX_DAYS;
     private static final ForgeConfigSpec.IntValue MILITARY_DAY;
+    private static final ForgeConfigSpec.IntValue MILITARY_DECLINE_DAY;
+    private static final ForgeConfigSpec.IntValue MILITARY_COLLAPSE_DAY;
     private static final ForgeConfigSpec.IntValue MAX_ACTIVE;
     private static final ForgeConfigSpec.BooleanValue CACHE_ENABLED;
     private static final ForgeConfigSpec.BooleanValue GUNFIRE_ENABLED;
@@ -79,6 +81,10 @@ public final class LazarusEvents {
         MAX_DAYS = builder.comment("Maximum days between successful encounters; values below minimumDays use minimumDays.")
                 .defineInRange("maximumDays", 2, 1, 30);
         MILITARY_DAY = builder.comment("First world day with military encounters.").defineInRange("militaryFromDay", 10, 1, 100);
+        MILITARY_DECLINE_DAY = builder.comment("From this world day active military checkpoints halve and abandoned ones appear.")
+                .defineInRange("militaryDeclineDay", 21, 1, 365);
+        MILITARY_COLLAPSE_DAY = builder.comment("From this world day active checkpoints are rare and abandoned ones common.")
+                .defineInRange("militaryCollapseDay", 36, 1, 365);
         MAX_ACTIVE = builder.defineInRange("maximumActiveEncounters", 4, 1, 16);
         CACHE_ENABLED = builder.define("enableCache", true);
         GUNFIRE_ENABLED = builder.define("enableGunfire", true);
@@ -184,15 +190,28 @@ public final class LazarusEvents {
     }
 
     private static String randomType(long now) {
-        List<String> choices = new ArrayList<>();
-        if (CACHE_ENABLED.get()) for (int i = 0; i < 9; i++) choices.add("cache");
-        if (GUNFIRE_ENABLED.get()) for (int i = 0; i < 6; i++) choices.add("gunfire");
-        if (FLARE_ENABLED.get()) for (int i = 0; i < 4; i++) choices.add("flare");
-        if (RESCUE_ENABLED.get()) for (int i = 0; i < 4; i++) choices.add(RescueEncounter.TYPE);
-        if (LAST_DEFENSE_ENABLED.get() && now / 24000 >= 3) for (int i = 0; i < 3; i++) choices.add(LastDefenseEncounter.TYPE);
-        if (FALSE_RADIO_ENABLED.get() && now / 24000 >= 6) for (int i = 0; i < 3; i++) choices.add(FalseRadioEncounter.TYPE);
-        if (MILITARY_ENABLED.get() && now / 24000 >= MILITARY_DAY.get()) choices.add("military");
-        return choices.isEmpty() ? null : choices.get(ThreadLocalRandom.current().nextInt(choices.size()));
+        Map<String, Double> weights = new java.util.LinkedHashMap<>();
+        int day = (int) (now / 24000);
+        if (CACHE_ENABLED.get()) weights.put("cache", 9.0);
+        if (GUNFIRE_ENABLED.get()) weights.put("gunfire", 6.0);
+        if (FLARE_ENABLED.get()) weights.put("flare", 4.0);
+        if (RESCUE_ENABLED.get()) weights.put(RescueEncounter.TYPE, 4.0);
+        if (LAST_DEFENSE_ENABLED.get() && day >= 3) weights.put(LastDefenseEncounter.TYPE, 3.0);
+        if (FALSE_RADIO_ENABLED.get() && day >= 6) weights.put(FalseRadioEncounter.TYPE, 3.0);
+        if (MILITARY_ENABLED.get()) {
+            double[] military = militaryWeights(day);
+            if (military[0] > 0) weights.put("military", military[0]);
+            if (military[1] > 0) weights.put(MilitaryCollapse.ABANDONED, military[1]);
+        }
+        if (weights.isEmpty()) return null;
+        double roll = ThreadLocalRandom.current().nextDouble(weights.values().stream().mapToDouble(Double::doubleValue).sum());
+        for (Map.Entry<String, Double> entry : weights.entrySet())
+            if ((roll -= entry.getValue()) < 0) return entry.getKey();
+        return null;
+    }
+
+    static double[] militaryWeights(int day) {
+        return MilitaryCollapse.weights(day, MILITARY_DAY.get(), MILITARY_DECLINE_DAY.get(), MILITARY_COLLAPSE_DAY.get());
     }
 
     @SubscribeEvent
@@ -313,7 +332,7 @@ public final class LazarusEvents {
             BlockPos actors = EncounterScenery.offset(pos, rotation, EncounterScenery.RADIUS + 1, 1);
             BlockPos signal = EncounterScenery.offset(pos, rotation, 2, 1);
             String scenery = scenery(type);
-            if (!safe(level, pos) || !type.equals("military") && !safe(level, actors)
+            if (!safe(level, pos) || !scenery.equals("military") && !safe(level, actors)
                     || scenery.equals("flare") && !safe(level, signal)
                     || !EncounterScenery.canPlace(level, pos, scenery, rotation)) {
                 failures.merge(Reject.GROUND, 1, Integer::sum);
@@ -380,8 +399,9 @@ public final class LazarusEvents {
             return true;
         }
         if (type.equals("military") && !testing && day < MILITARY_DAY.get()) return false;
+        boolean checkpoint = scenery(type).equals("military");
         ResourceLocation table = new ResourceLocation("dyairdrop", "chests/"
-                + (type.equals("military") ? "weaponairdrop" : "smallairdrop") + tier);
+                + (checkpoint ? "weaponairdrop" : "smallairdrop") + tier);
         if (level.getServer().getLootData().getLootTable(table) == LootTable.EMPTY) return false;
         if (!level.setBlock(pos, Blocks.BARREL.defaultBlockState(), 3)) return false;
         BlockEntity blockEntity = level.getBlockEntity(pos);
@@ -395,12 +415,22 @@ public final class LazarusEvents {
             level.removeBlock(pos, false);
             return false;
         }
+        if (type.equals(MilitaryCollapse.ABANDONED)) {
+            if (!EncounterScenery.build(level, pos, "military", rotation)) {
+                level.removeBlock(pos, false);
+                return false;
+            }
+            stockMilitaryCheckpoint(level, pos, rotation, tier, true);
+            if (MilitaryCollapse.infest(level, pos, rotation, id) == 0) LOGGER.warn("Abandoned checkpoint at {} has no infected", pos);
+            if (!MilitaryCollapse.log(level, pos, rotation)) LOGGER.warn("Abandoned checkpoint at {} has no room for its log", pos);
+            return true;
+        }
         if (type.equals("military")) {
             if (!EncounterScenery.build(level, pos, type, rotation)) {
                 level.removeBlock(pos, false);
                 return false;
             }
-            stockMilitaryCheckpoint(level, pos, rotation, tier);
+            stockMilitaryCheckpoint(level, pos, rotation, tier, false);
             List<Mob> staff = new ArrayList<>();
             spawnMilitary(level, pos, rotation, 5, 9, "apocalypsenow:military_01", id, staff);
             spawnMilitary(level, pos, rotation, 10, 9, "apocalypsenow:military_02", id, staff);
@@ -424,7 +454,8 @@ public final class LazarusEvents {
         return true;
     }
 
-    private static void stockMilitaryCheckpoint(ServerLevel level, BlockPos origin, int rotation, int tier) {
+    /** An abandoned post keeps its supply barrel; the fridge is empty and the generator stays off. */
+    private static void stockMilitaryCheckpoint(ServerLevel level, BlockPos origin, int rotation, int tier, boolean abandoned) {
         BlockPos supplies = EncounterScenery.militaryPosition(origin, rotation, 8, 3, 2);
         BlockEntity secondBarrel = level.getBlockEntity(supplies);
         ResourceLocation suppliesTable = new ResourceLocation("dyairdrop", "chests/smallairdrop" + tier);
@@ -432,6 +463,7 @@ public final class LazarusEvents {
                 && level.getServer().getLootData().getLootTable(suppliesTable) != LootTable.EMPTY) {
             barrel.setLootTable(suppliesTable, ThreadLocalRandom.current().nextLong());
         } else LOGGER.warn("Military supply barrel unavailable at {}", supplies);
+        if (abandoned) return;
 
         BlockPos fridgePos = EncounterScenery.militaryPosition(origin, rotation, 11, 2, 1);
         BlockEntity fridge = level.getBlockEntity(fridgePos);
@@ -514,6 +546,7 @@ public final class LazarusEvents {
             case RescueEncounter.TYPE -> "flare";
             case LastDefenseEncounter.TYPE -> "gunfire";
             case FalseRadioEncounter.TYPE -> "cache";
+            case MilitaryCollapse.ABANDONED -> "military";
             default -> type;
         };
     }
@@ -523,6 +556,7 @@ public final class LazarusEvents {
         return switch (type) {
             case RescueEncounter.TYPE, FalseRadioEncounter.TYPE -> "distress call";
             case LastDefenseEncounter.TYPE -> "last stand";
+            case MilitaryCollapse.ABANDONED -> "abandoned checkpoint";
             default -> type + " encounter";
         };
     }
@@ -531,6 +565,7 @@ public final class LazarusEvents {
         return switch (type) {
             case RescueEncounter.TYPE, FalseRadioEncounter.TYPE -> "Someone is begging for help";
             case LastDefenseEncounter.TYPE -> "Defenders under attack, asking for anyone with a gun,";
+            case MilitaryCollapse.ABANDONED -> "An automated military beacon is still transmitting";
             default -> type + " signal";
         };
     }
