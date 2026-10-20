@@ -115,6 +115,8 @@ public final class LazarusEvents {
         MinecraftForge.EVENT_BUS.register(new MilitaryBaseEncounter.Listener());
         MinecraftForge.EVENT_BUS.register(new VaccineProject.Listener());
         MinecraftForge.EVENT_BUS.register(new HavenRefuge.Listener());
+        MinecraftForge.EVENT_BUS.register(new HostileLore.Listener());
+        HostileLore.init(net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext.get().getModEventBus());
         VaccineProject.init(net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext.get().getModEventBus());
         MinecraftForge.EVENT_BUS.register(new FactionBases());
         MinecraftForge.EVENT_BUS.register(new FactionMissions());
@@ -128,6 +130,7 @@ public final class LazarusEvents {
                     MilitaryBaseEncounter.register();
                     VaccineProject.register();
                     HavenRefuge.register();
+                    HostileLore.register();
                     FactionMissions.register();
                     FactionExpeditions.register();
                 }));

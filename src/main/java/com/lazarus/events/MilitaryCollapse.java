@@ -68,8 +68,10 @@ final class MilitaryCollapse {
         return LecternBlock.tryPlaceBook(null, level, at, lectern, book(ThreadLocalRandom.current().nextInt(LOGS.size())));
     }
 
-    static ItemStack book(int index) {
-        String[] log = LOGS.get(Math.floorMod(index, LOGS.size()));
+    static ItemStack book(int index) { return written(LOGS.get(Math.floorMod(index, LOGS.size()))); }
+
+    /** A signed book from {title, author, page...}. */
+    static ItemStack written(String[] log) {
         ItemStack book = new ItemStack(Items.WRITTEN_BOOK);
         CompoundTag tag = book.getOrCreateTag();
         tag.putString("title", log[0]);

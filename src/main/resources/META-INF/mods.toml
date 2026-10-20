@@ -4,7 +4,7 @@ license="All Rights Reserved"
 
 [[mods]]
 modId="lazarusevents"
-version="0.16.0"
+version="0.17.0"
 displayName="Lazarus Events"
 authors="Project Lazarus"
 description='''Emergent apocalypse encounters for Project Lazarus.'''
@@ -33,7 +33,7 @@ side="BOTH"
 [[dependencies.lazarusevents]]
 modId="lazarusnpcs"
 mandatory=true
-versionRange="[1.14.0,)"
+versionRange="[1.15.0,)"
 ordering="AFTER"
 side="BOTH"
 [[dependencies.lazarusevents]]

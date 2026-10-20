@@ -6,7 +6,7 @@
   <img alt="Minecraft 1.20.1" src="https://img.shields.io/badge/Minecraft-1.20.1-3c8527">
   <img alt="Forge 47.x" src="https://img.shields.io/badge/Forge-47.x-dd7d2b">
   <img alt="Java 17" src="https://img.shields.io/badge/Java-17-b07219">
-  <img alt="Versão 0.16.0" src="https://img.shields.io/badge/vers%C3%A3o-0.16.0-6b5b3e">
+  <img alt="Versão 0.17.0" src="https://img.shields.io/badge/vers%C3%A3o-0.17.0-6b5b3e">
 </p>
 
 # Lazarus Events
@@ -78,6 +78,18 @@ O soro é bebido como uma poção: **cura a infecção do The Hordes e impede um
 ### Colapso militar
 
 Com o passar dos dias, os postos militares ativos ficam raros e os **abandonados** tomam o lugar deles. Cada posto abandonado tem um dos seis diários de serviço (evacuação, ordens cortadas, deserção) no atril do centro.
+
+## Hostis na história do mundo
+
+Os humanos hostis têm identidade própria e deixam provas quando o jogador os mata (um rendido nunca deixa nada):
+
+| Grupo | Quem são | Prova | Quem paga |
+|---|---|---|---|
+| **Desertores** (Soldiers) | Soldados que abandonaram os postos durante o colapso | **Placas de identificação** (60%) | Soldado ou médico de um posto militar ativo: **3 placas** dão +2 Military e 30 munições 5.56 |
+| **Gangues** (Looters) | Gangues de rua com território: o nome muda a cada 512 blocos (Rust Dogs, Lantern Boys, Crowbar Saints, Red Tape, Gutter Kings, Static, Tin Men, Black Pine) | **Insígnia** com o nome da gangue (30%) | Líder ou guarda dos Wardens: **3 insígnias** dão +2 Wardens, 2 comidas enlatadas e 1 bandagem |
+| **The Hollow** (Cannibals) | Um culto noturno que some com sobreviventes | **Amuleto de osso** (40%) | Líder do refúgio do Haven: **2 amuletos** dão +3 Haven e 1 antibiótico |
+
+O aviso e a tela de negociação dos saqueadores citam a gangue do lugar. Qualquer hostil morto pode deixar um **bilhete** (15%): são cinco textos por grupo, como cartas de desertores, listas de pedágio das gangues e rabiscos do culto. Quem carrega provas suficientes é recebido primeiro com a oferta de pagamento; a opção "Something else" deixa conversar normalmente por um minuto.
 
 ## Refúgio do Haven
 
@@ -210,7 +222,7 @@ O Immersive Frequencies é usado apenas para as mensagens opcionais de rádio.
 
 ### Jogadores e servidores
 
-1. Compile `lazarusevents-0.16.0.jar` em `build/libs/` ou [compile o projeto](#compilar-a-partir-do-código).
+1. Compile `lazarusevents-0.17.0.jar` em `build/libs/` ou [compile o projeto](#compilar-a-partir-do-código).
 2. Coloque o JAR na pasta `mods` do perfil. No CurseForge, clique com o botão direito no perfil e escolha **Open Folder**.
 3. Em multiplayer, instale o **mesmo JAR** no servidor e em todos os clientes.
 4. Remova versões antigas de `lazarusevents` e reinicie o jogo ou servidor após a troca.

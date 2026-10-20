@@ -61,7 +61,7 @@ final class MilitaryBaseEncounter {
                 NpcApi.registerDialogue(new DialogueDefinition(GATE, Set.of(DialogueTrigger.INTERACT), 50, MilitaryBaseEncounter::gate)));
     }
 
-    private static ItemStack ammo(String ammoId, int count) {
+    static ItemStack ammo(String ammoId, int count) {
         ItemStack stack = ApiSupport.stack("tacz:ammo", count);
         if (!stack.isEmpty()) {
             CompoundTag tag = stack.getOrCreateTag();
