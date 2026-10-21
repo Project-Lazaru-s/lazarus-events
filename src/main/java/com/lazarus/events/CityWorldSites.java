@@ -97,14 +97,20 @@ final class CityWorldSites {
 
     /** True when {@code pos} is inside the metro's own space (a station or a tunnel), not merely above it. */
     static boolean inSubway(ServerLevel level, BlockPos pos) {
-        return call("isSubway", new Class<?>[] {ServerLevel.class, BlockPos.class}, level, pos) instanceof Boolean subway && subway;
+        // CityWorld 6.3.0's isSubway only checks the chunk, not the player's height.
+        return subway(level, pos).map(s -> contains(s, pos.getY())).orElse(false);
+    }
+
+    static boolean contains(Subway s, int y) {
+        return s.eastWest() && y > s.eastWestFloorY() && y <= s.eastWestFloorY() + 6
+                || s.northSouth() && y > s.northSouthFloorY() && y <= s.northSouthFloorY() + 6;
     }
 
     /** Centres of up to {@code max} lots of class {@code lotClass} within {@code radius} chunks (CityWorld caps it at 8). */
     static List<BlockPos> findLots(ServerLevel level, BlockPos near, String lotClass, int radius, int max) {
         List<BlockPos> found = new ArrayList<>();
         if (!(call("findLots", new Class<?>[] {ServerLevel.class, BlockPos.class, String.class, int.class, int.class},
-                level, near, lotClass, Math.min(radius, 8), max) instanceof List<?> lots)) return found;
+                level, near, lotClass, Math.min(radius, 8) * 16, max) instanceof List<?> lots)) return found;
         for (Object lot : lots) {
             try {
                 ChunkPos chunk = (ChunkPos) field(lot, "chunk");

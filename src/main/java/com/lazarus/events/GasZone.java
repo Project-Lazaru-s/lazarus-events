@@ -91,16 +91,29 @@ final class GasZone {
 
     /** The medical reward barrel deep inside, with a chance of a serum; false when the space has no wall to use. */
     static boolean place(ServerLevel level, BuildingHideout.Room room) {
+        return medicalReward(level, room, "infection_medical");
+    }
+
+    /** A premium medical cache for accepting the tunnel's infectious hazard. */
+    static boolean placeMetro(ServerLevel level, BuildingHideout.Room room) {
+        return medicalReward(level, room, "metro_medical");
+    }
+
+    private static boolean medicalReward(ServerLevel level, BuildingHideout.Room room, String prefix) {
         int tier = Math.min(5, 1 + (int) (level.getDayTime() / 24000) / 10);
-        BlockPos at = barrel(level, room, "medicalairdrop" + tier);
-        if (at == null) return false;
-        if (level.getBlockEntity(at) instanceof RandomizableContainerBlockEntity barrel && ThreadLocalRandom.current().nextFloat() < 0.3f)
-            barrel.setItem(barrel.getContainerSize() - 1, new ItemStack(VaccineProject.SERUM.get()));
+        ResourceLocation table = ApiSupport.id("chests/" + prefix + tier);
+        if (level.getServer().getLootData().getLootTable(table) == LootTable.EMPTY) return false;
+        BlockPos at = barrel(level, room, table);
+        if (at == null || !(level.getBlockEntity(at) instanceof RandomizableContainerBlockEntity barrel)) return false;
         return true;
     }
 
     /** A barrel of dyairdrop {@code loot} in the wall cell farthest from every way out, or null. */
     static BlockPos barrel(ServerLevel level, BuildingHideout.Room room, String loot) {
+        return barrel(level, room, new ResourceLocation("dyairdrop", "chests/" + loot));
+    }
+
+    private static BlockPos barrel(ServerLevel level, BuildingHideout.Room room, ResourceLocation table) {
         BuildingHideout.Cells cells = BuildingHideout.cells(level, room);
         if (cells.walls().isEmpty()) return null;
         BlockPos deepest = cells.walls().get(0);
@@ -110,7 +123,6 @@ final class GasZone {
             if (nearestExit > best) { best = nearestExit; deepest = cell; }
         }
         if (!level.setBlock(deepest, Blocks.BARREL.defaultBlockState(), 3)) return null;
-        ResourceLocation table = new ResourceLocation("dyairdrop", "chests/" + loot);
         if (level.getBlockEntity(deepest) instanceof RandomizableContainerBlockEntity barrel
                 && level.getServer().getLootData().getLootTable(table) != LootTable.EMPTY)
             barrel.setLootTable(table, ThreadLocalRandom.current().nextLong());
@@ -118,7 +130,7 @@ final class GasZone {
     }
 
     /** Encounters that fill their space with gas. */
-    static boolean gassed(String type) { return TYPE.equals(type) || Quarantine.TYPE.equals(type); }
+    static boolean gassed(String type) { return TYPE.equals(type) || Quarantine.TYPE.equals(type) || TerritoryEvents.METRO_GAS.equals(type); }
 
     static void record(EventData.Encounter encounter, BuildingHideout.Room room, long now) {
         encounter.data.putLongArray(CELLS, room.cells().stream().mapToLong(BlockPos::asLong).toArray());
@@ -135,17 +147,18 @@ final class GasZone {
         return true;
     }
 
-    static boolean masked(ServerPlayer player) { return player.getItemBySlot(EquipmentSlot.HEAD).is(GAS_MASKS); }
+    static ItemStack mask(ServerPlayer player) {
+        ItemStack helmet = player.getItemBySlot(EquipmentSlot.HEAD);
+        if (helmet.is(GAS_MASKS)) return helmet;
+        return net.minecraftforge.fml.ModList.get().isLoaded("curios") ? GasCurios.mask(player) : ItemStack.EMPTY;
+    }
+
+    static boolean masked(ServerPlayer player) { return !mask(player).isEmpty(); }
 
     /** One second in the gas for this player. Returns the unprotected exposure in seconds (0 when protected). */
     static int breathe(ServerPlayer player, long second) {
-        if (hazmat(player)) { EXPOSURE.remove(player.getUUID()); return 0; }
-        if (masked(player)) {
+        if (protectedBreath(player, second)) {
             EXPOSURE.remove(player.getUUID());
-            if (second % 2 == 0) {
-                ItemStack mask = player.getItemBySlot(EquipmentSlot.HEAD);
-                if (mask.isDamageableItem()) mask.hurtAndBreak(1, player, broken -> broken.broadcastBreakEvent(EquipmentSlot.HEAD));
-            }
             return 0;
         }
         int seconds = EXPOSURE.merge(player.getUUID(), 1, Integer::sum);
@@ -158,6 +171,17 @@ final class GasZone {
             if (infected != null && !player.hasEffect(infected)) player.addEffect(new MobEffectInstance(infected, 12_000, 0));
         }
         return seconds;
+    }
+
+    /** Shared equipment rule only; natural gas never calls the infectious breathe method. */
+    static boolean protectedBreath(ServerPlayer player, long second) {
+        if (hazmat(player)) return true;
+        ItemStack mask = mask(player);
+        if (mask.isEmpty()) return false;
+        if (second % 2 == 0) {
+            if (mask.isDamageableItem()) mask.hurtAndBreak(1, player, broken -> broken.broadcastBreakEvent(EquipmentSlot.HEAD));
+        }
+        return true;
     }
 
     /** One second in the gas for a human NPC: unmasked ones choke and head for the nearest way out. */
@@ -193,11 +217,12 @@ final class GasZone {
                     data.remove(encounter.id);
                     continue;
                 }
-                Vec3 center = Vec3.atCenterOf(encounter.pos);
-                List<ServerPlayer> near = level.players().stream()
-                        .filter(player -> !player.isSpectator() && player.distanceToSqr(center) < 48 * 48).toList();
-                if (near.isEmpty() || !level.isLoaded(encounter.pos)) continue;
                 Set<Long> cells = cells(encounter);
+                if (cells.isEmpty()) continue;
+                AABB bounds = GasVolumes.bounds(cells);
+                List<ServerPlayer> near = level.players().stream()
+                        .filter(player -> !player.isSpectator() && bounds.inflate(24).contains(player.position())).toList();
+                if (near.isEmpty() || !level.isLoaded(encounter.pos)) continue;
                 List<Long> list = new ArrayList<>(cells);
                 ThreadLocalRandom random = ThreadLocalRandom.current();
                 for (int i = 0; i < Math.min(24, list.size()); i++) {
@@ -217,7 +242,7 @@ final class GasZone {
                     exposed.add(player.getUUID());
                     breathe(player, now / 20);
                 }
-                for (Mob npc : level.getEntitiesOfClass(Mob.class, new AABB(encounter.pos).inflate(REACH + 4),
+                for (Mob npc : level.getEntitiesOfClass(Mob.class, bounds,
                         mob -> mob.isAlive() && inGas(cells, mob.blockPosition()) && NpcApi.identity(mob).isPresent()))
                     choke(npc, encounter);
             }
@@ -229,7 +254,7 @@ final class GasZone {
         public void filter(PlayerInteractEvent.RightClickItem event) {
             if (!(event.getEntity() instanceof ServerPlayer player) || !FILTER.equals(ForgeRegistries.ITEMS.getKey(event.getItemStack().getItem())))
                 return;
-            ItemStack mask = player.getItemBySlot(EquipmentSlot.HEAD);
+            ItemStack mask = GasZone.mask(player);
             if (!mask.is(GAS_MASKS) || !mask.isDamaged()) return;
             mask.setDamageValue(0);
             if (!player.getAbilities().instabuild) event.getItemStack().shrink(1);

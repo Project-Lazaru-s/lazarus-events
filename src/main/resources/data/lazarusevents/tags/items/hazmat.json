@@ -48,6 +48,62 @@
     {
       "id": "apocalypsenow:level_a_hazmatsuit_boots",
       "required": false
+    },
+    {
+      "id": "apocalypsenow:contamination_suit_white_helmet",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:contamination_suit_white_chestplate",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:contamination_suit_white_leggings",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:contamination_suit_blue_helmet",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:contamination_suit_blue_chestplate",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:contamination_suit_blue_leggings",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:contamination_suit_green_helmet",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:contamination_suit_green_chestplate",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:contamination_suit_green_leggings",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:contamination_suit_white_boots",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:biohazard_helmet",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:biohazard_chestplate",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:biohazard_leggings",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:biohazard_boots",
+      "required": false
     }
   ]
 }

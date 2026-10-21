@@ -11,6 +11,8 @@
 
 # Lazarus Events
 
+> **Build local T1/T2: 0.23.0-local.5.** Acrescenta gás de metrô, abrigo de plataforma, gás natural de mineração e mineiros perdidos. Inclui reservas médicas premium, loot de mineração com equipamento encantado, 24 IDs de proteção respiratória, ignição por tochas e explosão destrutiva. Veja as [recompensas por tier](docs/RECOMPENSAS_T1_T2.md). A validação desta revisão está no registro de testes; o aceite visual no CityWorld continua separado. Veja o [roteiro local](docs/TESTE_LOCAL_T1_T2.md) e o [registro de validação](docs/VALIDACAO_T1_T2.md) e a [revisão técnica de T1/T2](docs/REVISAO_T1_T2.md). A documentação de distribuição abaixo ainda descreve a release 0.22.0.
+
 **Lazarus Events** é um mod para Minecraft Forge 1.20.1 criado para o modpack **Project Lazarus**. Ele espalha pequenos encontros pelo mundo enquanto o jogador explora: acampamentos abandonados, barricadas após disparos, pedidos de socorro (verdadeiros ou não), defesas contra hordas, bases militares, esconderijos de hostis, ninhos de zumbis, zonas de gás de infecção e quarentenas militares. Cada cenário tem uma construção própria, personagens ou infectados e recursos que fazem sentido para o local. Também mantém as bases permanentes das facções Rovers e Wardens, o refúgio do Haven, o projeto vacina e o colapso militar ao longo dos dias.
 
 Os encontros são colocados em áreas já carregadas do *Overworld*. O mod não força a geração de chunks, não depende dos antigos scripts de eventos do KubeJS e guarda o progresso separadamente em cada mundo. As novas bases de facção usam apenas chunks recém-gerados. Os textos dentro do jogo estão em inglês, seguindo o padrão do modpack.
@@ -154,10 +156,10 @@ Enquanto o ninho vive, os **64 blocos** em volta viram zona infestada:
 A partir do **dia 12**, um vazamento químico pode encher de **gás verde** um espaço fechado, de preferência subterrâneo: porão, esgoto ou cisterna do CityWorld, ou um cômodo de prédio. O rádio avisa: *"Military band: chemical leak detected underground, masks mandatory"*. A nuvem é visível (partículas verdes) e chia de vez em quando.
 
 - **Sem proteção**, a cada segundo dentro do gás: náusea e tosse; depois de 5 s, veneno; depois de 15 s, **1 coração de dano por segundo** (mata em cerca de 25 s). A cada 10 s há 25% de chance de pegar a **infecção do The Hordes** (o soro experimental protege).
-- **Máscara de gás** na cabeça (tag `lazarusevents:gas_masks`: as máscaras e capacetes hazmat do Apocalypse Now) bloqueia tudo, mas **perde 1 de durabilidade a cada 2 s** no gás. Usar um **Breathing Filter Module** com a máscara posta a deixa nova.
+- **Máscara de gás** na cabeça ou adaptação MO4 equipada num slot funcional do Curios (tag `lazarusevents:gas_masks`: as máscaras e capacetes hazmat do Apocalypse Now) bloqueia tudo, mas **perde 1 de durabilidade a cada 2 s** no gás. Usar um **Breathing Filter Module** com a máscara posta a deixa nova.
 - **Roupa hazmat completa** (tag `lazarusevents:hazmat`) bloqueia sem gastar nada.
 - Zumbis não são afetados. NPCs humanos sem máscara sofrem e fogem para a saída mais próxima.
-- No ponto mais fundo, longe das saídas, há um **barril com loot médico** do tier atual e 30% de chance de um **soro experimental**.
+- No ponto mais fundo, longe das saídas, há um **barril médico premium** do tier atual, com kits, medicamentos, filtros, máscara, peitoral protetor e 35–55% de chance de um **soro experimental**. As [quantidades por tier](docs/RECOMPENSAS_T1_T2.md) também descrevem o novo loot dos mineiros.
 - O gás dura **2 dias de jogo** e se dissipa com aviso no rádio. A opção `enableInfectionZones` desliga.
 
 ### Quarentena militar

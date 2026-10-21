@@ -55,7 +55,8 @@ public final class LazarusEvents {
     private static final String[] TYPES = {"cache", "gunfire", "flare", "military", RescueEncounter.TYPE,
             LastDefenseEncounter.TYPE, FalseRadioEncounter.TYPE, MilitaryCollapse.ABANDONED,
             HostileHideouts.DESERTER_CAMP, HostileHideouts.GANG_HIDEOUT, BuildingHideout.TYPE, HollowDen.TYPE, ZombieNest.TYPE,
-            GasZone.TYPE, Quarantine.TYPE, SmugglerDen.TYPE, HeliCrash.TYPE};
+            GasZone.TYPE, Quarantine.TYPE, SmugglerDen.TYPE, HeliCrash.TYPE,
+            TerritoryEvents.METRO_GAS, TerritoryEvents.SHELTER, TerritoryEvents.MINERS, NaturalGas.TYPE};
     private static final ResourceLocation RADIO_ID = new ResourceLocation("ifreq", "walkie_talkie");
     private static final ForgeConfigSpec CONFIG;
     private static final ForgeConfigSpec.BooleanValue ENABLED;
@@ -129,6 +130,7 @@ public final class LazarusEvents {
 
     public LazarusEvents() {
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, CONFIG);
+        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, TerritoryConfig.SPEC, "lazarusevents-territories.toml");
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(new RescueEncounter.Listener());
         MinecraftForge.EVENT_BUS.register(new LastDefenseEncounter.Listener());
@@ -142,6 +144,8 @@ public final class LazarusEvents {
         MinecraftForge.EVENT_BUS.register(new InfestedZone.Listener());
         MinecraftForge.EVENT_BUS.register(new GasZone.Listener());
         MinecraftForge.EVENT_BUS.register(new HeliCrash.Listener());
+        MinecraftForge.EVENT_BUS.register(new NaturalGas());
+        if (net.minecraftforge.fml.ModList.get().isLoaded("tacz")) MinecraftForge.EVENT_BUS.register(new GasGunHook());
         HostileLore.init(net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext.get().getModEventBus());
         VaccineProject.init(net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext.get().getModEventBus());
         MinecraftForge.EVENT_BUS.register(new FactionBases());
@@ -165,6 +169,7 @@ public final class LazarusEvents {
     }
 
     static boolean expeditionsEnabled() { return FACTION_EXPEDITIONS_ENABLED.get(); }
+    static boolean enabled() { return ENABLED.get(); }
 
     static int baseFallbackDay() { return BASE_FALLBACK_DAY.get(); }
 
@@ -182,6 +187,7 @@ public final class LazarusEvents {
         ZombieNest.tick(level, data);
         Quarantine.tick(level, data);
         HeliCrash.tick(level, data);
+        TerritoryEvents.tick(level, data);
         for (EventData.Encounter encounter : data.encounters) {
             if (encounter.discovered) continue;
             for (ServerPlayer player : level.players()) {
@@ -197,12 +203,12 @@ public final class LazarusEvents {
             data.setDirty();
             return;
         }
-        if (now < data.nextAttempt || data.encounters.size() >= MAX_ACTIVE.get()) return;
+        if (now < data.nextAttempt || data.encounters.stream().filter(e -> !NaturalGas.TYPE.equals(e.type)).count() >= MAX_ACTIVE.get()) return;
         List<ServerPlayer> eligible = level.players().stream()
                 .filter(player -> !player.isSpectator() && !player.isCreative()).toList();
         if (eligible.isEmpty()) return;
         ServerPlayer player = eligible.get(ThreadLocalRandom.current().nextInt(eligible.size()));
-        String type = randomType(level.getDayTime());
+        String type = randomType(level, player);
         if (type == null) {
             data.result("No encounter types enabled for this world day");
             data.nextAttempt = now + 1200;
@@ -229,7 +235,8 @@ public final class LazarusEvents {
                 : 24000L * min + ThreadLocalRandom.current().nextLong(24000L * (max - min) + 1);
     }
 
-    private static String randomType(long now) {
+    private static String randomType(ServerLevel level, ServerPlayer player) {
+        long now = level.getDayTime();
         Map<String, Double> weights = new java.util.LinkedHashMap<>();
         int day = (int) (now / 24000);
         if (CACHE_ENABLED.get()) weights.put("cache", 9.0);
@@ -256,6 +263,7 @@ public final class LazarusEvents {
         if (GAS_ENABLED.get() && day >= 12) weights.put(GasZone.TYPE, 1.5);
         if (QUARANTINE_ENABLED.get() && day >= 21) weights.put(Quarantine.TYPE, 1.0);
         if (HELI_ENABLED.get() && day >= HELI_DAY.get()) weights.put(HeliCrash.TYPE, 1.0);
+        TerritoryEvents.weights(weights, level, player);
         if (weights.isEmpty()) return null;
         double roll = ThreadLocalRandom.current().nextDouble(weights.values().stream().mapToDouble(Double::doubleValue).sum());
         for (Map.Entry<String, Double> entry : weights.entrySet())
@@ -437,6 +445,16 @@ public final class LazarusEvents {
             data.setDirty();
             radioMessage(level, pos, type);
             return new Outcome(true, "Placed " + type + " " + id + " at " + pos.toShortString());
+        }
+        if (NaturalGas.TYPE.equals(type)) {
+            boolean released = NaturalGas.release(level, player, player.blockPosition(), true);
+            return new Outcome(released, released ? "Released natural gas around you" : "No enclosed air volume available (or a pocket is already here)");
+        }
+        if (TerritoryEvents.handles(type)) {
+            String failure = TerritoryEvents.attempt(level, player, type, near, data);
+            if (failure != null) return new Outcome(false, failure);
+            EventData.Encounter placed = data.encounters.get(data.encounters.size() - 1);
+            return new Outcome(true, "Placed " + type + " " + placed.id + " at " + placed.pos.toShortString());
         }
         if (BuildingHideout.TYPE.equals(type) || HollowDen.TYPE.equals(type) || ZombieNest.TYPE.equals(type) || GasZone.gassed(type)
                 || SmugglerDen.TYPE.equals(type))
@@ -763,7 +781,7 @@ public final class LazarusEvents {
     private static void removeActors(ServerLevel level, UUID id, BlockPos pos) {
         String tag = ID + ":" + id;
         for (Entity entity : level.getEntities((Entity) null,
-                AABB.ofSize(Vec3.atCenterOf(pos), 48, 24, 48), candidate -> candidate.getTags().contains(tag))) {
+                AABB.ofSize(Vec3.atCenterOf(pos), 128, 32, 128), candidate -> candidate.getTags().contains(tag))) {
             entity.discard();
         }
     }
@@ -823,6 +841,9 @@ public final class LazarusEvents {
             case GasZone.TYPE -> "chemical leak";
             case Quarantine.TYPE -> "military quarantine";
             case HeliCrash.TYPE -> "helicopter crash";
+            case TerritoryEvents.METRO_GAS -> "metro chemical leak";
+            case TerritoryEvents.SHELTER -> "fallen platform shelter";
+            case TerritoryEvents.MINERS -> "lost mining crew";
             default -> type + " encounter";
         };
     }

@@ -48,6 +48,54 @@
     {
       "id": "apocalypsenow:level_a_hazmatsuit_helmet",
       "required": false
+    },
+    {
+      "id": "apocalypsenow:rou_respirator_helmet",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:mo_4gasmaskfaceadaptation",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:mo_4gasmaskfaceadaptationforestcamo",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:mo_4gasmaskfaceadaptationmudcamo",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:contamination_suit_white_helmet",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:contamination_suit_blue_helmet",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:contamination_suit_green_helmet",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:soldier_helmet",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:mo4_forest_camo_helmet",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:mo4_mud_camo_helmet",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:rusty_helmet",
+      "required": false
+    },
+    {
+      "id": "apocalypsenow:biohazard_helmet",
+      "required": false
     }
   ]
 }
