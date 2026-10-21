@@ -3,11 +3,8 @@ package com.lazarus.events;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -64,22 +61,22 @@ final class SmugglerDen {
         if (door == null) return false;
         Set<BlockPos> cells = new HashSet<>(room.cells());
         BlockPos inside = room.cells().stream().min(Comparator.comparingDouble(door::distSqr)).orElse(room.center());
-        List<BlockPos> walkway = walkway(level, room, inside);
+        List<BlockPos> walkway = HideoutLayout.walkway(level, room.cells(), inside, null);
         Set<BlockPos> taken = new HashSet<>();
         for (BlockPos step : walkway) { taken.add(step); taken.add(step.above()); }
         List<List<BlockPos>> zones = zones(room, door);
         for (int i = 0; i < USES.length; i++)
-            for (String use : USES[i]) furnishOne(level, use, zones.get(i), taken, tier);
-        furnishOne(level, "decor", room.cells(), taken, tier);
-        stock(level, freeWall(level, zones.get(4), cells, taken), "weaponairdrop" + tier, null);
-        stock(level, freeWall(level, zones.get(3), cells, taken), "medicalairdrop" + tier,
+            for (String use : USES[i]) HideoutLayout.furnishOne(level, use, zones.get(i), taken, tier);
+        HideoutLayout.furnishOne(level, "decor", room.cells(), taken, tier);
+        stock(level, HideoutLayout.freeWall(level, taken, zones.get(4), cells), "weaponairdrop" + tier, null);
+        stock(level, HideoutLayout.freeWall(level, taken, zones.get(3), cells), "medicalairdrop" + tier,
                 ApiSupport.stack("apocalypsenow:cigarettes", 1 + random.nextInt(3)));
-        stock(level, freeWall(level, zones.get(2), cells, taken), "smallairdrop" + tier, random.nextBoolean()
+        stock(level, HideoutLayout.freeWall(level, taken, zones.get(2), cells), "smallairdrop" + tier, random.nextBoolean()
                 ? ApiSupport.stack("apocalypsenow:alcohol", 1 + random.nextInt(2)) : ApiSupport.stack("apocalypsenow:beer", 2 + random.nextInt(3)));
-        planks(level, zones.get(2));
-        planks(level, zones.get(3));
+        HideoutLayout.planks(level, zones.get(2));
+        HideoutLayout.planks(level, zones.get(3));
         beams(level, room, taken);
-        cobwebs(level, room, taken);
+        HideoutLayout.cobwebs(level, room, taken);
         bridges(level, room);
         List<BlockPos> spawns = new ArrayList<>(room.cells());
         spawns.removeIf(pos -> taken.contains(pos) && !walkway.contains(pos)
@@ -129,39 +126,6 @@ final class SmugglerDen {
         return gaps.get(0);
     }
 
-    /**
-     * The walkway from the door to the far end, kept clear of furniture: the cheapest path where cells against a
-     * wall cost less, so it hugs one side and leaves the other side's depth to the kits.
-     */
-    static List<BlockPos> walkway(ServerLevel level, BuildingHideout.Room room, BlockPos inside) {
-        Set<BlockPos> cells = new HashSet<>(room.cells());
-        Map<BlockPos, Integer> cost = new HashMap<>();
-        Map<BlockPos, BlockPos> from = new HashMap<>();
-        PriorityQueue<BlockPos> queue = new PriorityQueue<>(Comparator.comparingInt(cost::get));
-        cost.put(inside, 0);
-        queue.add(inside);
-        while (!queue.isEmpty()) {
-            BlockPos cell = queue.poll();
-            for (Direction side : Direction.Plane.HORIZONTAL) {
-                BlockPos next = cell.relative(side);
-                if (!cells.contains(next)) continue;
-                boolean byWall = false;
-                for (Direction around : Direction.Plane.HORIZONTAL) byWall |= !BuildingHideout.passable(level, next.relative(around));
-                int total = cost.get(cell) + (byWall ? 1 : 3);
-                if (total < cost.getOrDefault(next, Integer.MAX_VALUE)) {
-                    cost.put(next, total);
-                    from.put(next, cell);
-                    queue.remove(next);
-                    queue.add(next);
-                }
-            }
-        }
-        BlockPos far = room.cells().stream().max(Comparator.comparingDouble(inside::distSqr)).orElse(inside);
-        List<BlockPos> path = new ArrayList<>();
-        for (BlockPos step = far; step != null; step = from.get(step)) path.add(step);
-        return path;
-    }
-
     /** The cells of each use, cut along the stretch's long axis from the door's end. */
     static List<List<BlockPos>> zones(BuildingHideout.Room room, BlockPos door) {
         int minX = Integer.MAX_VALUE, maxX = Integer.MIN_VALUE, minZ = Integer.MAX_VALUE, maxZ = Integer.MIN_VALUE;
@@ -182,36 +146,6 @@ final class SmugglerDen {
             zones.get(use).add(cell);
         }
         return zones;
-    }
-
-    private static boolean furnishOne(ServerLevel level, String use, List<BlockPos> floor, Set<BlockPos> taken, int tier) {
-        if (floor.isEmpty()) return false;
-        List<HideoutKits.Kit> kits = new ArrayList<>(HideoutKits.tagged(level.getServer(), use));
-        Collections.shuffle(kits, ThreadLocalRandom.current());
-        for (HideoutKits.Kit kit : kits) if (HideoutKits.furnish(level, kit, floor, taken, tier)) return true;
-        return false;
-    }
-
-    /** A free cell against a wall in the zone (or anywhere in the den), or null. */
-    private static BlockPos freeWall(ServerLevel level, List<BlockPos> zone, Set<BlockPos> cells, Set<BlockPos> taken) {
-        for (List<BlockPos> where : List.of(zone, new ArrayList<>(cells)))
-            for (BlockPos cell : where) {
-                if (taken.contains(cell) || !BuildingHideout.passable(level, cell)) continue;
-                for (Direction side : Direction.Plane.HORIZONTAL)
-                    if (!BuildingHideout.passable(level, cell.relative(side))) {
-                        taken.add(cell);
-                        return cell;
-                    }
-            }
-        return null;
-    }
-
-    /** Spruce planks over the stone floor where the gang lives. */
-    private static void planks(ServerLevel level, List<BlockPos> zone) {
-        BlockState plank = Blocks.SPRUCE_PLANKS.defaultBlockState();
-        for (BlockPos cell : zone)
-            if (level.getBlockState(cell.below()).isCollisionShapeFullBlock(level, cell.below()) && ThreadLocalRandom.current().nextFloat() < 0.8f)
-                level.setBlock(cell.below(), plank, 3);
     }
 
     /**
@@ -235,15 +169,6 @@ final class SmugglerDen {
                 level.setBlock(cell.above(), Blocks.LANTERN.defaultBlockState().setValue(net.minecraft.world.level.block.LanternBlock.HANGING, true), 3);
                 taken.add(cell.above());
             }
-        }
-    }
-
-    /** Cobwebs high in a few corners, never over the walkway. */
-    private static void cobwebs(ServerLevel level, BuildingHideout.Room room, Set<BlockPos> taken) {
-        for (BlockPos cell : BuildingHideout.cells(level, room).walls()) {
-            BlockPos high = cell.above(2);
-            if (ThreadLocalRandom.current().nextFloat() < 0.15f && !taken.contains(cell) && level.getBlockState(high).isAir())
-                level.setBlock(high, Blocks.COBWEB.defaultBlockState(), 3);
         }
     }
 

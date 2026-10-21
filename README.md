@@ -126,6 +126,10 @@ Quando um saqueador ou desertor se rende, a tela de rendição ganha duas opçõ
 - **Interrogate:** uma vez por prisioneiro. Ele entrega o esconderijo do grupo, que é criado agora a 80–160 blocos em área já carregada: acampamento de desertores para soldados; esconderijo de gangue ou cômodo de prédio tomado pela gangue para saqueadores. O prisioneiro diz a direção e a distância, e uma tarefa **Find the hideout** vai para o diário com o destino. Se não houver lugar válido por perto, ele não diz nada útil.
 - **Send to refuge:** só aparece se o refúgio do Haven tiver um beliche de hóspede livre. O prisioneiro deixa as cores da gangue e vai recomeçar no refúgio, com roupa de sobrevivente e nome novo. Dá +2 Haven.
 
+### Esconderijos habitados
+
+Os esconderijos em prédio (gangue e covil do Hollow) ocupam o cômodo encontrado e os vizinhos atrás das portas (até 4 cômodos para a gangue, 3 para o Hollow). Cada cômodo é esvaziado e mobiliado com os **kits de móveis** conforme o tamanho: o maior vira sala comum (cozinha e guarita), os outros dormitório, oficina e depósito, sempre com passagens livres entre as portas. A gangue guarda o estoque no depósito e marca a sala comum com a placa TURF; o Hollow prende o refém numa jaula num canto longe das portas, entre ossos, velas e uma fogueira apagada.
+
 ## Ninhos de zumbis
 
 A partir do **dia 8**, a infecção pode criar raiz num cômodo de prédio (ou porão): **3 a 5 pústulas** (blocos vermelhos e carnudos, que os zumbis não comem) junto às paredes, teias, esporos no ar e gemidos. O rádio avisa: *"Military band: biological growth reported inside a building, avoid the area"*.
