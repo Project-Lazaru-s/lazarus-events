@@ -252,7 +252,7 @@ Essa é a base da update de **eventos por território** (metrô, cavernas, esgot
 ### Esgotos (0.23.0)
 
 - **Ninhos e gás preferem esgotos:** com o CityWorld, 60% das vezes os ninhos de zumbis e as zonas de infecção procuram primeiro um esgoto a 30–80 blocos do jogador; sem esgoto por perto, voltam ao prédio ou ao subsolo de antes.
-- **Esconderijo de contrabandista** (`smuggler_den`, a partir do dia 6): a gangue local fecha um trecho de túnel de esgoto com **grades de ferro** dos dois lados e uma única **porta**. Dentro, três barris com o melhor estoque da gangue (armas e munição com um distintivo da gangue, remédio com cigarros, suprimentos com bebida), caixas e uma lanterna, guardados por 3 ou 4 saqueadores. Só aparece em trechos com formato de túnel; limpar o lugar paga reputação política com os Wardens, como os outros esconderijos de gangue.
+- **Esconderijo de contrabandista** (`smuggler_den`, a partir do dia 6): a gangue local fecha um trecho de túnel de esgoto com **grades de ferro** e uma única **porta**, e mora lá. Da porta para dentro: guarita, oficina, cozinha, dormitório e depósito, montados com os **kits de móveis**, ao longo de uma passagem livre; vigas de madeira com lanternas penduradas, piso de tábuas e **pontes** de tábuas sobre os canais de água. O melhor estoque (armas e munição com um distintivo da gangue no depósito, remédio com cigarros, suprimentos com bebida) é guardado por 3 ou 4 saqueadores. Só aparece em trechos com formato de túnel; limpar o lugar paga reputação política com os Wardens, como os outros esconderijos de gangue.
 
 ---
 
