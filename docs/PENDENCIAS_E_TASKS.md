@@ -11,8 +11,8 @@ Legenda: `[x]` feito · `[ ]` a fazer · `[~]` feito, falta validar no jogo
 | Fase | Entrega | Versão | Estado |
 |---|---|---|---|
 | T0 | API do CityWorld (reflexão) e comando `where` | Events 0.22.0 | `[x]` validada e aprovada no jogo |
-| T1 | Metrô: gás no túnel e estação-abrigo | Events 0.25.0 | `[~]` teste manual no CityWorld pendente (branch `FSantiago75/T1-T2`) |
-| T2 | Cavernas: bolsões de gás natural e mineiros perdidos | Events 0.25.0 | `[~]` teste manual no CityWorld pendente (branch `FSantiago75/T1-T2`) |
+| T1 | Metrô: gás no túnel e estação-abrigo | Events 1.0.0 | `[~]` teste manual no CityWorld pendente |
+| T2 | Cavernas: bolsões de gás natural e mineiros perdidos | Events 1.0.0 | `[~]` teste manual no CityWorld pendente |
 | T3 | Esgotos: preferência de ninhos e gás, esconderijo de contrabandista | Events 0.23.0 | `[x]` aprovada no jogo |
 | T3+ | Esconderijos habitados (kits de móveis) | Events 0.23.x | `[x]` etapas 1 a 5 aprovadas no jogo, na branch `KaiD3v/T3-T4` |
 | T4 | Superfície: queda de helicóptero | Events 0.24.0 | `[x]` aprovada no jogo |

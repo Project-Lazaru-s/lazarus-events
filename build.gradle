@@ -2,7 +2,7 @@ plugins {
     id 'net.minecraftforge.gradle' version '[6.0,6.2)'
 }
 
-version = "0.25.0"
+version = "1.0.0"
 group = 'com.lazarus.events'
 base.archivesName = 'lazarusevents'
 
@@ -48,6 +48,8 @@ dependencies {
 }
 
 tasks.named('processResources') {
+    // declared as input, or a version bump reuses the cached mods.toml with the old version
+    inputs.property 'mod_version', project.version
     filesMatching('META-INF/mods.toml') { expand mod_version: project.version }
 }
 tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
