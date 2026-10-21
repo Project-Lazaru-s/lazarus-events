@@ -1,0 +1,24 @@
+{
+  "tags": [
+    "dorm"
+  ],
+  "groups": [
+    "smugglers"
+  ],
+  "palette": {
+    "H": "minecraft:brown_bed[part=head,facing=back]",
+    "F": "minecraft:brown_bed[part=foot,facing=back]",
+    "B": "minecraft:barrel[facing=up]",
+    "C": "minecraft:gray_carpet",
+    "L": "minecraft:lantern"
+  },
+  "layers": [
+    [
+      "HB",
+      "FC"
+    ],
+    [
+      " L"
+    ]
+  ]
+}

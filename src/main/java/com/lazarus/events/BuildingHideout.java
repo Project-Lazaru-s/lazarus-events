@@ -146,7 +146,7 @@ final class BuildingHideout {
         String gang = HostileGroups.gang(level, room.center());
         if (cells(level, room).walls().size() < 4) return false;
         List<Room> rooms = HideoutLayout.rooms(level, room, 4);
-        HideoutLayout.Furnished home = HideoutLayout.furnish(level, rooms, tier, new java.util.HashSet<>());
+        HideoutLayout.Furnished home = HideoutLayout.furnish(level, rooms, tier, new java.util.HashSet<>(), "gang");
         BlockPos stash = HideoutLayout.freeWall(level, home.taken(), home.storage().cells(), room.cells());
         if (stash == null || !level.setBlock(stash, Blocks.BARREL.defaultBlockState(), 3)) return false;
         ResourceLocation table = new ResourceLocation("dyairdrop", "chests/smallairdrop" + tier);

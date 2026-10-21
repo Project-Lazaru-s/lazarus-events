@@ -1,0 +1,36 @@
+{
+  "tags": [
+    "storage"
+  ],
+  "groups": [
+    "deserters"
+  ],
+  "palette": {
+    "M": [
+      "apocalypsenow:military_crate",
+      "minecraft:barrel[facing=up]"
+    ],
+    "S": [
+      "apocalypsenow:sandbags",
+      "minecraft:sandstone_slab[type=bottom]"
+    ],
+    "B": {
+      "block": "minecraft:barrel[facing=up]",
+      "loot": "smallairdrop"
+    },
+    "I": "minecraft:iron_bars",
+    "L": "minecraft:lantern"
+  },
+  "layers": [
+    [
+      "MMB",
+      "SS "
+    ],
+    [
+      "M I"
+    ],
+    [
+      "L  "
+    ]
+  ]
+}

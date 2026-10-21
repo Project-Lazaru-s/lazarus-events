@@ -1,0 +1,34 @@
+{
+  "tags": [
+    "storage"
+  ],
+  "groups": [
+    "hollow"
+  ],
+  "palette": {
+    "B": {
+      "block": "minecraft:barrel[facing=up]",
+      "loot": "smallairdrop"
+    },
+    "X": [
+      "apocalypsenow:corpsesack[facing=front]",
+      "minecraft:brown_wool"
+    ],
+    "M": "minecraft:red_mushroom_block",
+    "N": "minecraft:nether_wart_block",
+    "W": "minecraft:cobweb",
+    "C": "minecraft:candle[candles=2,lit=true]"
+  },
+  "layers": [
+    [
+      "BXM",
+      " N "
+    ],
+    [
+      "  C"
+    ],
+    [
+      "W  "
+    ]
+  ]
+}

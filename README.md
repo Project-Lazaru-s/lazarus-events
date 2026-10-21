@@ -128,7 +128,7 @@ Quando um saqueador ou desertor se rende, a tela de rendição ganha duas opçõ
 
 ### Esconderijos habitados
 
-Os esconderijos em prédio (gangue e covil do Hollow) ocupam o cômodo encontrado e os vizinhos atrás das portas (até 4 cômodos para a gangue, 3 para o Hollow). Cada cômodo é esvaziado e mobiliado com os **kits de móveis** conforme o tamanho: o maior vira sala comum (cozinha e guarita), os outros dormitório, oficina e depósito, sempre com passagens livres entre as portas. A gangue guarda o estoque no depósito e marca a sala comum com a placa TURF; o Hollow prende o refém numa jaula num canto longe das portas, entre ossos, velas e uma fogueira apagada.
+Os esconderijos em prédio (gangue e covil do Hollow) ocupam o cômodo encontrado e os vizinhos atrás das portas (até 4 cômodos para a gangue, 3 para o Hollow). Cada cômodo é esvaziado e mobiliado com os **kits de móveis** conforme o tamanho: o maior vira sala comum (cozinha e guarita), os outros dormitório, oficina e depósito, sempre com passagens livres entre as portas. Cada grupo tem identidade própria (kits exclusivos e troca de blocos, descritos em [docs/IDENTIDADE_GRUPOS.md](docs/IDENTIDADE_GRUPOS.md)): a gangue em vermelho, preto e amarelo com estandartes, pneus e sucata; os contrabandistas com caixas militares, paletes e mesa de contagem; o Hollow com velas, ossos, altar e carne pendurada. A gangue guarda o estoque no depósito e marca a sala comum com a placa TURF; o Hollow prende o refém numa jaula num canto longe das portas, entre ossos, velas e uma fogueira apagada.
 
 ## Ninhos de zumbis
 
@@ -277,7 +277,7 @@ Os comandos exigem permissão de operador, e os testes de colocação devem ser 
 | `/lazarusevents test <tipo> natural` | Usa a distância e a regra de direção dos encontros naturais; relata os motivos de rejeição. |
 | `/lazarusevents where` | Mostra o que o CityWorld diz sobre a sua posição: território (superfície, estação ou túnel de metrô, mina, bunker, esgoto ou caverna), lote, profundidade abaixo da rua, linhas de metrô e a estação mais próxima. Sem o CityWorld, só distingue superfície e caverna. |
 | `/lazarusevents scan` | Salva em `lazarus_scans/` (na pasta do jogo ou do servidor) um corte em texto dos blocos em volta do jogador, com legenda, para desenhar kits de esconderijo sobre a geometria real. |
-| `/lazarusevents kit <nome>` | Monta um kit de móveis (`data/lazarusevents/kits`) na parede para a qual o jogador está olhando, a até 5 blocos, para revisão. |
+| `/lazarusevents kit <nome> [grupo]` | Monta um kit de móveis (`data/lazarusevents/kits`) na parede para a qual o jogador está olhando, a até 5 blocos, para revisão; com um grupo (`gang`, `smugglers`, `deserters`, `hollow`), aplica o estilo dele. |
 | `/lazarusevents locate <id>` | Mostra as coordenadas de um encontro registrado. O começo do ID é suficiente. |
 | `/lazarusevents cancel <id>` | Para de acompanhar o encontro e remove seus personagens identificados; blocos e loot permanecem. Tarefas abertas desse encontro falham sem recompensa para os jogadores online. |
 | `/lazarusbase list` | Lista as bases permanentes, guarnição e estoque. |

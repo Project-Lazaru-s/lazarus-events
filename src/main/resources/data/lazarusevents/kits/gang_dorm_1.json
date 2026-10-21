@@ -1,0 +1,26 @@
+{
+  "tags": [
+    "dorm"
+  ],
+  "groups": [
+    "gang"
+  ],
+  "palette": {
+    "H": "minecraft:red_bed[part=head,facing=back]",
+    "F": "minecraft:red_bed[part=foot,facing=back]",
+    "h": "minecraft:gray_bed[part=head,facing=back]",
+    "f": "minecraft:gray_bed[part=foot,facing=back]",
+    "B": "minecraft:barrel[facing=up]",
+    "r": "minecraft:red_carpet",
+    "L": "minecraft:candle[candles=2,lit=true]"
+  },
+  "layers": [
+    [
+      "HBh",
+      "Frf"
+    ],
+    [
+      " L "
+    ]
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "replace": {
+    "minecraft:lantern": "minecraft:candle[candles=3,lit=true]",
+    "minecraft:white_wool": "minecraft:black_wool",
+    "minecraft:green_wool": "minecraft:brown_wool",
+    "minecraft:brown_wool": "minecraft:black_wool",
+    "minecraft:white_carpet": "minecraft:red_carpet",
+    "minecraft:brown_carpet": "minecraft:black_carpet"
+  }
+}

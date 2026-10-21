@@ -1,0 +1,30 @@
+{
+  "tags": [
+    "workshop"
+  ],
+  "groups": [
+    "deserters"
+  ],
+  "palette": {
+    "T": "minecraft:smithing_table",
+    "A": "minecraft:anvil[facing=left]",
+    "X": [
+      "apocalypsenow:military_crate",
+      "minecraft:barrel[facing=up]"
+    ],
+    "S": [
+      "lootpiles:soldier_scrap_pile",
+      "minecraft:iron_trapdoor[half=bottom]"
+    ],
+    "L": "minecraft:lantern"
+  },
+  "layers": [
+    [
+      "TAX",
+      "S  "
+    ],
+    [
+      " L "
+    ]
+  ]
+}

@@ -284,7 +284,12 @@ public final class LazarusEvents {
                         .then(Commands.argument("name", StringArgumentType.word())
                                 .suggests((context, builder) -> SharedSuggestionProvider.suggest(
                                         HideoutKits.all(context.getSource().getServer()).keySet(), builder))
-                                .executes(context -> kit(context.getSource(), StringArgumentType.getString(context, "name")))))
+                                .executes(context -> kit(context.getSource(), StringArgumentType.getString(context, "name"), null))
+                                .then(Commands.argument("group", StringArgumentType.word())
+                                        .suggests((context, builder) -> SharedSuggestionProvider.suggest(
+                                                HideoutKits.styled(context.getSource().getServer()), builder))
+                                        .executes(context -> kit(context.getSource(), StringArgumentType.getString(context, "name"),
+                                                StringArgumentType.getString(context, "group"))))))
                 .then(Commands.literal("locate")
                         .then(Commands.argument("id", StringArgumentType.word())
                                 .executes(context -> locate(context.getSource(), StringArgumentType.getString(context, "id")))))
@@ -332,7 +337,7 @@ public final class LazarusEvents {
     }
 
     /** Sets a kit against the wall the player is looking at (within 5 blocks), centred, for reviewing it in game. */
-    private static int kit(net.minecraft.commands.CommandSourceStack source, String name) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+    private static int kit(net.minecraft.commands.CommandSourceStack source, String name, String group) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         ServerPlayer player = source.getPlayerOrException();
         ServerLevel level = source.getLevel();
         HideoutKits.Kit kit = HideoutKits.all(source.getServer()).get(name);
@@ -355,8 +360,9 @@ public final class LazarusEvents {
             return 0;
         }
         int tier = Math.min(5, 1 + (int) (level.getDayTime() / 24000) / 10);
-        int placed = HideoutKits.place(level, kit, spot, tier, new java.util.HashSet<>());
-        source.sendSuccess(() -> Component.literal("Kit " + name + ": " + placed + " blocks " + kit.tags()), false);
+        int placed = HideoutKits.place(level, kit, spot, tier, new java.util.HashSet<>(), group);
+        source.sendSuccess(() -> Component.literal("Kit " + name + (group == null ? "" : " in " + group + " style") + ": " + placed
+                + " blocks " + kit.tags() + (kit.groups().isEmpty() ? "" : " for " + kit.groups())), false);
         return placed;
     }
 

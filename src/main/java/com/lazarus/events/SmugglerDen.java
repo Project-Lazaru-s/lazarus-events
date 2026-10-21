@@ -38,6 +38,8 @@ import net.minecraft.world.level.storage.loot.LootTable;
  */
 final class SmugglerDen {
     static final String TYPE = "smuggler_den";
+    /** The kit group and style of the den. */
+    static final String GROUP = "smugglers";
     /** The stretch of sewer the den takes. */
     static final int MAX_CELLS = 80, REACH = 10;
     /** More ways on than this and the space is a hall, not a tunnel (a 3-wide tunnel cut at both ends has 6). */
@@ -66,8 +68,8 @@ final class SmugglerDen {
         for (BlockPos step : walkway) { taken.add(step); taken.add(step.above()); }
         List<List<BlockPos>> zones = zones(room, door);
         for (int i = 0; i < USES.length; i++)
-            for (String use : USES[i]) HideoutLayout.furnishOne(level, use, zones.get(i), taken, tier);
-        HideoutLayout.furnishOne(level, "decor", room.cells(), taken, tier);
+            for (String use : USES[i]) HideoutLayout.furnishOne(level, use, zones.get(i), taken, tier, GROUP);
+        HideoutLayout.furnishOne(level, "decor", room.cells(), taken, tier, GROUP);
         stock(level, HideoutLayout.freeWall(level, taken, zones.get(4), cells), "weaponairdrop" + tier, null);
         stock(level, HideoutLayout.freeWall(level, taken, zones.get(3), cells), "medicalairdrop" + tier,
                 ApiSupport.stack("apocalypsenow:cigarettes", 1 + random.nextInt(3)));

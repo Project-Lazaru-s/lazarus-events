@@ -62,7 +62,7 @@ final class HollowDen {
             taken.add(next);
         }
         List<BuildingHideout.Room> rooms = HideoutLayout.rooms(level, room, 3);
-        HideoutLayout.Furnished home = HideoutLayout.furnish(level, rooms, tier, taken);
+        HideoutLayout.Furnished home = HideoutLayout.furnish(level, rooms, tier, taken, "hollow");
         String captiveType = "apocalypsenow:survivor_" + (1 + random.nextInt(8));
         if (!(LazarusEvents.spawn(level, cage, captiveType, id, true) instanceof Mob captive)) return false;
         captive.addTag(CAPTIVE);

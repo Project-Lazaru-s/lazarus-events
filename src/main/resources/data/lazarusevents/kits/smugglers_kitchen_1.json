@@ -1,0 +1,30 @@
+{
+  "tags": [
+    "kitchen"
+  ],
+  "groups": [
+    "smugglers"
+  ],
+  "palette": {
+    "F": "minecraft:smoker[facing=front]",
+    "B": {
+      "block": "minecraft:barrel[facing=up]",
+      "loot": "smallairdrop"
+    },
+    "S": [
+      "farmersdelight:rice_bag",
+      "minecraft:hay_block"
+    ],
+    "T": "minecraft:spruce_slab[type=bottom]",
+    "L": "minecraft:lantern"
+  },
+  "layers": [
+    [
+      "FBS",
+      "T  "
+    ],
+    [
+      " L "
+    ]
+  ]
+}

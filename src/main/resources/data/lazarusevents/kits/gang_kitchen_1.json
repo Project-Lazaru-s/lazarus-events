@@ -1,0 +1,30 @@
+{
+  "tags": [
+    "kitchen"
+  ],
+  "groups": [
+    "gang"
+  ],
+  "palette": {
+    "F": "minecraft:smoker[facing=front]",
+    "T": "minecraft:crafting_table",
+    "B": {
+      "block": "minecraft:barrel[facing=up]",
+      "loot": "smallairdrop"
+    },
+    "J": [
+      "lootpiles:cooking_scrap_pile",
+      "minecraft:brown_carpet"
+    ],
+    "L": "minecraft:candle[candles=2,lit=true]"
+  },
+  "layers": [
+    [
+      "FBT",
+      "J  "
+    ],
+    [
+      " L "
+    ]
+  ]
+}

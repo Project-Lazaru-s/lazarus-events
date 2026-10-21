@@ -1,0 +1,28 @@
+{
+  "tags": [
+    "dorm"
+  ],
+  "groups": [
+    "hollow"
+  ],
+  "palette": {
+    "H": "minecraft:black_bed[part=head,facing=back]",
+    "F": "minecraft:black_bed[part=foot,facing=back]",
+    "B": "minecraft:bone_block[axis=y]",
+    "R": "minecraft:red_carpet",
+    "W": "minecraft:cobweb",
+    "C": "minecraft:candle[candles=1,lit=true]"
+  },
+  "layers": [
+    [
+      "HB",
+      "FR"
+    ],
+    [
+      " C"
+    ],
+    [
+      "W "
+    ]
+  ]
+}

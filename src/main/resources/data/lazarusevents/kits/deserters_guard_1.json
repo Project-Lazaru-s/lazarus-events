@@ -1,0 +1,33 @@
+{
+  "tags": [
+    "guard"
+  ],
+  "groups": [
+    "deserters"
+  ],
+  "palette": {
+    "Z": [
+      "apocalypsenow:sandbagbarrier",
+      "minecraft:sandstone_wall"
+    ],
+    "R": [
+      "apocalypsenow:military_communication_radio[facing=front]",
+      "minecraft:note_block"
+    ],
+    "B": {
+      "block": "minecraft:barrel[facing=up]",
+      "loot": "smallairdrop"
+    },
+    "I": "minecraft:iron_bars",
+    "L": "minecraft:lantern"
+  },
+  "layers": [
+    [
+      "BRI",
+      "ZZ "
+    ],
+    [
+      "L  "
+    ]
+  ]
+}

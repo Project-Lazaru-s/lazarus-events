@@ -60,7 +60,7 @@ final class HideoutLayout {
      * Clears the rooms and furnishes them by use: the largest is the common room (kitchen, guard post), then dorm,
      * workshop and storage; one room alone holds a bit of everything. Walkways between each room's doors stay clear.
      */
-    static Furnished furnish(ServerLevel level, List<BuildingHideout.Room> rooms, int tier, Set<BlockPos> taken) {
+    static Furnished furnish(ServerLevel level, List<BuildingHideout.Room> rooms, int tier, Set<BlockPos> taken, String group) {
         List<BuildingHideout.Room> bySize = new ArrayList<>(rooms);
         bySize.sort(Comparator.comparingInt((BuildingHideout.Room room) -> room.cells().size()).reversed());
         for (BuildingHideout.Room room : bySize) {
@@ -73,7 +73,7 @@ final class HideoutLayout {
         }
         String[][] uses = USES[Math.min(bySize.size(), USES.length) - 1];
         for (int i = 0; i < uses.length; i++)
-            for (String use : uses[i]) furnishOne(level, use, bySize.get(i).cells(), taken, tier);
+            for (String use : uses[i]) furnishOne(level, use, bySize.get(i).cells(), taken, tier, group);
         List<BlockPos> standing = new ArrayList<>();
         for (BuildingHideout.Room room : rooms)
             for (BlockPos cell : room.cells())
@@ -136,12 +136,11 @@ final class HideoutLayout {
         return path;
     }
 
-    /** Sets down one random kit of the use that fits on the floor; false when none fits. */
-    static boolean furnishOne(ServerLevel level, String use, List<BlockPos> floor, Set<BlockPos> taken, int tier) {
+    /** Sets down one kit of the use that fits on the floor, the group's own kits first, in its style; false when none fits. */
+    static boolean furnishOne(ServerLevel level, String use, List<BlockPos> floor, Set<BlockPos> taken, int tier, String group) {
         if (floor.isEmpty()) return false;
-        List<HideoutKits.Kit> kits = new ArrayList<>(HideoutKits.tagged(level.getServer(), use));
-        Collections.shuffle(kits, ThreadLocalRandom.current());
-        for (HideoutKits.Kit kit : kits) if (HideoutKits.furnish(level, kit, floor, taken, tier)) return true;
+        for (HideoutKits.Kit kit : HideoutKits.forUse(level.getServer(), use, group))
+            if (HideoutKits.furnish(level, kit, floor, taken, tier, group)) return true;
         return false;
     }
 

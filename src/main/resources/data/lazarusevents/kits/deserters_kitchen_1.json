@@ -1,0 +1,30 @@
+{
+  "tags": [
+    "kitchen"
+  ],
+  "groups": [
+    "deserters"
+  ],
+  "palette": {
+    "F": "minecraft:smoker[facing=front]",
+    "B": {
+      "block": "minecraft:barrel[facing=up]",
+      "loot": "smallairdrop"
+    },
+    "X": [
+      "apocalypsenow:military_crate",
+      "minecraft:barrel[facing=up]"
+    ],
+    "T": "minecraft:spruce_slab[type=bottom]",
+    "L": "minecraft:lantern"
+  },
+  "layers": [
+    [
+      "FBX",
+      "T  "
+    ],
+    [
+      " L "
+    ]
+  ]
+}

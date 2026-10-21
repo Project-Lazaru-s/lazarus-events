@@ -14,7 +14,7 @@ Legenda: `[x]` feito · `[ ]` a fazer · `[~]` feito, falta validar no jogo
 | T1 | Metrô: gás no túnel e estação-abrigo | Events 0.22.x | `[ ]` |
 | T2 | Cavernas: bolsões de gás natural e mineiros perdidos | Events 0.24.x | `[ ]` |
 | T3 | Esgotos: preferência de ninhos e gás, esconderijo de contrabandista | Events 0.23.0 | `[~]` implementada na branch `KaiD3v/T3-T4`, GameTests passam, falta validar no jogo |
-| T3+ | Esconderijos habitados (kits de móveis) | Events 0.23.x | `[~]` etapas 1 a 4 aprovadas; etapa 5 a fazer, na branch `KaiD3v/T3-T4` |
+| T3+ | Esconderijos habitados (kits de móveis) | Events 0.23.x | `[x]` etapas 1 a 5 aprovadas no jogo, na branch `KaiD3v/T3-T4` |
 | T4 | Superfície: queda de helicóptero | Events 0.23.x | `[ ]` |
 
 ---
@@ -114,7 +114,11 @@ Detalhes em [PLANO_EVENTOS_TERRITORIOS_V1.md](PLANO_EVENTOS_TERRITORIOS_V1.md#5b
   - funções pelo tamanho: o maior é a sala comum (cozinha, guarita, decoração), depois dormitório, oficina e depósito; um cômodo só recebe um pouco de tudo
   - gangue: estoque com o distintivo no depósito, placa TURF na sala comum, teias, guardas por todos os cômodos
   - Hollow: jaula num canto longe das portas, montada antes dos móveis; ossos, caveira, velas e fogueira apagada nos espaços livres
-- [ ] **Etapa 5:** paletas por grupo (gangue, contrabandistas, desertores, Hollow)
+- [x] **Etapa 5** (aprovada no jogo): identidade visual por grupo
+  - motor: kits com `"groups"` (só daquele grupo, usados antes dos kits de todos) e estilos em `data/lazarusevents/kit_styles/<grupo>.json` (troca de blocos por id em todo kit que o grupo monta); `rotation=front` para caveiras e estandartes
+  - identidade desenhada pelo Codex ([IDENTIDADE_GRUPOS.md](IDENTIDADE_GRUPOS.md)): 6 kits e um estilo para cada grupo (gangue, contrabandistas, desertores, Hollow); revisada (estandartes da gangue viraram de parede)
+  - em uso: contrabandistas no esgoto, gangue no prédio, Hollow no covil; os desertores ainda não têm esconderijo de interior (o acampamento é um modelo ao ar livre), então o estilo e os kits deles ficam prontos para quando tiverem
+  - `/lazarusevents kit <nome> [grupo]` monta um kit no estilo de um grupo
 
 ---
 

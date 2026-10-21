@@ -1,0 +1,39 @@
+{
+  "tags": [
+    "storage"
+  ],
+  "groups": [
+    "smugglers"
+  ],
+  "palette": {
+    "M": [
+      "apocalypsenow:military_crate",
+      "minecraft:barrel[facing=up]"
+    ],
+    "X": [
+      "apocalypsenow:cardboard_box",
+      "minecraft:barrel[facing=up]"
+    ],
+    "P": [
+      "apocalypsenow:pallet",
+      "minecraft:spruce_slab[type=bottom]"
+    ],
+    "B": {
+      "block": "minecraft:barrel[facing=up]",
+      "loot": "smallairdrop"
+    },
+    "S": [
+      "farmersdelight:rice_bag",
+      "minecraft:hay_block"
+    ]
+  },
+  "layers": [
+    [
+      "MBSX",
+      "P   "
+    ],
+    [
+      "M X "
+    ]
+  ]
+}

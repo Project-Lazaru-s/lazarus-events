@@ -1,0 +1,29 @@
+{
+  "tags": [
+    "workshop"
+  ],
+  "groups": [
+    "smugglers"
+  ],
+  "palette": {
+    "T": "minecraft:crafting_table",
+    "A": "minecraft:anvil[facing=left]",
+    "X": [
+      "apocalypsenow:military_crate",
+      "minecraft:barrel[facing=up]"
+    ],
+    "B": {
+      "block": "minecraft:barrel[facing=up]",
+      "loot": "smallairdrop"
+    },
+    "L": "minecraft:lantern"
+  },
+  "layers": [
+    [
+      "TAXB"
+    ],
+    [
+      "L   "
+    ]
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "tags": [
+    "kitchen"
+  ],
+  "groups": [
+    "hollow"
+  ],
+  "palette": {
+    "F": "minecraft:soul_campfire[lit=true,signal_fire=false,facing=front]",
+    "B": {
+      "block": "minecraft:barrel[facing=up]",
+      "loot": "smallairdrop"
+    },
+    "M": "minecraft:red_mushroom_block",
+    "R": "minecraft:nether_wart_block",
+    "C": "minecraft:candle[candles=2,lit=true]",
+    "W": "minecraft:cobweb"
+  },
+  "layers": [
+    [
+      "FBM",
+      " R "
+    ],
+    [
+      "  C"
+    ],
+    [
+      "W  "
+    ]
+  ]
+}
