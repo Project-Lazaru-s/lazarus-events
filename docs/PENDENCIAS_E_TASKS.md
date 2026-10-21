@@ -124,6 +124,8 @@ Detalhes em [PLANO_EVENTOS_TERRITORIOS_V1.md](PLANO_EVENTOS_TERRITORIOS_V1.md#5b
 
 ## T4: superfície
 
+Plano detalhado em [PLANO_T4_QUEDA_HELICOPTERO.md](PLANO_T4_QUEDA_HELICOPTERO.md); implementação pelo Codex com o prompt [PROMPT_CODEX_T4.md](PROMPT_CODEX_T4.md).
+
 - [ ] Helicóptero militar caído em blocos (carcaça, hélice quebrada), fogo e coluna de fumaça visível de longe
 - [ ] 3 ou 4 infectados de farda, 1 ou 2 caixas `weaponairdrop`/`largeairdrop`, às vezes um piloto ferido para resgatar
 - [ ] A fumaça atrai a horda com o tempo
