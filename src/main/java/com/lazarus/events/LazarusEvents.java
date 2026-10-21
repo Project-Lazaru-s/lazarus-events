@@ -55,7 +55,7 @@ public final class LazarusEvents {
     private static final String[] TYPES = {"cache", "gunfire", "flare", "military", RescueEncounter.TYPE,
             LastDefenseEncounter.TYPE, FalseRadioEncounter.TYPE, MilitaryCollapse.ABANDONED,
             HostileHideouts.DESERTER_CAMP, HostileHideouts.GANG_HIDEOUT, BuildingHideout.TYPE, HollowDen.TYPE, ZombieNest.TYPE,
-            GasZone.TYPE, Quarantine.TYPE, SmugglerDen.TYPE};
+            GasZone.TYPE, Quarantine.TYPE, SmugglerDen.TYPE, HeliCrash.TYPE};
     private static final ResourceLocation RADIO_ID = new ResourceLocation("ifreq", "walkie_talkie");
     private static final ForgeConfigSpec CONFIG;
     private static final ForgeConfigSpec.BooleanValue ENABLED;
@@ -78,6 +78,8 @@ public final class LazarusEvents {
     private static final ForgeConfigSpec.BooleanValue GAS_ENABLED;
     private static final ForgeConfigSpec.BooleanValue QUARANTINE_ENABLED;
     private static final ForgeConfigSpec.BooleanValue SMUGGLERS_ENABLED;
+    private static final ForgeConfigSpec.BooleanValue HELI_ENABLED;
+    private static final ForgeConfigSpec.IntValue HELI_DAY;
     private static final ForgeConfigSpec.IntValue FACTION_EXPEDITION_DAYS;
     private static final ForgeConfigSpec.IntValue BASE_FALLBACK_DAY;
 
@@ -113,6 +115,8 @@ public final class LazarusEvents {
                 .define("enableQuarantines", true);
         SMUGGLERS_ENABLED = builder.comment("Smuggler dens (from day 6, CityWorld sewers only): a gated stretch of sewer with the gang's best goods.")
                 .define("enableSmugglerDens", true);
+        HELI_ENABLED = builder.comment("Crashed military helicopters under open sky.").define("enableHeliCrashes", true);
+        HELI_DAY = builder.comment("First world day with helicopter crashes.").defineInRange("heliCrashFromDay", 15, 1, 365);
         FACTION_EXPEDITIONS_ENABLED = builder.comment("Rare Rovers or Wardens patrols outside faction bases.")
                 .define("enableFactionExpeditions", true);
         FACTION_EXPEDITION_DAYS = builder.comment("Minimum days between faction patrol attempts.")
@@ -137,6 +141,7 @@ public final class LazarusEvents {
         MinecraftForge.EVENT_BUS.register(new ZombieNest.Listener());
         MinecraftForge.EVENT_BUS.register(new InfestedZone.Listener());
         MinecraftForge.EVENT_BUS.register(new GasZone.Listener());
+        MinecraftForge.EVENT_BUS.register(new HeliCrash.Listener());
         HostileLore.init(net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext.get().getModEventBus());
         VaccineProject.init(net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext.get().getModEventBus());
         MinecraftForge.EVENT_BUS.register(new FactionBases());
@@ -146,6 +151,7 @@ public final class LazarusEvents {
         net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext.get().getModEventBus().addListener(
                 (net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent event) -> event.enqueueWork(() -> {
                     RescueEncounter.register();
+                    HeliCrash.register();
                     LastDefenseEncounter.register();
                     FalseRadioEncounter.register();
                     MilitaryBaseEncounter.register();
@@ -175,6 +181,7 @@ public final class LazarusEvents {
         HostileHideouts.tick(level, data);
         ZombieNest.tick(level, data);
         Quarantine.tick(level, data);
+        HeliCrash.tick(level, data);
         for (EventData.Encounter encounter : data.encounters) {
             if (encounter.discovered) continue;
             for (ServerPlayer player : level.players()) {
@@ -248,6 +255,7 @@ public final class LazarusEvents {
         if (NESTS_ENABLED.get() && day >= 8) weights.put(ZombieNest.TYPE, 1.5);
         if (GAS_ENABLED.get() && day >= 12) weights.put(GasZone.TYPE, 1.5);
         if (QUARANTINE_ENABLED.get() && day >= 21) weights.put(Quarantine.TYPE, 1.0);
+        if (HELI_ENABLED.get() && day >= HELI_DAY.get()) weights.put(HeliCrash.TYPE, 1.0);
         if (weights.isEmpty()) return null;
         double roll = ThreadLocalRandom.current().nextDouble(weights.values().stream().mapToDouble(Double::doubleValue).sum());
         for (Map.Entry<String, Double> entry : weights.entrySet())
@@ -414,6 +422,22 @@ public final class LazarusEvents {
 
     private static Outcome attempt(ServerLevel level, ServerPlayer player, String type, boolean near,
             boolean testing, EventData data) {
+        if (HeliCrash.TYPE.equals(type)) {
+            HeliCrash.Site site = HeliCrash.find(level, player, data, near);
+            if (site.pos() == null) return new Outcome(false, "No crash site: " + site.refused());
+            BlockPos pos = site.pos();
+            UUID id = UUID.randomUUID();
+            int tier = Math.min(5, 1 + (int) (level.getDayTime() / 24_000) / 10);
+            CompoundTag memory = HeliCrash.place(level, pos, ThreadLocalRandom.current().nextInt(4), tier, id, false);
+            if (memory == null) {
+                removeActors(level, id, pos);
+                return new Outcome(false, "Could not place helicopter crash at " + pos.toShortString());
+            }
+            data.add(id, type, pos, level.getGameTime()).data.merge(memory);
+            data.setDirty();
+            radioMessage(level, pos, type);
+            return new Outcome(true, "Placed " + type + " " + id + " at " + pos.toShortString());
+        }
         if (BuildingHideout.TYPE.equals(type) || HollowDen.TYPE.equals(type) || ZombieNest.TYPE.equals(type) || GasZone.gassed(type)
                 || SmugglerDen.TYPE.equals(type))
             return attemptBuilding(level, player, type, near, data);
@@ -798,6 +822,7 @@ public final class LazarusEvents {
             case ZombieNest.TYPE -> "zombie nest";
             case GasZone.TYPE -> "chemical leak";
             case Quarantine.TYPE -> "military quarantine";
+            case HeliCrash.TYPE -> "helicopter crash";
             default -> type + " encounter";
         };
     }
@@ -814,6 +839,7 @@ public final class LazarusEvents {
             case ZombieNest.TYPE -> "Military band: biological growth reported inside a building, avoid the area";
             case GasZone.TYPE -> "Military band: chemical leak detected underground, masks mandatory";
             case Quarantine.TYPE -> "Military band, automated loop: quarantine zone breached, containment team lost. Do not enter";
+            case HeliCrash.TYPE -> "Mayday, mayday, we're going down... we're going down";
             default -> type + " signal";
         };
     }

@@ -13,9 +13,9 @@ Legenda: `[x]` feito · `[ ]` a fazer · `[~]` feito, falta validar no jogo
 | T0 | API do CityWorld (reflexão) e comando `where` | Events 0.22.0 | `[x]` validada e aprovada no jogo |
 | T1 | Metrô: gás no túnel e estação-abrigo | Events 0.22.x | `[ ]` |
 | T2 | Cavernas: bolsões de gás natural e mineiros perdidos | Events 0.24.x | `[ ]` |
-| T3 | Esgotos: preferência de ninhos e gás, esconderijo de contrabandista | Events 0.23.0 | `[~]` implementada na branch `KaiD3v/T3-T4`, GameTests passam, falta validar no jogo |
+| T3 | Esgotos: preferência de ninhos e gás, esconderijo de contrabandista | Events 0.23.0 | `[x]` aprovada no jogo |
 | T3+ | Esconderijos habitados (kits de móveis) | Events 0.23.x | `[x]` etapas 1 a 5 aprovadas no jogo, na branch `KaiD3v/T3-T4` |
-| T4 | Superfície: queda de helicóptero | Events 0.23.x | `[ ]` |
+| T4 | Superfície: queda de helicóptero | Events 0.24.0 | `[x]` aprovada no jogo |
 
 ---
 
@@ -88,8 +88,8 @@ Legenda: `[x]` feito · `[ ]` a fazer · `[~]` feito, falta validar no jogo
 - [x] **T3b:** esconderijo de contrabandista (`smuggler_den`): grades e uma porta nas pontas do túnel, barris de armas, remédio e bebida, 3 ou 4 saqueadores, pagamento político aos Wardens ao limpar
   - só em trechos com formato de túnel (até 10 passagens para fora); porta militar do Apocalypse Now, que abre com a mão
 - [x] GameTest: recusa fora de esgoto, montagem num túnel, guardas e pagamento
-- [ ] **Validar no jogo:**
-  - [ ] `/lazarusevents test smuggler_den near` dentro de um esgoto: grades, porta, barris e guardas
+- [~] **Validar no jogo:**
+  - [x] `/lazarusevents test smuggler_den near` dentro de um esgoto: grades, porta, barris e guardas
   - [ ] `/lazarusevents test smuggler_den natural` acha um esgoto sozinho
   - [ ] ninhos e zonas de gás naturais aparecendo em esgotos
 
@@ -126,11 +126,12 @@ Detalhes em [PLANO_EVENTOS_TERRITORIOS_V1.md](PLANO_EVENTOS_TERRITORIOS_V1.md#5b
 
 Plano detalhado em [PLANO_T4_QUEDA_HELICOPTERO.md](PLANO_T4_QUEDA_HELICOPTERO.md); implementação pelo Codex com o prompt [PROMPT_CODEX_T4.md](PROMPT_CODEX_T4.md).
 
-- [ ] Helicóptero militar caído em blocos (carcaça, hélice quebrada), fogo e coluna de fumaça visível de longe
-- [ ] 3 ou 4 infectados de farda, 1 ou 2 caixas `weaponairdrop`/`largeairdrop`, às vezes um piloto ferido para resgatar
-- [ ] A fumaça atrai a horda com o tempo
-- [ ] Rádio: *"Mayday, mayday, we're going down..."*
-- [ ] GameTest: carcaça, fogo, caixas e infectados
+- [x] Helicóptero militar caído em blocos, hélice quebrada, fogo isolado e fogueiras de sinal sobre feno
+- [x] 3 ou 4 infectados de farda, caixas `weaponairdrop` e `largeairdrop`, às vezes piloto ferido para resgatar por +3 Military
+- [x] Fumaça atrai horda de 1 a 3 infectados a cada 2 minutos, até 12 vivos; fogo apaga em 1 dia e fumaça em 2
+- [x] Rádio: *"Mayday, mayday, we're going down..."*
+- [x] GameTest: carcaça, fogo, caixas, infectados, piloto, ciclo de vida, teto da horda e terreno com obstáculo
+- [x] Validado no jogo; a busca aceita desníveis de 1 bloco (a queda nivela o terreno), o modo `near` ignora encontros vizinhos e a falha mostra os motivos
 
 ---
 
