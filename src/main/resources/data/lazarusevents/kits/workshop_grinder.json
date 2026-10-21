@@ -1,0 +1,14 @@
+{
+  "tags": ["workshop"],
+  "palette": {
+    "G": "minecraft:grindstone[face=floor,facing=left]",
+    "M": "minecraft:smithing_table",
+    "C": {"block": ["refurbished_furniture:oak_storage_cabinet[facing=front]", "minecraft:chest[facing=front]"], "loot": "smallairdrop"},
+    "S": ["lootpiles:mechanic_scrap_pile", "lootpiles:common_scrap_pile"],
+    "L": "minecraft:lantern"
+  },
+  "layers": [
+    ["GMC", "  S"],
+    ["  L"]
+  ]
+}

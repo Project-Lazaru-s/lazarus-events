@@ -1,0 +1,14 @@
+{
+  "tags": ["dorm"],
+  "palette": {
+    "H": {"random": ["minecraft:brown_bed[part=head,facing=back]"]},
+    "F": "minecraft:brown_bed[part=foot,facing=back]",
+    "X": {"block": ["apocalypsenow:wooden_crate", "minecraft:barrel[facing=up]"]},
+    "r": "minecraft:brown_carpet",
+    "L": "minecraft:lantern"
+  },
+  "layers": [
+    ["HX", "Fr"],
+    [" L"]
+  ]
+}

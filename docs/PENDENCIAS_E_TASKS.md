@@ -12,9 +12,10 @@ Legenda: `[x]` feito · `[ ]` a fazer · `[~]` feito, falta validar no jogo
 |---|---|---|---|
 | T0 | API do CityWorld (reflexão) e comando `where` | Events 0.22.0 | `[x]` validada e aprovada no jogo |
 | T1 | Metrô: gás no túnel e estação-abrigo | Events 0.22.x | `[ ]` |
-| T2 | Cavernas: bolsões de gás natural e mineiros perdidos | Events 0.23.0 | `[ ]` |
-| T3 | Esgotos: preferência de ninhos e gás, esconderijo de contrabandista | Events 0.23.x | `[ ]` |
-| T4 | Superfície: queda de helicóptero | Events 0.24.0 | `[ ]` |
+| T2 | Cavernas: bolsões de gás natural e mineiros perdidos | Events 0.24.x | `[ ]` |
+| T3 | Esgotos: preferência de ninhos e gás, esconderijo de contrabandista | Events 0.23.0 | `[~]` implementada na branch `KaiD3v/T3-T4`, GameTests passam, falta validar no jogo |
+| T3+ | Esconderijos habitados (kits de móveis) | Events 0.23.x | `[~]` etapa 1 aprovada; etapas 2 a 5 a fazer, na branch `KaiD3v/T3-T4` |
+| T4 | Superfície: queda de helicóptero | Events 0.23.x | `[ ]` |
 
 ---
 
@@ -83,9 +84,28 @@ Legenda: `[x]` feito · `[ ]` a fazer · `[~]` feito, falta validar no jogo
 
 ## T3: esgotos
 
-- [ ] **T3a:** ninhos (Z1) e zonas de gás (Z3) com peso maior quando o espaço é `SEWER`
-- [ ] **T3b:** esconderijo de contrabandista: porta de ferro e grades, caixas de bebida, remédio, munição e arma, 3 ou 4 saqueadores, pagamento ao limpar
-- [ ] GameTest: montagem, guardas e pagamento
+- [x] **T3a:** ninhos (Z1) e zonas de gás (Z3) procuram primeiro um esgoto em 60% das vezes (`CityWorldSites.findSewer`, `SEWER_PREFERENCE`)
+- [x] **T3b:** esconderijo de contrabandista (`smuggler_den`): grades e uma porta nas pontas do túnel, barris de armas, remédio e bebida, 3 ou 4 saqueadores, pagamento político aos Wardens ao limpar
+  - só em trechos com formato de túnel (até 10 passagens para fora); porta militar do Apocalypse Now, que abre com a mão
+- [x] GameTest: recusa fora de esgoto, montagem num túnel, guardas e pagamento
+- [ ] **Validar no jogo:**
+  - [ ] `/lazarusevents test smuggler_den near` dentro de um esgoto: grades, porta, barris e guardas
+  - [ ] `/lazarusevents test smuggler_den natural` acha um esgoto sozinho
+  - [ ] ninhos e zonas de gás naturais aparecendo em esgotos
+
+---
+
+## T3+: esconderijos habitados
+
+Detalhes em [PLANO_EVENTOS_TERRITORIOS_V1.md](PLANO_EVENTOS_TERRITORIOS_V1.md#5b-esconderijos-habitados-fase-t3).
+
+- [x] **Etapa 1** (aprovada no jogo): gerador de kits (`data/lazarusevents/kits/*.json`, paleta com alternativas e sorteio, direções relativas à parede, loot do Dyairdrop), comandos `scan` e `kit`, primeiros kits (oficina, cozinha, dormitório, depósito, guarita, tenda)
+  - [x] rodar `/lazarusevents scan` num esgoto, num porão e num cômodo de prédio e mandar os arquivos de `lazarus_scans/`
+  - [x] revisar cada kit com `/lazarusevents kit <nome>`
+- [ ] **Etapa 2:** 3 a 5 variações por função
+- [ ] **Etapa 3:** esgoto habitado (corredor de usos, pontes, teto de madeira, estrados) no esconderijo de contrabandista
+- [ ] **Etapa 4:** prédios com 2 a 4 cômodos e funções na gangue em prédio e no covil do Hollow
+- [ ] **Etapa 5:** paletas por grupo (gangue, contrabandistas, desertores, Hollow)
 
 ---
 

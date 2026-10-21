@@ -1,0 +1,15 @@
+{
+  "tags": ["storage", "decor"],
+  "palette": {
+    "s": "minecraft:spruce_trapdoor[half=top,facing=front,open=false]",
+    "L": "minecraft:lantern",
+    "v": {"random": ["minecraft:potted_dead_bush", "minecraft:flower_pot", "minecraft:candle[candles=3,lit=false]"]},
+    "c": "minecraft:cobweb"
+  },
+  "layers": [
+    ["   "],
+    ["sss"],
+    ["LvL"],
+    ["c  "]
+  ]
+}

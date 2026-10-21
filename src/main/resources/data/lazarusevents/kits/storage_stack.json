@@ -1,0 +1,14 @@
+{
+  "tags": ["storage"],
+  "palette": {
+    "X": ["apocalypsenow:wooden_crate", "minecraft:barrel[facing=up]"],
+    "D": {"block": "minecraft:barrel[facing=front]", "loot": "smallairdrop"},
+    "p": ["apocalypsenow:cardboard_box", "minecraft:barrel[facing=up]"],
+    "L": "minecraft:lantern"
+  },
+  "layers": [
+    ["XXD", "Xp "],
+    ["XD ", "p  "],
+    ["L  "]
+  ]
+}

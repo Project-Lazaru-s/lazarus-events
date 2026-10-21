@@ -80,6 +80,59 @@ O `cityworld-6.3.0` tem uma API pública, `me.daddychurchill.CityWorld.api.CityW
 - Aproveita o esconderijo de gangue em prédio (cômodo, guardas, pagamento ao limpar) com outra decoração e loot.
 - **Motivo para ir:** o loot de gangue mais rico do mapa, escondido debaixo da cidade.
 
+## 5b. Esconderijos habitados (fase T3+)
+
+**Problema:** os esconderijos (gangue em prédio, covil do Hollow, contrabandista) são cômodos com barris avulsos, uma grade e uma porta. Não parecem lugares onde alguém vive.
+
+**Princípios** (das referências de interiores do Minecraft): móveis em **conjuntos**, espaço com **função** e **sujeira de vida**.
+
+### Kits de móveis
+- Um **kit** é um arranjo de 2×1 a 3×3 blocos, encostado numa parede e virado para o centro do cômodo, escrito em texto (paleta e camadas) em `data/lazarusevents/kits/*.json`. Aceita datapacks.
+- A paleta aceita alternativas (`[a, b]`: o primeiro bloco que existir) e sorteio (`{"random": [...]}`), para funcionar sem os mods opcionais e variar a cena. Contêineres podem ter loot do Dyairdrop (`"loot": "smallairdrop"` vira a tabela do tier atual).
+- As direções na paleta são relativas à parede (`facing=front|back|left|right`).
+- Kits por função, de 3 a 5 variações cada:
+  - **oficina:** bancada, bigorna, forno, rebolo, sucata mecânica;
+  - **cozinha:** fogão ou fogueira com panela (Farmer's Delight), tábua de corte, cesto, barril de enlatados;
+  - **dormitório:** camas desencontradas, baú ao pé, vela ou lanterna;
+  - **depósito:** caixas empilhadas, papelão, palete, prateleira com lanterna;
+  - **guarita:** sacos de areia, cadeira, rádio, lanterna;
+  - **tenda:** postes, lona ou lã, cama, fogueira na frente.
+- Blocos usados: vanilla, Farmer's Delight, Refurbished Furniture, Apocalypse Now, Loot Piles, Immersive Weathering.
+
+### Espaço com função
+- **Prédios:** o mapeamento atravessa portas e junta de 2 a 4 cômodos; o maior vira sala comum, os médios dormitório ou oficina, o menor depósito; a guarita fica na entrada.
+- **Esgoto:** corredor de usos ao longo do túnel: grade → guarita → oficina → cozinha e tendas → dormitório → depósito → porta.
+- Antes de montar, o espaço é limpo (como na quarentena) e um caminho de 1 bloco entre as saídas fica livre.
+
+### Esgoto habitado
+- **Pontes** de tábuas ou lajes sobre a água do canal, com corrimão de corda ou cerca.
+- **Teto de madeira** (forro de tábuas com vigas) onde houver altura, com lanternas em corrente.
+- **Estrados** de madeira na parte habitada; papéis, teias, trepadeiras e lajes rachadas.
+
+### Identidade por grupo
+| Grupo | Toque próprio |
+|---|---|
+| Gangue | desencontrado, sucata, bandeira com as cores da gangue, pichação |
+| Contrabandistas | depósito maior, caixas militares, garrafas, cigarros |
+| Desertores | camas de campanha, caixas militares, rádio, sacos de areia, lona verde |
+| The Hollow | velas, ganchos com carne pendurada, ossos, altar, mais escuro |
+
+### Loot
+O loot fica dentro dos kits (baú da cama, barril da oficina, caixas do depósito); pilhas de sucata do Loot Piles são o loot pequeno; o estoque principal fica no depósito, o cômodo mais fundo.
+
+### Ferramentas
+- `/lazarusevents scan`: salva um corte em texto do lugar em volta do jogador (camadas e paleta) em `lazarus_scans/`, para desenhar os kits sobre a geometria real (largura do esgoto, canal de água, altura do teto).
+- `/lazarusevents kit <nome>`: monta um kit na parede à frente do jogador, para revisar no jogo.
+
+### Etapas
+1. Gerador de kits (leitura, rotação, encaixe na parede), comandos `scan` e `kit`, primeiros kits.
+2. Mais variações por função.
+3. Esgoto com corredor de usos, pontes, teto e estrados, aplicado ao esconderijo de contrabandista.
+4. Prédios com vários cômodos e funções, aplicados à gangue em prédio e ao covil do Hollow.
+5. Paletas por grupo.
+
+---
+
 ## 6. Superfície (fase T4)
 
 **Identidade:** a superfície já tem muitos eventos; entra só o que dá um **destino visível de longe**.
@@ -99,6 +152,7 @@ O `cityworld-6.3.0` tem uma API pública, `me.daddychurchill.CityWorld.api.CityW
 | T1 | Metrô: gás no túnel e estação-abrigo | Events 0.22.x | T0 |
 | T2 | Cavernas: bolsões de gás natural e mineiros perdidos | Events 0.23.0 | T0 |
 | T3 | Esgotos: preferência de ninhos e gás, esconderijo de contrabandista | Events 0.23.x | T0 |
+| T3+ | Esconderijos habitados: kits de móveis, espaço com função, esgoto habitado | Events 0.23.x | T3 |
 | T4 | Superfície: queda de helicóptero | Events 0.24.0 | — |
 
 **Testes de cada fase:**

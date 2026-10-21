@@ -55,7 +55,7 @@ public final class LazarusEvents {
     private static final String[] TYPES = {"cache", "gunfire", "flare", "military", RescueEncounter.TYPE,
             LastDefenseEncounter.TYPE, FalseRadioEncounter.TYPE, MilitaryCollapse.ABANDONED,
             HostileHideouts.DESERTER_CAMP, HostileHideouts.GANG_HIDEOUT, BuildingHideout.TYPE, HollowDen.TYPE, ZombieNest.TYPE,
-            GasZone.TYPE, Quarantine.TYPE};
+            GasZone.TYPE, Quarantine.TYPE, SmugglerDen.TYPE};
     private static final ResourceLocation RADIO_ID = new ResourceLocation("ifreq", "walkie_talkie");
     private static final ForgeConfigSpec CONFIG;
     private static final ForgeConfigSpec.BooleanValue ENABLED;
@@ -77,6 +77,7 @@ public final class LazarusEvents {
     private static final ForgeConfigSpec.BooleanValue NESTS_ENABLED;
     private static final ForgeConfigSpec.BooleanValue GAS_ENABLED;
     private static final ForgeConfigSpec.BooleanValue QUARANTINE_ENABLED;
+    private static final ForgeConfigSpec.BooleanValue SMUGGLERS_ENABLED;
     private static final ForgeConfigSpec.IntValue FACTION_EXPEDITION_DAYS;
     private static final ForgeConfigSpec.IntValue BASE_FALLBACK_DAY;
 
@@ -110,6 +111,8 @@ public final class LazarusEvents {
                 .define("enableInfectionZones", true);
         QUARANTINE_ENABLED = builder.comment("Military quarantines (from day 21): a fenced-off infection zone with hazmat infected and a military stash.")
                 .define("enableQuarantines", true);
+        SMUGGLERS_ENABLED = builder.comment("Smuggler dens (from day 6, CityWorld sewers only): a gated stretch of sewer with the gang's best goods.")
+                .define("enableSmugglerDens", true);
         FACTION_EXPEDITIONS_ENABLED = builder.comment("Rare Rovers or Wardens patrols outside faction bases.")
                 .define("enableFactionExpeditions", true);
         FACTION_EXPEDITION_DAYS = builder.comment("Minimum days between faction patrol attempts.")
@@ -240,6 +243,7 @@ public final class LazarusEvents {
             if (hideouts[2] > 0) weights.put(BuildingHideout.TYPE, hideouts[2]);
             long time = now % 24000;
             if (day >= 10 && time >= 13000 && time < 23000) weights.put(HollowDen.TYPE, 1.5); // the Hollow moves at night
+            if (SMUGGLERS_ENABLED.get() && day >= 6 && CityWorldSites.available()) weights.put(SmugglerDen.TYPE, 1.5);
         }
         if (NESTS_ENABLED.get() && day >= 8) weights.put(ZombieNest.TYPE, 1.5);
         if (GAS_ENABLED.get() && day >= 12) weights.put(GasZone.TYPE, 1.5);
@@ -275,6 +279,12 @@ public final class LazarusEvents {
                                 .then(Commands.literal("natural").executes(context -> test(context.getSource(),
                                         StringArgumentType.getString(context, "type"), false)))))
                 .then(Commands.literal("where").executes(context -> where(context.getSource())))
+                .then(Commands.literal("scan").executes(context -> scan(context.getSource())))
+                .then(Commands.literal("kit")
+                        .then(Commands.argument("name", StringArgumentType.word())
+                                .suggests((context, builder) -> SharedSuggestionProvider.suggest(
+                                        HideoutKits.all(context.getSource().getServer()).keySet(), builder))
+                                .executes(context -> kit(context.getSource(), StringArgumentType.getString(context, "name")))))
                 .then(Commands.literal("locate")
                         .then(Commands.argument("id", StringArgumentType.word())
                                 .executes(context -> locate(context.getSource(), StringArgumentType.getString(context, "id")))))
@@ -306,6 +316,48 @@ public final class LazarusEvents {
         CityWorldSites.fullInfo(level, pos).forEach((key, value) -> lines.add("  " + key + ": " + value));
         for (String line : lines) source.sendSuccess(() -> Component.literal(line), false);
         return 1;
+    }
+
+    /** Saves a text cut of the place around the player for designing hideout kits. */
+    private static int scan(net.minecraft.commands.CommandSourceStack source) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        try {
+            java.nio.file.Path file = SiteScan.save(source.getLevel(), player.blockPosition());
+            source.sendSuccess(() -> Component.literal("Scan saved: " + file.toAbsolutePath()), false);
+            return 1;
+        } catch (java.io.IOException failure) {
+            source.sendFailure(Component.literal("Scan failed: " + failure.getMessage()));
+            return 0;
+        }
+    }
+
+    /** Sets a kit against the wall the player is looking at (within 5 blocks), centred, for reviewing it in game. */
+    private static int kit(net.minecraft.commands.CommandSourceStack source, String name) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        ServerLevel level = source.getLevel();
+        HideoutKits.Kit kit = HideoutKits.all(source.getServer()).get(name);
+        if (kit == null) {
+            source.sendFailure(Component.literal("Unknown kit: " + name));
+            return 0;
+        }
+        net.minecraft.core.Direction facing = player.getDirection();
+        BlockPos cell = player.blockPosition();
+        for (int i = 0; i < 5 && BuildingHideout.passable(level, cell.relative(facing)); i++) cell = cell.relative(facing);
+        if (BuildingHideout.passable(level, cell.relative(facing))) {
+            source.sendFailure(Component.literal("Look at a wall within 5 blocks."));
+            return 0;
+        }
+        net.minecraft.core.Direction front = facing.getOpposite();
+        HideoutKits.Spot spot = new HideoutKits.Spot(cell.relative(front.getCounterClockWise(), -(kit.width() / 2)), front);
+        if (!HideoutKits.fits(level, kit, spot, null, new java.util.HashSet<>())) {
+            source.sendFailure(Component.literal("Kit " + name + " (" + kit.width() + " wide, " + kit.depth() + " deep, "
+                    + kit.layers().size() + " high) does not fit there."));
+            return 0;
+        }
+        int tier = Math.min(5, 1 + (int) (level.getDayTime() / 24000) / 10);
+        int placed = HideoutKits.place(level, kit, spot, tier, new java.util.HashSet<>());
+        source.sendSuccess(() -> Component.literal("Kit " + name + ": " + placed + " blocks " + kit.tags()), false);
+        return placed;
     }
 
     private static int test(net.minecraft.commands.CommandSourceStack source, String type, boolean near) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
@@ -356,7 +408,8 @@ public final class LazarusEvents {
 
     private static Outcome attempt(ServerLevel level, ServerPlayer player, String type, boolean near,
             boolean testing, EventData data) {
-        if (BuildingHideout.TYPE.equals(type) || HollowDen.TYPE.equals(type) || ZombieNest.TYPE.equals(type) || GasZone.gassed(type))
+        if (BuildingHideout.TYPE.equals(type) || HollowDen.TYPE.equals(type) || ZombieNest.TYPE.equals(type) || GasZone.gassed(type)
+                || SmugglerDen.TYPE.equals(type))
             return attemptBuilding(level, player, type, near, data);
         Search search = findSpot(level, player, type, near, data);
         if (search.pos == null) return new Outcome(false, "No valid location (" + search.failures + ")");
@@ -373,12 +426,27 @@ public final class LazarusEvents {
         return new Outcome(true, message);
     }
 
+    /** Nests prefer a sewer when CityWorld is there, else a building room. */
+    private static BuildingHideout.Room nestRoom(ServerLevel level, ServerPlayer player, EventData data) {
+        if (ThreadLocalRandom.current().nextDouble() < CityWorldSites.SEWER_PREFERENCE) {
+            BuildingHideout.Room sewer = CityWorldSites.findSewer(level, player, data, 160, 12);
+            if (sewer != null) return sewer;
+        }
+        return BuildingHideout.find(level, player, data);
+    }
+
     /** Building hideouts use a room: the one the player stands in for the test command, a random roofed one otherwise. */
     private static Outcome attemptBuilding(ServerLevel level, ServerPlayer player, String type, boolean near, EventData data) {
         boolean gas = GasZone.gassed(type);
-        BuildingHideout.Room room = gas ? (near ? GasZone.space(level, player.blockPosition())
+        if (SmugglerDen.TYPE.equals(type) && near && CityWorldSites.territory(level, player.blockPosition()) != CityWorldSites.Territory.SEWER)
+            return new Outcome(false, "Stand in a sewer (/lazarusevents where must say SEWER)");
+        BuildingHideout.Room room = SmugglerDen.TYPE.equals(type)
+                ? (near ? SmugglerDen.space(level, player.blockPosition())
+                        : CityWorldSites.findSewer(level, player, data, SmugglerDen.MAX_CELLS, SmugglerDen.REACH))
+                : gas ? (near ? GasZone.space(level, player.blockPosition())
                 : Quarantine.TYPE.equals(type) ? GasZone.space(level, BuildingHideout.find(level, player, data)) : GasZone.find(level, player, data))
-                : near ? BuildingHideout.room(level, player.blockPosition()) : BuildingHideout.find(level, player, data);
+                : near ? BuildingHideout.room(level, player.blockPosition())
+                : ZombieNest.TYPE.equals(type) ? nestRoom(level, player, data) : BuildingHideout.find(level, player, data);
         if (room == null) return new Outcome(false, near ? "Stand inside a building: no enclosed room around you"
                 : "No building interior found nearby");
         if (Quarantine.TYPE.equals(type)) {
@@ -391,7 +459,7 @@ public final class LazarusEvents {
         int tier = Math.min(5, 1 + (int) (level.getDayTime() / 24000) / 10);
         List<BlockPos> pustules = ZombieNest.TYPE.equals(type) ? ZombieNest.place(level, room) : null;
         net.minecraft.nbt.CompoundTag quarantine = Quarantine.TYPE.equals(type) ? Quarantine.place(level, room, tier, id) : null;
-        boolean placed = Quarantine.TYPE.equals(type) ? quarantine != null : gas ? GasZone.place(level, room) : ZombieNest.TYPE.equals(type) ? pustules != null
+        boolean placed = SmugglerDen.TYPE.equals(type) ? SmugglerDen.place(level, room, tier, id) : Quarantine.TYPE.equals(type) ? quarantine != null : gas ? GasZone.place(level, room) : ZombieNest.TYPE.equals(type) ? pustules != null
                 : HollowDen.TYPE.equals(type) ? HollowDen.place(level, room, id) : BuildingHideout.place(level, room, tier, id);
         if (!placed) {
             removeActors(level, id, room.center());
@@ -719,7 +787,8 @@ public final class LazarusEvents {
             case RescueEncounter.TYPE, FalseRadioEncounter.TYPE -> "distress call";
             case LastDefenseEncounter.TYPE -> "last stand";
             case MilitaryCollapse.ABANDONED -> "abandoned checkpoint";
-            case HostileHideouts.DESERTER_CAMP, HostileHideouts.GANG_HIDEOUT, BuildingHideout.TYPE, HollowDen.TYPE -> HostileHideouts.label(type);
+            case HostileHideouts.DESERTER_CAMP, HostileHideouts.GANG_HIDEOUT, BuildingHideout.TYPE, HollowDen.TYPE, SmugglerDen.TYPE ->
+                    HostileHideouts.label(type);
             case ZombieNest.TYPE -> "zombie nest";
             case GasZone.TYPE -> "chemical leak";
             case Quarantine.TYPE -> "military quarantine";
