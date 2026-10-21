@@ -37,7 +37,8 @@ final class HostileHideouts {
     private HostileHideouts() {}
 
     static boolean is(String type) {
-        return DESERTER_CAMP.equals(type) || GANG_HIDEOUT.equals(type) || GANG_BUILDING.equals(type) || HollowDen.TYPE.equals(type);
+        return DESERTER_CAMP.equals(type) || GANG_HIDEOUT.equals(type) || GANG_BUILDING.equals(type) || HollowDen.TYPE.equals(type)
+                || SmugglerDen.TYPE.equals(type);
     }
 
     /** Draw weights of {deserter camp, gang hideout, gang building} for a world day (an ordinary encounter weighs 1). */
@@ -84,12 +85,14 @@ final class HostileHideouts {
     static String radio(ServerLevel level, BlockPos pos, String type) {
         if (DESERTER_CAMP.equals(type)) return "Intercepted on an old military channel: deserters arguing over rations at a camp";
         if (HollowDen.TYPE.equals(type)) return "Haven calling: another one of ours didn't come back tonight. Candles were seen in a building";
+        if (SmugglerDen.TYPE.equals(type)) return "Intercepted chatter: the " + HostileGroups.gang(level, pos) + " are moving goods through the sewers";
         return "Intercepted chatter: the " + HostileGroups.gang(level, pos) + " are holed up "
                 + (GANG_BUILDING.equals(type) ? "inside a building" : "at their stash");
     }
 
     static String label(String type) {
-        return DESERTER_CAMP.equals(type) ? "deserter camp" : HollowDen.TYPE.equals(type) ? "Hollow den" : "gang hideout";
+        return DESERTER_CAMP.equals(type) ? "deserter camp" : HollowDen.TYPE.equals(type) ? "Hollow den"
+                : SmugglerDen.TYPE.equals(type) ? "smuggler den" : "gang hideout";
     }
 
     /** Every 100 ticks: pays the players present when a seen hideout has no occupant left, and ends it. */

@@ -1,0 +1,13 @@
+{
+  "tags": ["guard"],
+  "palette": {
+    "Z": ["apocalypsenow:sandbagbarrier", "minecraft:sandstone_wall"],
+    "z": ["apocalypsenow:sandbags", "minecraft:sandstone_slab[type=bottom]"],
+    "B": {"block": "minecraft:barrel[facing=up]", "loot": "smallairdrop"},
+    "L": "minecraft:lantern"
+  },
+  "layers": [
+    ["B  ", "Z  ", "ZZz"],
+    ["L  ", "Z  ", "ZZ "]
+  ]
+}

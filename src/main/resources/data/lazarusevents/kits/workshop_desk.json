@@ -1,0 +1,14 @@
+{
+  "tags": ["workshop"],
+  "palette": {
+    "D": ["refurbished_furniture:oak_desk[facing=back]", "minecraft:crafting_table"],
+    "F": "minecraft:fletching_table",
+    "c": ["refurbished_furniture:oak_chair[facing=front]", "minecraft:spruce_stairs[facing=front]"],
+    "L": "minecraft:lantern",
+    "p": ["apocalypsenow:papertrash[facing=front]", "minecraft:white_carpet"]
+  },
+  "layers": [
+    ["DDF", " c "],
+    ["L p"]
+  ]
+}

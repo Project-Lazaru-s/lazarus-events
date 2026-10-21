@@ -1,0 +1,24 @@
+{
+  "tags": [
+    "guard"
+  ],
+  "groups": [
+    "hollow"
+  ],
+  "palette": {
+    "I": "minecraft:iron_bars",
+    "C": "minecraft:chain",
+    "S": "minecraft:skeleton_skull[rotation=front]",
+    "B": "minecraft:black_banner[rotation=front]",
+    "L": "minecraft:candle[candles=3,lit=true]"
+  },
+  "layers": [
+    [
+      "IBI",
+      "S L"
+    ],
+    [
+      "C C"
+    ]
+  ]
+}

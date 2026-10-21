@@ -1,0 +1,28 @@
+{
+  "tags": [
+    "workshop"
+  ],
+  "groups": [
+    "hollow"
+  ],
+  "palette": {
+    "T": "minecraft:stonecutter[facing=front]",
+    "A": "minecraft:chipped_anvil[facing=left]",
+    "B": "minecraft:bone_block[axis=y]",
+    "R": "minecraft:red_carpet",
+    "L": "minecraft:candle[candles=2,lit=true]",
+    "W": "minecraft:cobweb"
+  },
+  "layers": [
+    [
+      "TAB",
+      "R  "
+    ],
+    [
+      " BL"
+    ],
+    [
+      "W  "
+    ]
+  ]
+}

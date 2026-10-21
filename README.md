@@ -6,7 +6,7 @@
   <img alt="Minecraft 1.20.1" src="https://img.shields.io/badge/Minecraft-1.20.1-3c8527">
   <img alt="Forge 47.x" src="https://img.shields.io/badge/Forge-47.x-dd7d2b">
   <img alt="Java 17" src="https://img.shields.io/badge/Java-17-b07219">
-  <img alt="Versão 0.22.0" src="https://img.shields.io/badge/vers%C3%A3o-0.22.0-6b5b3e">
+  <img alt="Versão 0.24.0" src="https://img.shields.io/badge/vers%C3%A3o-0.24.0-6b5b3e">
 </p>
 
 # Lazarus Events
@@ -50,9 +50,11 @@ Os encontros são colocados em áreas já carregadas do *Overworld*. O mod não 
 | **Gang hideout** / **Gang building hideout** | 6 | Esconderijo de gangue ao ar livre ou num cômodo de prédio do CityWorld, com saqueadores guardando o loot. |
 | **Hollow den** | 10 (à noite) | Covil dos canibais do Hollow num prédio, com um prisioneiro do Haven para libertar. |
 | **Zombie nest** | 8 | Pústulas num prédio que geram infectados até serem destruídas; em volta, uma zona infestada. |
+| **Smuggler den** | 6 | Trecho de esgoto do CityWorld fechado com grades e uma porta, com o melhor estoque da gangue local. |
 | **Deserter camp** | 21 | Posto militar tomado por desertores. |
 | **Infection zone** | 12 | Gás verde num espaço fechado; máscara ou hazmat obrigatórios. |
 | **Military quarantine** | 21 | Uma quarentena militar que falhou, com perímetro, tenda de descontaminação e gás no prédio. |
+| **Helicopter crash** | 15 | Helicóptero militar caído com fogo, fumaça de sinal, duas caixas militares, infectados de farda e às vezes um piloto ferido. |
 
 Os detalhes dos hostis, ninhos, zonas de gás e quarentena estão nas seções abaixo. Rescue, Last Defense, False Radio e Military usam a API do **Lazarus NPCs**: ordens aos personagens (esperar, seguir, guardar, recuar), conversa com escolhas, tarefa no diário (aba **Encounters**) e recompensa. Só um jogador por vez pode aceitar a tarefa de um mesmo personagem.
 
@@ -124,6 +126,10 @@ Quando um saqueador ou desertor se rende, a tela de rendição ganha duas opçõ
 
 - **Interrogate:** uma vez por prisioneiro. Ele entrega o esconderijo do grupo, que é criado agora a 80–160 blocos em área já carregada: acampamento de desertores para soldados; esconderijo de gangue ou cômodo de prédio tomado pela gangue para saqueadores. O prisioneiro diz a direção e a distância, e uma tarefa **Find the hideout** vai para o diário com o destino. Se não houver lugar válido por perto, ele não diz nada útil.
 - **Send to refuge:** só aparece se o refúgio do Haven tiver um beliche de hóspede livre. O prisioneiro deixa as cores da gangue e vai recomeçar no refúgio, com roupa de sobrevivente e nome novo. Dá +2 Haven.
+
+### Esconderijos habitados
+
+Os esconderijos em prédio (gangue e covil do Hollow) ocupam o cômodo encontrado e os vizinhos atrás das portas (até 4 cômodos para a gangue, 3 para o Hollow). Cada cômodo é esvaziado e mobiliado com os **kits de móveis** conforme o tamanho: o maior vira sala comum (cozinha e guarita), os outros dormitório, oficina e depósito, sempre com passagens livres entre as portas. Cada grupo tem identidade própria (kits exclusivos e troca de blocos, descritos em [docs/IDENTIDADE_GRUPOS.md](docs/IDENTIDADE_GRUPOS.md)): a gangue em vermelho, preto e amarelo com estandartes, pneus e sucata; os contrabandistas com caixas militares, paletes e mesa de contagem; o Hollow com velas, ossos, altar e carne pendurada. A gangue guarda o estoque no depósito e marca a sala comum com a placa TURF; o Hollow prende o refém numa jaula num canto longe das portas, entre ossos, velas e uma fogueira apagada.
 
 ## Ninhos de zumbis
 
@@ -229,7 +235,7 @@ O cache usa uma tabela de suprimentos; os barris militares usam tabelas de armas
 ## Como aparecem
 
 - Após a primeira entrada no mundo, a primeira tentativa natural é programada para cerca de **um dia de jogo** depois. Após um encontro bem-sucedido, a próxima tentativa ocorre em **1 a 2 dias**, por padrão.
-- Cache, Gunfire, Flare e Rescue podem aparecer desde o começo; Last Defense a partir do **dia 3**; False Radio a partir do **dia 6**, junto com os saqueadores; e Military a partir do **dia 10**, por padrão. Pesos de sorteio entre os tipos liberados: Cache 9, Gunfire 6, Flare 4, Rescue 4, Last Defense 3, False Radio 3, Military 1 (0,5 a partir do dia 21 e 0,15 a partir do dia 36), Abandoned 1 (1,5 a partir do dia 36), Gang hideout 2 e Gang building hideout 2 (dia 6), Deserter camp 1 (1,5 a partir do dia 36), Hollow den 1,5 (dia 10, só à noite), Zombie nest 1,5 (dia 8), Infection zone 1,5 (dia 12) e Military quarantine 1 (dia 21).
+- Cache, Gunfire, Flare e Rescue podem aparecer desde o começo; Last Defense a partir do **dia 3**; False Radio a partir do **dia 6**, junto com os saqueadores; e Military a partir do **dia 10**, por padrão. Pesos de sorteio entre os tipos liberados: Cache 9, Gunfire 6, Flare 4, Rescue 4, Last Defense 3, False Radio 3, Military 1 (0,5 a partir do dia 21 e 0,15 a partir do dia 36), Abandoned 1 (1,5 a partir do dia 36), Gang hideout 2 e Gang building hideout 2 (dia 6), Smuggler den 1,5 (dia 6, só com o CityWorld), Deserter camp 1 (1,5 a partir do dia 36), Hollow den 1,5 (dia 10, só à noite), Zombie nest 1,5 (dia 8), Infection zone 1,5 (dia 12) , Military quarantine 1 (dia 21) e Helicopter crash 1 (dia 15 por padrão).
 - O mod procura um local adequado em chunks carregados, de 40 a 78 blocos do jogador, fora da direção para a qual ele está olhando. O terreno precisa ser seguro para a construção.
 - Um local inválido adia a tentativa em vez de consumir o intervalo inteiro. O limite padrão é de **quatro encontros acompanhados** ao mesmo tempo; registros antigos expiram depois de sete dias de jogo.
 - Ao chegar a 24 blocos de um encontro, o jogador recebe uma mensagem de descoberta. Quem carrega o *walkie-talkie* do Immersive Frequencies no inventário pode receber pelo rádio coordenadas aproximadas de um encontro recém-criado, se estiver a até 192 blocos.
@@ -246,7 +252,20 @@ Essas distâncias e condições explicam por que um comando de teste pode respon
 
 A partir da versão 0.22.0, o mod conversa com a API pública do **CityWorld** (`CityWorldAPI`) por reflexão: sem o CityWorld instalado, nada quebra e os eventos de território ficam desligados. Com ele, cada posição é classificada como **superfície**, **estação de metrô**, **túnel de metrô**, **mina**, **bunker**, **esgoto** (até 16 blocos abaixo da rua, já que esgotos não são lotes próprios na API) ou **caverna**.
 
-Essa é a base da update de **eventos por território** (metrô, cavernas, esgotos e superfície). Por enquanto só o comando `/lazarusevents where` usa a classificação; os eventos de cada área estão planejados em [docs/PLANO_EVENTOS_TERRITORIOS_V1.md](docs/PLANO_EVENTOS_TERRITORIOS_V1.md).
+Essa é a base da update de **eventos por território** (metrô, cavernas, esgotos e superfície), planejada em [docs/PLANO_EVENTOS_TERRITORIOS_V1.md](docs/PLANO_EVENTOS_TERRITORIOS_V1.md).
+
+### Esgotos (0.23.0)
+
+- **Ninhos e gás preferem esgotos:** com o CityWorld, 60% das vezes os ninhos de zumbis e as zonas de infecção procuram primeiro um esgoto a 30–80 blocos do jogador; sem esgoto por perto, voltam ao prédio ou ao subsolo de antes.
+- **Esconderijo de contrabandista** (`smuggler_den`, a partir do dia 6): a gangue local fecha um trecho de túnel de esgoto com **grades de ferro** e uma única **porta**, e mora lá. Da porta para dentro: guarita, oficina, cozinha, dormitório e depósito, montados com os **kits de móveis**, ao longo de uma passagem livre; vigas de madeira com lanternas penduradas, piso de tábuas e **pontes** de tábuas sobre os canais de água. O melhor estoque (armas e munição com um distintivo da gangue no depósito, remédio com cigarros, suprimentos com bebida) é guardado por 3 ou 4 saqueadores. Só aparece em trechos com formato de túnel; limpar o lugar paga reputação política com os Wardens, como os outros esconderijos de gangue.
+
+---
+
+### Queda de helicóptero (0.24.0)
+
+O `heli_crash` surge a partir do dia 15 em terreno plano a céu aberto, a 60–120 blocos do jogador. A fuselagem de ferro e concreto verde tem cabine envidraçada, cauda partida, rotor no teto e uma hélice quebrada no chão. Cascalho, terra revirada e sucata marcam o arrasto. O fogo isolado sobre netherrack apaga após um dia de jogo; duas fogueiras de sinal sobre feno mantêm a fumaça por mais um dia. A carcaça fica no mundo após o encontro expirar em três dias.
+
+Duas caixas usam as tabelas `dyairdrop:chests/weaponairdrop<tier>` e `largeairdrop<tier>`; às vezes há uma terceira caixa médica. O tier vai de 1 a 5 conforme o dia. Há 3 ou 4 infectados de farda. Enquanto houver fumaça e um jogador estiver a até 64 blocos, chegam 1 a 3 infectados a cada 2 minutos, até 12 vivos. Em 40% dos acidentes, um piloto ferido pede duas bandagens e escolta para longe da carcaça; o resgate dá **+3 Military** e suprimentos. O rádio anuncia o pedido de socorro; sem rádio, a fumaça indica o local.
 
 ---
 
@@ -264,8 +283,11 @@ Os comandos exigem permissão de operador, e os testes de colocação devem ser 
 | `/lazarusevents test rescue near` | Procura um local próximo para o sobrevivente ferido. |
 | `/lazarusevents test lastdefense near` | Procura um local próximo para a barricada defendida. |
 | `/lazarusevents test falseradio near` | Procura um local próximo para a emboscada do falso sinal. |
+| `/lazarusevents test heli_crash near` | Procura terreno plano a céu aberto a 14–34 blocos para a queda. |
 | `/lazarusevents test <tipo> natural` | Usa a distância e a regra de direção dos encontros naturais; relata os motivos de rejeição. |
 | `/lazarusevents where` | Mostra o que o CityWorld diz sobre a sua posição: território (superfície, estação ou túnel de metrô, mina, bunker, esgoto ou caverna), lote, profundidade abaixo da rua, linhas de metrô e a estação mais próxima. Sem o CityWorld, só distingue superfície e caverna. |
+| `/lazarusevents scan` | Salva em `lazarus_scans/` (na pasta do jogo ou do servidor) um corte em texto dos blocos em volta do jogador, com legenda, para desenhar kits de esconderijo sobre a geometria real. |
+| `/lazarusevents kit <nome> [grupo]` | Monta um kit de móveis (`data/lazarusevents/kits`) na parede para a qual o jogador está olhando, a até 5 blocos, para revisão; com um grupo (`gang`, `smugglers`, `deserters`, `hollow`), aplica o estilo dele. |
 | `/lazarusevents locate <id>` | Mostra as coordenadas de um encontro registrado. O começo do ID é suficiente. |
 | `/lazarusevents cancel <id>` | Para de acompanhar o encontro e remove seus personagens identificados; blocos e loot permanecem. Tarefas abertas desse encontro falham sem recompensa para os jogadores online. |
 | `/lazarusbase list` | Lista as bases permanentes, guarnição e estoque. |
@@ -280,13 +302,13 @@ Os comandos exigem permissão de operador, e os testes de colocação devem ser 
 | `/lazarusskirmish test` | Inicia confronto no local do operador se houver área aberta e carregada. |
 | `/lazarusskirmish clear` | Encerra apenas o confronto criado pelo comando de teste. |
 
-`<tipo>` pode ser `cache`, `gunfire`, `flare`, `military`, `abandoned`, `deserter_camp`, `gang_hideout`, `gang_building_hideout`, `hollow_den`, `zombie_nest`, `infection_zone`, `military_quarantine`, `rescue`, `lastdefense` ou `falseradio`. Os comandos de teste criam encontros reais no mundo, mas **não alteram o horário** do próximo evento natural. `gang_building_hideout near`, `hollow_den near`, `zombie_nest near`, `infection_zone near` e `military_quarantine near` precisam ser usados **dentro de um prédio**: o grupo ocupa o cômodo em volta do jogador.
+`<tipo>` pode ser `cache`, `gunfire`, `flare`, `military`, `abandoned`, `deserter_camp`, `gang_hideout`, `gang_building_hideout`, `hollow_den`, `zombie_nest`, `infection_zone`, `military_quarantine`, `smuggler_den`, `heli_crash`, `rescue`, `lastdefense` ou `falseradio`. Os comandos de teste criam encontros reais no mundo, mas **não alteram o horário** do próximo evento natural. `gang_building_hideout near`, `hollow_den near`, `zombie_nest near`, `infection_zone near` e `military_quarantine near` precisam ser usados **dentro de um prédio**: o grupo ocupa o cômodo em volta do jogador. `smuggler_den near` precisa ser usado **dentro de um esgoto do CityWorld** (o comando `where` deve dizer `SEWER`).
 
 ---
 
 ## Configuração
 
-O arquivo `config/lazarusevents-common.toml` é criado pelo Forge. Nele é possível ativar ou desativar o sistema e cada tipo de encontro, alterar o intervalo entre encontros, definir o primeiro dia de Military e os dias do colapso militar (`militaryDeclineDay` 21, `militaryCollapseDay` 36), ligar ou desligar os grupos novos (`enableHostileHideouts`, `enableZombieNests`, `enableInfectionZones`, `enableQuarantines`, `enableFactionExpeditions`), ajustar o limite de encontros acompanhados e escolher a partir de que dia as bases podem surgir em áreas já exploradas (`factionBaseFallbackDay`, 0 desliga). O estado dos encontros e o resultado da última tentativa são salvos por mundo.
+O arquivo `config/lazarusevents-common.toml` é criado pelo Forge. Nele é possível ativar ou desativar o sistema e cada tipo de encontro, alterar o intervalo entre encontros, definir o primeiro dia de Military e os dias do colapso militar (`militaryDeclineDay` 21, `militaryCollapseDay` 36), ligar ou desligar os grupos novos (`enableHostileHideouts`, `enableZombieNests`, `enableInfectionZones`, `enableQuarantines`, `enableSmugglerDens`, `enableHeliCrashes`, `enableFactionExpeditions`), definir o início das quedas (`heliCrashFromDay` 15), ajustar o limite de encontros acompanhados e escolher a partir de que dia as bases podem surgir em áreas já exploradas (`factionBaseFallbackDay`, 0 desliga). O estado dos encontros e o resultado da última tentativa são salvos por mundo.
 
 ---
 

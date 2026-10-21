@@ -1,0 +1,16 @@
+{
+  "tags": ["kitchen"],
+  "palette": {
+    "K": ["farmersdelight:stove[facing=front]", "minecraft:smoker[facing=front]"],
+    "P": ["farmersdelight:cooking_pot[facing=front]", "minecraft:cauldron"],
+    "b": ["farmersdelight:spruce_cabinet[facing=front]", "minecraft:barrel[facing=front]"],
+    "c": ["farmersdelight:cutting_board[facing=front]", "minecraft:spruce_pressure_plate"],
+    "B": {"block": "minecraft:barrel[facing=up]", "loot": "smallairdrop"},
+    "w": ["farmersdelight:wooden_basket[facing=up]"],
+    "S": ["lootpiles:cooking_scrap_pile", "lootpiles:common_scrap_pile"]
+  },
+  "layers": [
+    ["KbBS"],
+    ["Pcw "]
+  ]
+}

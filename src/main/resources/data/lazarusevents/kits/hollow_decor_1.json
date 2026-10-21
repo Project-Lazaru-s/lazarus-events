@@ -1,0 +1,38 @@
+{
+  "tags": [
+    "decor"
+  ],
+  "groups": [
+    "hollow"
+  ],
+  "palette": {
+    "A": "minecraft:polished_blackstone_bricks",
+    "S": "minecraft:skeleton_skull[rotation=front]",
+    "K": "minecraft:wither_skeleton_skull[rotation=front]",
+    "L": "minecraft:candle[candles=4,lit=true]",
+    "H": "minecraft:chain",
+    "I": "minecraft:iron_bars",
+    "M": "minecraft:red_mushroom_block",
+    "N": "minecraft:nether_wart_block",
+    "R": "minecraft:red_carpet",
+    "W": "minecraft:cobweb"
+  },
+  "layers": [
+    [
+      "AAA",
+      "R R"
+    ],
+    [
+      "SKL",
+      "M N"
+    ],
+    [
+      "   ",
+      "H H"
+    ],
+    [
+      "W  ",
+      "I I"
+    ]
+  ]
+}

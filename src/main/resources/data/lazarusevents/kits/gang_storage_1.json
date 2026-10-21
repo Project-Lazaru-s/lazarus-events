@@ -1,0 +1,35 @@
+{
+  "tags": [
+    "storage"
+  ],
+  "groups": [
+    "gang"
+  ],
+  "palette": {
+    "X": [
+      "apocalypsenow:wooden_crate",
+      "minecraft:barrel[facing=up]"
+    ],
+    "T": [
+      "apocalypsenow:pile_of_tires[facing=front]",
+      "minecraft:black_wool"
+    ],
+    "B": {
+      "block": "minecraft:barrel[facing=up]",
+      "loot": "smallairdrop"
+    },
+    "J": [
+      "lootpiles:common_scrap_pile",
+      "minecraft:iron_trapdoor[half=bottom]"
+    ]
+  },
+  "layers": [
+    [
+      "XBT",
+      "J  "
+    ],
+    [
+      "X  "
+    ]
+  ]
+}

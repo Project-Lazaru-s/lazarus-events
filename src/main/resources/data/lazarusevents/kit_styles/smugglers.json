@@ -1,0 +1,10 @@
+{
+  "replace": {
+    "minecraft:white_wool": "minecraft:brown_wool",
+    "minecraft:green_wool": "minecraft:gray_wool",
+    "minecraft:white_carpet": "minecraft:brown_carpet",
+    "minecraft:brown_carpet": "minecraft:gray_carpet",
+    "minecraft:spruce_fence": "minecraft:dark_oak_fence",
+    "apocalypsenow:wooden_crate": ["apocalypsenow:military_crate", "minecraft:barrel[facing=up]"]
+  }
+}

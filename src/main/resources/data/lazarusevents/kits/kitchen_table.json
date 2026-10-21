@@ -1,0 +1,15 @@
+{
+  "tags": ["kitchen"],
+  "palette": {
+    "b": {"block": "minecraft:barrel[facing=up]", "loot": "smallairdrop"},
+    "S": ["lootpiles:cooking_scrap_pile", "lootpiles:common_scrap_pile"],
+    "a": ["refurbished_furniture:oak_chair[facing=back]", "minecraft:spruce_stairs[facing=back]"],
+    "T": ["refurbished_furniture:oak_table", "minecraft:barrel[facing=up]"],
+    "z": ["refurbished_furniture:oak_chair[facing=front]", "minecraft:spruce_stairs[facing=front]"],
+    "l": "minecraft:candle[candles=3,lit=true]"
+  },
+  "layers": [
+    ["baS", " T ", " z "],
+    ["   ", " l "]
+  ]
+}

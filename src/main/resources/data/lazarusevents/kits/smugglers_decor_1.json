@@ -1,0 +1,35 @@
+{
+  "tags": [
+    "decor",
+    "workshop"
+  ],
+  "groups": [
+    "smugglers"
+  ],
+  "palette": {
+    "D": [
+      "refurbished_furniture:spruce_desk[facing=back]",
+      "minecraft:crafting_table"
+    ],
+    "C": [
+      "refurbished_furniture:spruce_chair[facing=front]",
+      "minecraft:spruce_stairs[facing=front]"
+    ],
+    "L": "minecraft:lectern[facing=front]",
+    "B": "minecraft:bookshelf",
+    "X": [
+      "apocalypsenow:cardboard_box",
+      "minecraft:barrel[facing=up]"
+    ],
+    "N": "minecraft:lantern"
+  },
+  "layers": [
+    [
+      "BDX",
+      " C "
+    ],
+    [
+      " NL"
+    ]
+  ]
+}

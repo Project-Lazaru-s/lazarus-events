@@ -1,0 +1,14 @@
+{
+  "tags": ["dorm", "camp"],
+  "palette": {
+    "P": "minecraft:spruce_fence",
+    "H": "minecraft:white_bed[part=head,facing=back]",
+    "F": "minecraft:white_bed[part=foot,facing=back]",
+    "W": {"random": ["minecraft:white_wool", "minecraft:green_wool", "minecraft:brown_wool"]}
+  },
+  "layers": [
+    ["PHP", " F ", "P P"],
+    ["P P", "   ", "P P"],
+    ["WWW", "WWW", "WWW"]
+  ]
+}

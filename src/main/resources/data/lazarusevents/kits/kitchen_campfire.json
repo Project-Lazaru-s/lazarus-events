@@ -1,0 +1,15 @@
+{
+  "tags": ["kitchen", "camp"],
+  "palette": {
+    "B": {"block": "minecraft:barrel[facing=up]", "loot": "smallairdrop"},
+    "X": ["apocalypsenow:wooden_crate", "minecraft:barrel[facing=up]"],
+    "b": "minecraft:barrel[facing=front]",
+    "k": ["farmersdelight:skillet[facing=front]"],
+    "F": "minecraft:campfire[lit=true,signal_fire=false,facing=front]",
+    "s": "minecraft:spruce_slab[type=bottom]"
+  },
+  "layers": [
+    ["BXb", "   ", "sFs"],
+    [" k "]
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "tags": ["workshop"],
+  "palette": {
+    "B": {"block": "minecraft:barrel[facing=up]", "loot": "smallairdrop"},
+    "T": "minecraft:crafting_table",
+    "A": {"random": ["minecraft:chipped_anvil[facing=left]", "minecraft:damaged_anvil[facing=left]", "minecraft:anvil[facing=left]"]},
+    "F": "minecraft:furnace[facing=front]",
+    "S": ["lootpiles:mechanic_scrap_pile", "minecraft:iron_trapdoor[half=bottom]"],
+    "L": "minecraft:lantern"
+  },
+  "layers": [
+    ["BTAF", "S   "],
+    [" L  "]
+  ]
+}

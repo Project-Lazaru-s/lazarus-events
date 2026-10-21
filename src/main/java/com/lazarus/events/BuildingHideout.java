@@ -136,32 +136,34 @@ final class BuildingHideout {
         return new Cells(walls, free);
     }
 
+    /**
+     * Turns the room, and up to three more behind its doors, into the gang's home: cleared, furnished by use with
+     * the hideout kits around clear walkways, the stash (with a gang patch) in the storage room, a turf sign in the
+     * main room, and the members on guard.
+     */
     static boolean place(ServerLevel level, Room room, int tier, UUID id) {
         ThreadLocalRandom random = ThreadLocalRandom.current();
         String gang = HostileGroups.gang(level, room.center());
-        Cells cells = cells(level, room);
-        List<BlockPos> walls = new ArrayList<>(cells.walls()), free = cells.free();
-        if (walls.size() < 4) return false;
-        Collections.shuffle(walls, random);
-        BlockPos stash = walls.get(0);
-        if (!level.setBlock(stash, Blocks.BARREL.defaultBlockState(), 3)) return false;
+        if (cells(level, room).walls().size() < 4) return false;
+        List<Room> rooms = HideoutLayout.rooms(level, room, 4);
+        HideoutLayout.Furnished home = HideoutLayout.furnish(level, rooms, tier, new java.util.HashSet<>(), "gang");
+        BlockPos stash = HideoutLayout.freeWall(level, home.taken(), home.storage().cells(), room.cells());
+        if (stash == null || !level.setBlock(stash, Blocks.BARREL.defaultBlockState(), 3)) return false;
         ResourceLocation table = new ResourceLocation("dyairdrop", "chests/smallairdrop" + tier);
         if (level.getBlockEntity(stash) instanceof RandomizableContainerBlockEntity barrel) {
             if (level.getServer().getLootData().getLootTable(table) != LootTable.EMPTY)
                 barrel.setLootTable(table, random.nextLong());
             barrel.setItem(barrel.getContainerSize() - 1, HostileLore.patch(level, stash));
         }
-        put(level, walls.get(1), ApiSupport.state("apocalypsenow:cardboard_box", Blocks.BARREL.defaultBlockState()));
-        put(level, walls.get(2), ApiSupport.state("apocalypsenow:wooden_crate", Blocks.BARREL.defaultBlockState()));
-        if (level.getBlockEntity(walls.get(2)) instanceof Container crate && crate.getContainerSize() > 0) {
-            crate.setItem(0, ApiSupport.stack("apocalypsenow:canned_food", 1 + random.nextInt(2)));
-        }
-        put(level, walls.get(3), Blocks.LANTERN.defaultBlockState());
-        for (int i = 4; i < Math.min(walls.size(), 7); i++) // sleeping mats
-            put(level, walls.get(i), (i % 2 == 0 ? Blocks.RED_CARPET : Blocks.GRAY_CARPET).defaultBlockState());
-        sign(level, room.center(), gang.toUpperCase(), "TURF", "", "KEEP OUT");
-        List<BlockPos> spawns = new ArrayList<>(free.isEmpty() ? walls.subList(Math.min(7, walls.size()), walls.size()) : free);
-        spawns.remove(room.center());
+        room.cells().stream().filter(cell -> !home.taken().contains(cell) && passable(level, cell))
+                .min(java.util.Comparator.comparingDouble(cell -> cell.distSqr(room.center())))
+                .ifPresent(at -> {
+                    sign(level, at, gang.toUpperCase(), "TURF", "", "KEEP OUT");
+                    home.taken().add(at);
+                });
+        for (Room part : rooms) HideoutLayout.cobwebs(level, part, home.taken());
+        List<BlockPos> spawns = new ArrayList<>(home.standing());
+        spawns.removeIf(cell -> !passable(level, cell));
         Collections.shuffle(spawns, random);
         List<Mob> occupants = new ArrayList<>();
         int count = 3 + random.nextInt(2);
@@ -171,12 +173,12 @@ final class BuildingHideout {
         if (occupants.isEmpty()) return false;
         for (Mob mob : occupants)
             ApiSupport.log("building hideout guard", NpcApi.assign(mob, new ScenarioAssignment(HostileHideouts.OWNER, id,
-                    ScenarioOrder.GUARD_AREA, GlobalPos.of(level.dimension(), room.center()), null, 8, 168_000L, 4)));
+                    ScenarioOrder.GUARD_AREA, GlobalPos.of(level.dimension(), room.center()), null, 12, 168_000L, 4)));
         return true;
     }
 
     static void put(ServerLevel level, BlockPos pos, BlockState state) {
-        if (passable(level, pos)) level.setBlock(pos, state, 3);
+        if (pos != null && passable(level, pos)) level.setBlock(pos, state, 3);
     }
 
     /** A waxed standing sign with up to four lines. */

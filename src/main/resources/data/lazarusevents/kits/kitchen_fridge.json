@@ -1,0 +1,15 @@
+{
+  "tags": ["kitchen"],
+  "palette": {
+    "R": ["refurbished_furniture:light_fridge[facing=back]", "minecraft:barrel[facing=front]"],
+    "Z": ["refurbished_furniture:light_freezer[facing=back]"],
+    "K": ["farmersdelight:stove[facing=front]", "minecraft:smoker[facing=front]"],
+    "s": ["refurbished_furniture:oak_kitchen_sink[facing=back]", "minecraft:water_cauldron[level=2]"],
+    "B": {"block": "minecraft:barrel[facing=up]", "loot": "smallairdrop"},
+    "k": ["farmersdelight:skillet[facing=front]"]
+  },
+  "layers": [
+    ["RKsB"],
+    ["Zk  "]
+  ]
+}

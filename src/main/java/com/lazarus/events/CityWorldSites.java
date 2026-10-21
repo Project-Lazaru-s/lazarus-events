@@ -9,8 +9,10 @@ import java.util.OptionalInt;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * The one door to CityWorld's public API ({@code me.daddychurchill.CityWorld.api.CityWorldAPI}), called by reflection
@@ -25,6 +27,8 @@ final class CityWorldSites {
 
     /** Sewers, cisterns and basements lie this many blocks under the street at most; deeper is cave or mine. */
     static final int SHALLOW = 16;
+    /** How often nests and gas zones look for a sewer first when CityWorld is there. */
+    static final double SEWER_PREFERENCE = 0.6;
     private static final String API = "me.daddychurchill.CityWorld.api.CityWorldAPI";
     private static Class<?> api;
     private static boolean looked;
@@ -117,6 +121,32 @@ final class CityWorldSites {
     static Map<String, String> fullInfo(ServerLevel level, BlockPos pos) {
         return call("getFullInfo", new Class<?>[] {ServerLevel.class, BlockPos.class}, level, pos) instanceof Map<?, ?> info
                 ? (Map<String, String>) info : Map.of();
+    }
+
+    /**
+     * An enclosed sewer space 30-80 blocks from the player, away from recent encounters and out of their reach; null
+     * without CityWorld or when none is found. {@code maxCells} and {@code reach} bound the space as in
+     * {@link BuildingHideout#room(ServerLevel, BlockPos, int, int)}.
+     */
+    static BuildingHideout.Room findSewer(ServerLevel level, ServerPlayer player, EventData data, int maxCells, int reach) {
+        OptionalInt street = streetLevel(level);
+        if (street.isEmpty()) return null;
+        java.util.concurrent.ThreadLocalRandom random = java.util.concurrent.ThreadLocalRandom.current();
+        for (int attempt = 0; attempt < 48; attempt++) {
+            double angle = random.nextDouble(Math.PI * 2), distance = random.nextDouble(30, 80);
+            int x = (int) Math.floor(player.getX() + Math.cos(angle) * distance);
+            int z = (int) Math.floor(player.getZ() + Math.sin(angle) * distance);
+            if (level.getChunkSource().getChunkNow(x >> 4, z >> 4) == null) continue;
+            for (int y = street.getAsInt() - 2; y >= street.getAsInt() - SHALLOW; y--) {
+                BlockPos pos = new BlockPos(x, y, z);
+                BuildingHideout.Room room = BuildingHideout.room(level, pos, maxCells, reach);
+                if (room == null) continue;
+                if (territory(level, pos) != Territory.SEWER || data.near(room.center())
+                        || player.distanceToSqr(Vec3.atCenterOf(room.center())) < 24 * 24) break;
+                return room;
+            }
+        }
+        return null;
     }
 
     /**

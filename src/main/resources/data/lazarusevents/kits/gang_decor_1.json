@@ -1,0 +1,31 @@
+{
+  "tags": [
+    "decor"
+  ],
+  "groups": [
+    "gang"
+  ],
+  "palette": {
+    "R": "minecraft:red_wall_banner[facing=front]",
+    "K": "minecraft:black_wall_banner[facing=front]",
+    "Y": "minecraft:yellow_wall_banner[facing=front]",
+    "T": [
+      "apocalypsenow:pile_of_tires[facing=front]",
+      "minecraft:black_wool"
+    ],
+    "S": [
+      "lootpiles:common_scrap_pile",
+      "minecraft:brown_carpet"
+    ],
+    "I": "minecraft:iron_bars"
+  },
+  "layers": [
+    [
+      "T S",
+      " I "
+    ],
+    [
+      "RKY"
+    ]
+  ]
+}

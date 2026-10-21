@@ -1,0 +1,30 @@
+{
+  "tags": [
+    "guard"
+  ],
+  "groups": [
+    "gang"
+  ],
+  "palette": {
+    "B": "minecraft:black_banner[rotation=front]",
+    "Z": [
+      "apocalypsenow:sandbagbarrier",
+      "minecraft:sandstone_wall"
+    ],
+    "I": "minecraft:iron_bars",
+    "C": {
+      "block": "minecraft:barrel[facing=up]",
+      "loot": "smallairdrop"
+    },
+    "L": "minecraft:lantern"
+  },
+  "layers": [
+    [
+      "BCI",
+      "ZZ "
+    ],
+    [
+      "L  "
+    ]
+  ]
+}

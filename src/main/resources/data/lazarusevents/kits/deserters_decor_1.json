@@ -1,0 +1,35 @@
+{
+  "tags": [
+    "decor",
+    "workshop"
+  ],
+  "groups": [
+    "deserters"
+  ],
+  "palette": {
+    "T": "minecraft:cartography_table",
+    "R": [
+      "apocalypsenow:military_communication_radio[facing=front]",
+      "minecraft:note_block"
+    ],
+    "X": [
+      "apocalypsenow:military_crate",
+      "minecraft:barrel[facing=up]"
+    ],
+    "C": [
+      "refurbished_furniture:spruce_chair[facing=front]",
+      "minecraft:spruce_stairs[facing=front]"
+    ],
+    "P": "minecraft:lectern[facing=front]",
+    "L": "minecraft:lantern"
+  },
+  "layers": [
+    [
+      "XTR",
+      " C "
+    ],
+    [
+      "L P"
+    ]
+  ]
+}

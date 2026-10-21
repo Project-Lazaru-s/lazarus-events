@@ -1,0 +1,31 @@
+{
+  "tags": [
+    "workshop"
+  ],
+  "groups": [
+    "gang"
+  ],
+  "palette": {
+    "A": "minecraft:chipped_anvil[facing=left]",
+    "T": "minecraft:smithing_table",
+    "S": [
+      "lootpiles:mechanic_scrap_pile",
+      "minecraft:iron_trapdoor[half=bottom]"
+    ],
+    "R": "minecraft:iron_bars",
+    "C": "minecraft:chain",
+    "B": {
+      "block": "minecraft:barrel[facing=up]",
+      "loot": "smallairdrop"
+    }
+  },
+  "layers": [
+    [
+      "ATSB",
+      "R   "
+    ],
+    [
+      "   C"
+    ]
+  ]
+}

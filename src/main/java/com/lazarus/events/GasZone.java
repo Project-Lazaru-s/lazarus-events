@@ -68,6 +68,10 @@ final class GasZone {
     /** An underground space 30-80 blocks from the player when possible, otherwise any roofed room. */
     static BuildingHideout.Room find(ServerLevel level, ServerPlayer player, EventData data) {
         ThreadLocalRandom random = ThreadLocalRandom.current();
+        if (random.nextDouble() < CityWorldSites.SEWER_PREFERENCE) { // the gas likes sewers best
+            BuildingHideout.Room sewer = CityWorldSites.findSewer(level, player, data, MAX_CELLS, REACH);
+            if (sewer != null) return sewer;
+        }
         for (int attempt = 0; attempt < 64; attempt++) {
             double angle = random.nextDouble(Math.PI * 2), distance = random.nextDouble(30, 80);
             int x = (int) Math.floor(player.getX() + Math.cos(angle) * distance);

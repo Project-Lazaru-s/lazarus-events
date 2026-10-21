@@ -1,0 +1,13 @@
+{
+  "tags": ["decor"],
+  "palette": {
+    "p": {"random": ["apocalypsenow:papertrash[facing=front]", "apocalypsenow:paperstrash[facing=left]"]},
+    "q": ["apocalypsenow:paperstrash[facing=right]", "minecraft:white_carpet"],
+    "c": "minecraft:cobweb"
+  },
+  "layers": [
+    ["p q", " q "],
+    ["   "],
+    ["c  "]
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "tags": [
+    "guard"
+  ],
+  "groups": [
+    "smugglers"
+  ],
+  "palette": {
+    "B": {
+      "block": "minecraft:barrel[facing=up]",
+      "loot": "smallairdrop"
+    },
+    "Z": [
+      "apocalypsenow:sandbagbarrier",
+      "minecraft:sandstone_wall"
+    ],
+    "L": "minecraft:lantern",
+    "I": "minecraft:iron_bars"
+  },
+  "layers": [
+    [
+      "BI ",
+      "ZZ "
+    ],
+    [
+      "L  "
+    ]
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "tags": [
+    "dorm"
+  ],
+  "groups": [
+    "deserters"
+  ],
+  "palette": {
+    "H": "minecraft:green_bed[part=head,facing=back]",
+    "F": "minecraft:green_bed[part=foot,facing=back]",
+    "h": "minecraft:gray_bed[part=head,facing=back]",
+    "f": "minecraft:gray_bed[part=foot,facing=back]",
+    "X": [
+      "apocalypsenow:military_crate",
+      "minecraft:barrel[facing=up]"
+    ],
+    "C": "minecraft:moss_carpet",
+    "L": "minecraft:lantern"
+  },
+  "layers": [
+    [
+      "HXh",
+      "FCf"
+    ],
+    [
+      " L "
+    ]
+  ]
+}
