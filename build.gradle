@@ -2,7 +2,7 @@ plugins {
     id 'net.minecraftforge.gradle' version '[6.0,6.2)'
 }
 
-version = "0.22.0"
+version = "0.23.0-local.5"
 group = 'com.lazarus.events'
 base.archivesName = 'lazarusevents'
 
@@ -10,6 +10,21 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 minecraft {
     mappings channel: 'official', version: '1.20.1'
+    runs {
+        configureEach {
+            workingDirectory project.file('run')
+            property 'forge.logging.console.level', 'info'
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+            mods {
+                lazarusevents {
+                    source sourceSets.main
+                    source sourceSets.test
+                }
+            }
+        }
+        gameTestServer { property 'forge.enabledGameTestNamespaces', 'lazarusevents' }
+    }
 }
 
 repositories {
@@ -20,7 +35,22 @@ repositories {
 dependencies {
     minecraft 'net.minecraftforge:forge:1.20.1-47.4.10'
     compileOnly fg.deobf("blank:lazarusnpcs:1.16.0")
+    compileOnly fg.deobf("blank:tacz:1.1.8")
+    compileOnly fg.deobf("blank:curios:5.14.1")
+    testCompileOnly fg.deobf("blank:curios:5.14.1")
+    testCompileOnly fg.deobf("blank:tacz:1.1.8")
+    runtimeOnly fg.deobf("blank:lazarusnpcs:1.16.0")
+    runtimeOnly fg.deobf("blank:apocalypsenow:3.0.5")
+    runtimeOnly fg.deobf("blank:curios:5.14.1")
+    runtimeOnly fg.deobf("blank:tacz:1.1.8")
+    runtimeOnly fg.deobf("blank:dyairdrop:1.0.0")
+    runtimeOnly fg.deobf("blank:geckolib:4.8.4")
 }
+
+tasks.named('processResources') {
+    filesMatching('META-INF/mods.toml') { expand mod_version: project.version }
+}
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
 
 tasks.named('jar', Jar).configure {
     finalizedBy 'reobfJar'

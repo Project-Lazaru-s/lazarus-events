@@ -11,8 +11,8 @@ Legenda: `[x]` feito · `[ ]` a fazer · `[~]` feito, falta validar no jogo
 | Fase | Entrega | Versão | Estado |
 |---|---|---|---|
 | T0 | API do CityWorld (reflexão) e comando `where` | Events 0.22.0 | `[x]` validada e aprovada no jogo |
-| T1 | Metrô: gás no túnel e estação-abrigo | Events 0.22.x | `[ ]` |
-| T2 | Cavernas: bolsões de gás natural e mineiros perdidos | Events 0.23.0 | `[ ]` |
+| T1 | Metrô: gás no túnel e estação-abrigo | Events 0.23.0-local.5 | `[~]` teste manual no CityWorld pendente |
+| T2 | Cavernas: bolsões de gás natural e mineiros perdidos | Events 0.23.0-local.5 | `[~]` teste manual no CityWorld pendente |
 | T3 | Esgotos: preferência de ninhos e gás, esconderijo de contrabandista | Events 0.23.x | `[ ]` |
 | T4 | Superfície: queda de helicóptero | Events 0.24.0 | `[ ]` |
 
@@ -44,20 +44,20 @@ Legenda: `[x]` feito · `[ ]` a fazer · `[~]` feito, falta validar no jogo
 ## T1: metrô
 
 ### T1a: gás no túnel
-- [ ] Achar um trecho de túnel (`inSubway` e não estação) a 30–80 blocos do jogador
-- [ ] Volume do gás seguindo o túnel (até cerca de 60 blocos), com as duas pontas como saída
-- [ ] Reaproveitar a Z3: máscara, filtro, hazmat, NPCs fugindo, barril médico no meio
-- [ ] Fala de rádio: *"Military band: chemical leak in the metro, line closed"*
-- [ ] Comando `test metro_gas near` dentro de um túnel
-- [ ] GameTest: gás cobre um corredor montado na arena e só ele
+- [~] Achar um trecho de túnel (`inSubway` e não estação) a 30–80 blocos do jogador
+- [~] Volume do gás seguindo o túnel (até cerca de 60 blocos), com as duas pontas como saída
+- [~] Reaproveitar a Z3: máscara, filtro, hazmat, NPCs fugindo, barril médico no meio
+- [~] Fala de rádio: *"Military band: chemical leak in the metro, line closed"*
+- [~] Comando `test metro_gas near` dentro de um túnel
+- [x] GameTest: gás cobre um corredor montado na arena e só ele
 
 ### T1b: estação-abrigo caída
-- [ ] Achar uma plataforma (`findLots("SubwayStationLot")` e `subway().eastWestFloorY / northSouthFloorY`)
-- [ ] Montar barracas (lã e cerca), camas, papelão, lixo, quadro de avisos e diário no atril
-- [ ] 4 a 6 infectados civis entre as barracas; 2 ou 3 baús `smallairdrop` do tier atual
-- [ ] Só uma das plataformas da estação
-- [ ] Comando `test metro_shelter near` dentro de uma estação
-- [ ] GameTest: barracas, diário e loot numa plataforma montada
+- [~] Achar uma plataforma (`findLots("SubwayStationLot")` e `subway().eastWestFloorY / northSouthFloorY`)
+- [~] Montar barracas (lã e cerca), camas, papelão, lixo, quadro de avisos e diário no atril
+- [~] 4 a 6 infectados civis entre as barracas; 2 ou 3 baús `smallairdrop` do tier atual
+- [~] Só uma das plataformas da estação
+- [~] Comando `test metro_shelter near` dentro de uma estação
+- [x] GameTest: barracas, diário e loot numa plataforma montada
 
 **Aceite T1:** gás no túnel e estação-abrigo aparecem nos lugares certos, com `where` confirmando o território.
 
@@ -66,16 +66,16 @@ Legenda: `[x]` feito · `[ ]` a fazer · `[~]` feito, falta validar no jogo
 ## T2: cavernas e minas
 
 ### T2a: bolsões de gás natural
-- [ ] Ao quebrar pedra ou minério abaixo de Y 0: chance de cerca de 1 em 400 de abrir um bolsão; no máximo um a cada 10 min por jogador (configurável)
-- [ ] Nuvem cinza-esverdeada na galeria por alguns minutos; sem máscara: tontura, fraqueza e dano leve, sem infecção
-- [ ] Fogo dentro do bolsão (tocha na mão, fogueira, tiro) explode sem destruir blocos, com chiado de aviso antes
-- [ ] GameTest: abertura forçada, explosão com fogo, máscara protege
+- [~] Ao quebrar pedra ou minério abaixo de Y 0: chance de cerca de 1 em 400 de abrir um bolsão; no máximo um a cada 10 min por jogador (configurável)
+- [~] Nuvem cinza-esverdeada na galeria por alguns minutos; sem máscara: tontura, fraqueza e dano leve, sem infecção
+- [~] Fogo dentro do bolsão (tocha na mão/colocada, fogueira, tiro) explode destruindo blocos; potência 5 e dano ×4, com chiado de três segundos antes (requisito revisado após teste)
+- [x] GameTest: abertura forçada, explosão com fogo, máscara protege
 
 ### T2b: mineiros perdidos
-- [ ] Achar mina do CityWorld (`findLots("MineEntranceLot")` ou território `MINE`)
-- [ ] Carrinhos, trilhos, lanternas apagadas; 3 a 5 mineiros infectados de capacete e picareta
-- [ ] Baú com minério extraído e ferramentas; diário do colapso da mina
-- [ ] GameTest: montagem numa galeria da arena
+- [~] Achar mina do CityWorld (`findLots("MineEntranceLot")` ou território `MINE`)
+- [~] Carrinhos, trilhos, lanternas apagadas; 3 a 5 mineiros infectados de capacete e picareta
+- [~] Baú com minério extraído e ferramentas; diário do colapso da mina
+- [x] GameTest: montagem numa galeria da arena
 
 **Aceite T2:** minerar fundo deixa de ser vanilla (máscara e lanterna fazem diferença) e as minas do CityWorld têm um motivo para ir.
 

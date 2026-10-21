@@ -17,6 +17,7 @@ final class EventData extends SavedData {
     long nextAttempt;
     String lastResult = "No attempt yet";
     final List<Encounter> encounters = new ArrayList<>();
+    final java.util.Set<String> sites = new java.util.HashSet<>();
 
     static EventData get(ServerLevel level) {
         return level.getDataStorage().computeIfAbsent(EventData::load, EventData::new, NAME);
@@ -26,6 +27,7 @@ final class EventData extends SavedData {
         EventData data = new EventData();
         data.nextAttempt = tag.getLong("NextAttempt");
         data.lastResult = tag.getString("LastResult");
+        for (Tag site : tag.getList("TerritorySites", Tag.TAG_STRING)) data.sites.add(site.getAsString());
         for (Tag entry : tag.getList("Encounters", Tag.TAG_COMPOUND)) {
             CompoundTag saved = (CompoundTag) entry;
             Encounter encounter = new Encounter(saved.getUUID("Id"), saved.getString("Type"),
@@ -66,6 +68,7 @@ final class EventData extends SavedData {
 
     boolean near(BlockPos pos) {
         for (Encounter encounter : encounters) {
+            if (NaturalGas.TYPE.equals(encounter.type)) continue;
             if (encounter.pos.distSqr(pos) < 128 * 128) return true;
         }
         return false;
@@ -80,6 +83,9 @@ final class EventData extends SavedData {
     public CompoundTag save(CompoundTag tag) {
         tag.putLong("NextAttempt", nextAttempt);
         tag.putString("LastResult", lastResult);
+        ListTag sitesTag = new ListTag();
+        sites.stream().sorted().forEach(s -> sitesTag.add(net.minecraft.nbt.StringTag.valueOf(s)));
+        tag.put("TerritorySites", sitesTag);
         ListTag saved = new ListTag();
         for (Encounter encounter : encounters) {
             CompoundTag entry = new CompoundTag();

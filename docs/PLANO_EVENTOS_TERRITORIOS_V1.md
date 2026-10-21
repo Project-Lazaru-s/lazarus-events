@@ -54,7 +54,7 @@ O `cityworld-6.3.0` tem uma API pública, `me.daddychurchill.CityWorld.api.CityW
 ### T2a: bolsões de gás natural (perigo sistêmico da mineração)
 - Ao quebrar pedra ou minério **abaixo de Y 0** (ajustável), há uma chance pequena de abrir um **bolsão de gás**: uma nuvem cinza-esverdeada que ocupa a galeria em volta por alguns minutos.
 - Sem máscara: tontura, fraqueza e sufocamento (dano leve); sem infecção, porque não é o vírus.
-- **Fogo explode o bolsão:** tocha na mão, fogueira, isqueiro ou tiro dentro dele causam uma explosão pequena. Um aviso de som (chiado) dá ao jogador alguns segundos.
+- **Fogo explode o bolsão:** tocha na mão, fogueira, isqueiro ou tiro dentro dele ou uma tocha colocada causam uma explosão destrutiva (potência 5, dano multiplicado por 4). Um aviso de som (chiado) dá ao jogador alguns segundos.
 - Limite de um bolsão por jogador a cada certo tempo, para não cansar.
 - Reaproveita o sistema de células e exposição do gás, com outro efeito.
 - **Motivo:** muda a mineração de vez: máscara e lanterna em vez de tocha, e cuidado ao cavar fundo.
@@ -128,6 +128,6 @@ A lore das zonas e do gás ([LORE_ZONAS_INFECCAO.md](LORE_ZONAS_INFECCAO.md)) va
 
 1. **Dependência do CityWorld.** Padrão: opcional, por reflexão. Alternativa: dependência de compilação com o jar em `libs/`, mais simples de escrever e mais frágil quando o CityWorld atualizar.
 2. **Profundidade dos bolsões de gás natural.** Padrão: abaixo de Y 0, com chance de cerca de 1 em 400 blocos quebrados e no máximo um a cada 10 minutos por jogador.
-3. **O bolsão explode com fogo?** Padrão: sim, explosão pequena que não destrói blocos (só dano e empurrão), com aviso de chiado antes.
+3. **O bolsão explode com fogo?** Padrão revisado após teste: sim, explosão destrutiva com potência 5 (antes 2,5), dano ×4 antes da armadura e aviso de chiado de três segundos. Este requisito substitui a proposta inicial sem destruição.
 4. **A estação-abrigo ocupa uma estação inteira?** Padrão: só uma das plataformas, para não esvaziar o metrô.
 5. **Ordem das fases.** Padrão: T0, T1, T2, T3, T4. Alternativa: T2 antes de T1, se a prioridade for mudar a mineração logo.
