@@ -1,0 +1,11 @@
+{
+  "tags": ["decor"],
+  "palette": {
+    "t": ["apocalypsenow:trash_bin", "minecraft:composter"],
+    "q": {"random": ["apocalypsenow:trashbag", "apocalypsenow:trashbagblueplastic"]},
+    "S": ["lootpiles:common_scrap_pile", "minecraft:air"]
+  },
+  "layers": [
+    ["tqS", " q "]
+  ]
+}

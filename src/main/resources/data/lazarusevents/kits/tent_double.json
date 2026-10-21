@@ -1,0 +1,17 @@
+{
+  "tags": ["dorm", "camp"],
+  "palette": {
+    "P": "minecraft:spruce_fence",
+    "H": "minecraft:white_bed[part=head,facing=back]",
+    "F": "minecraft:white_bed[part=foot,facing=back]",
+    "h": "minecraft:brown_bed[part=head,facing=back]",
+    "f": "minecraft:brown_bed[part=foot,facing=back]",
+    "W": {"random": ["minecraft:white_wool", "minecraft:green_wool", "minecraft:light_gray_wool"]},
+    "r": "minecraft:brown_carpet"
+  },
+  "layers": [
+    ["PHPhP", " F f ", "P r P"],
+    ["P P P", "     ", "P P P"],
+    ["WWWWW", "WWWWW", "WWWWW"]
+  ]
+}

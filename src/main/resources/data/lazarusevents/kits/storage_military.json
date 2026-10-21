@@ -1,0 +1,14 @@
+{
+  "tags": ["storage"],
+  "palette": {
+    "M": ["apocalypsenow:military_crate", "minecraft:barrel[facing=up]"],
+    "m": {"block": "minecraft:barrel[facing=front]", "loot": "smallairdrop"},
+    "W": ["apocalypsenow:military_storage[facing=front]", "minecraft:chest[facing=front]"],
+    "L": "minecraft:lantern"
+  },
+  "layers": [
+    ["MmW", "M  "],
+    ["M  "],
+    ["L  "]
+  ]
+}

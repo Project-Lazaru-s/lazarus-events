@@ -1,0 +1,12 @@
+{
+  "tags": ["storage"],
+  "palette": {
+    "f": {"random": ["apocalypsenow:red_petrol_barrel[facing=front]", "apocalypsenow:petrol_barrel[facing=front]", "apocalypsenow:yellow_petrol_barrel[facing=front]"]},
+    "g": {"random": ["apocalypsenow:black_petrol_barrel[facing=front]", "apocalypsenow:gray_petrol_barrel[facing=front]", "minecraft:barrel[facing=up]"]},
+    "T": ["apocalypsenow:toxic_waste_barrel[facing=front]", "minecraft:barrel[facing=up]"],
+    "C": {"block": "minecraft:chest[facing=front]", "loot": "smallairdrop"}
+  },
+  "layers": [
+    ["fgTC", "f   "]
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "tags": ["guard"],
+  "palette": {
+    "B": "minecraft:barrel[facing=up]",
+    "c": ["refurbished_furniture:oak_chair[facing=back]", "minecraft:spruce_stairs[facing=back]"],
+    "X": ["apocalypsenow:wooden_crate", "minecraft:barrel[facing=up]"],
+    "R": ["apocalypsenow:military_communication_radio[facing=front]", "minecraft:note_block"],
+    "L": "minecraft:lantern"
+  },
+  "layers": [
+    ["BcX"],
+    ["R L"]
+  ]
+}

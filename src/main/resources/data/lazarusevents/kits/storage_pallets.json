@@ -1,0 +1,14 @@
+{
+  "tags": ["storage"],
+  "palette": {
+    "X": ["apocalypsenow:wooden_crate", "minecraft:barrel[facing=up]"],
+    "p": ["apocalypsenow:cardboard_box", "minecraft:barrel[facing=up]"],
+    "P": "minecraft:spruce_trapdoor[half=bottom,facing=front,open=false]",
+    "D": {"block": "minecraft:barrel[facing=front]", "loot": "smallairdrop"},
+    "q": {"random": ["apocalypsenow:trashbag", "apocalypsenow:trashbagblueplastic"]}
+  },
+  "layers": [
+    ["XpD", "PPq"],
+    ["pX ", "   "]
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "tags": ["dorm"],
+  "palette": {
+    "H": "minecraft:blue_bed[part=head,facing=back]",
+    "F": "minecraft:blue_bed[part=foot,facing=back]",
+    "h": "minecraft:light_gray_bed[part=head,facing=back]",
+    "f": "minecraft:light_gray_bed[part=foot,facing=back]",
+    "l": "minecraft:ladder[facing=front]",
+    "C": {"block": "minecraft:chest[facing=front]", "loot": "smallairdrop"}
+  },
+  "layers": [
+    ["Hl", "F ", "C "],
+    ["hl", "f "]
+  ]
+}

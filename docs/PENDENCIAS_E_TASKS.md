@@ -14,7 +14,7 @@ Legenda: `[x]` feito · `[ ]` a fazer · `[~]` feito, falta validar no jogo
 | T1 | Metrô: gás no túnel e estação-abrigo | Events 0.22.x | `[ ]` |
 | T2 | Cavernas: bolsões de gás natural e mineiros perdidos | Events 0.24.x | `[ ]` |
 | T3 | Esgotos: preferência de ninhos e gás, esconderijo de contrabandista | Events 0.23.0 | `[~]` implementada na branch `KaiD3v/T3-T4`, GameTests passam, falta validar no jogo |
-| T3+ | Esconderijos habitados (kits de móveis) | Events 0.23.x | `[~]` etapa 1 aprovada; etapas 2 a 5 a fazer, na branch `KaiD3v/T3-T4` |
+| T3+ | Esconderijos habitados (kits de móveis) | Events 0.23.x | `[~]` etapas 1 e 2 aprovadas; etapas 3 a 5 a fazer, na branch `KaiD3v/T3-T4` |
 | T4 | Superfície: queda de helicóptero | Events 0.23.x | `[ ]` |
 
 ---
@@ -102,7 +102,7 @@ Detalhes em [PLANO_EVENTOS_TERRITORIOS_V1.md](PLANO_EVENTOS_TERRITORIOS_V1.md#5b
 - [x] **Etapa 1** (aprovada no jogo): gerador de kits (`data/lazarusevents/kits/*.json`, paleta com alternativas e sorteio, direções relativas à parede, loot do Dyairdrop), comandos `scan` e `kit`, primeiros kits (oficina, cozinha, dormitório, depósito, guarita, tenda)
   - [x] rodar `/lazarusevents scan` num esgoto, num porão e num cômodo de prédio e mandar os arquivos de `lazarus_scans/`
   - [x] revisar cada kit com `/lazarusevents kit <nome>`
-- [ ] **Etapa 2:** 3 a 5 variações por função
+- [x] **Etapa 2** (aprovada no jogo): 3 a 5 variações por função: 24 kits (oficina 4, cozinha 4, dormitório 6 com as tendas, depósito 5, guarita 3, acampamento 4, decoração 3)
 - [ ] **Etapa 3:** esgoto habitado (corredor de usos, pontes, teto de madeira, estrados) no esconderijo de contrabandista
 - [ ] **Etapa 4:** prédios com 2 a 4 cômodos e funções na gangue em prédio e no covil do Hollow
 - [ ] **Etapa 5:** paletas por grupo (gangue, contrabandistas, desertores, Hollow)

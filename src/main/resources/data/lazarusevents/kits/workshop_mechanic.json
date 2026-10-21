@@ -1,0 +1,17 @@
+{
+  "tags": ["workshop"],
+  "palette": {
+    "V": ["refurbished_furniture:light_electricity_generator[facing=back]", "minecraft:blast_furnace[facing=front]"],
+    "G": {"random": ["apocalypsenow:red_petrol_barrel[facing=front]", "apocalypsenow:petrol_barrel[facing=front]"]},
+    "B": {"block": "minecraft:barrel[facing=up]", "loot": "smallairdrop"},
+    "S": ["lootpiles:mechanic_scrap_pile", "minecraft:iron_trapdoor[half=bottom]"],
+    "C": "minecraft:chain",
+    "L": "minecraft:lantern[hanging=true]"
+  },
+  "layers": [
+    ["VGB", "S  "],
+    ["   "],
+    [" C "],
+    [" L "]
+  ]
+}
