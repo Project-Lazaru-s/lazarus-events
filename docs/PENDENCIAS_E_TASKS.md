@@ -10,7 +10,7 @@ Legenda: `[x]` feito · `[ ]` a fazer · `[~]` feito, falta validar no jogo
 
 | Fase | Entrega | Versão | Estado |
 |---|---|---|---|
-| T0 | API do CityWorld (reflexão) e comando `where` | Events 0.22.0 | `[~]` implementada, GameTests passam, falta validar no jogo |
+| T0 | API do CityWorld (reflexão) e comando `where` | Events 0.22.0 | `[x]` validada e aprovada no jogo |
 | T1 | Metrô: gás no túnel e estação-abrigo | Events 0.22.x | `[ ]` |
 | T2 | Cavernas: bolsões de gás natural e mineiros perdidos | Events 0.23.0 | `[ ]` |
 | T3 | Esgotos: preferência de ninhos e gás, esconderijo de contrabandista | Events 0.23.x | `[ ]` |
@@ -25,15 +25,15 @@ Legenda: `[x]` feito · `[ ]` a fazer · `[~]` feito, falta validar no jogo
   - `territory`: `SURFACE`, `METRO_STATION`, `METRO_TUNNEL`, `MINE`, `BUNKER`, `SEWER`, `CAVE`
 - [x] `/lazarusevents where`: território, lote, profundidade, metrô, estação mais próxima e a descrição do próprio CityWorld
 - [x] GameTest: sem CityWorld, todas as consultas respondem vazio sem erro; superfície e caverna pelo céu aberto
-- [ ] **Validar no jogo** com `/lazarusevents where` em cada lugar e anotar a saída:
-  - [ ] rua (esperado `SURFACE`)
-  - [ ] bilheteria e plataforma de uma estação (`METRO_STATION`)
-  - [ ] túnel entre estações (`METRO_TUNNEL`)
-  - [ ] esgoto, cisterna e porão (`SEWER`)
-  - [ ] mina do CityWorld (`MINE`) e bunker (`BUNKER`)
-  - [ ] caverna funda fora de mina (`CAVE`)
-- [ ] Conferir se `findLots("SubwayStationLot")` acha a estação mais próxima e se o tempo de resposta é aceitável
-- [ ] Conferir se o limite de 16 blocos abaixo da rua separa bem esgoto de caverna; ajustar `CityWorldSites.SHALLOW` se preciso
+- [x] **Validado no jogo** com `/lazarusevents where`:
+  - [x] rua (esperado `SURFACE`)
+  - [x] bilheteria e plataforma de uma estação (`METRO_STATION`)
+  - [x] túnel entre estações (`METRO_TUNNEL`)
+  - [x] esgoto, cisterna e porão (`SEWER`)
+  - [x] mina do CityWorld (`MINE`) e bunker (`BUNKER`)
+  - [x] caverna funda fora de mina (`CAVE`)
+- [x] Conferir se `findLots("SubwayStationLot")` acha a estação mais próxima e se o tempo de resposta é aceitável
+- [x] Conferir se o limite de 16 blocos abaixo da rua separa bem esgoto de caverna; ajustar `CityWorldSites.SHALLOW` se preciso
 
 **Riscos conhecidos:**
 - Esgotos não são lotes na API: a classificação é só por profundidade.
