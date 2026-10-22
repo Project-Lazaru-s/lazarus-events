@@ -170,6 +170,7 @@ public final class LazarusEvents {
                     VaccineProject.register();
                     HavenRefuge.register();
                     HostileLore.register();
+                    Bounties.register();
                     HostilePrisoners.register();
                     FactionMissions.register();
                     FactionExpeditions.register();

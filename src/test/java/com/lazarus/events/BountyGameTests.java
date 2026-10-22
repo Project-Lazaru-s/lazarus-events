@@ -143,6 +143,53 @@ public final class BountyGameTests {
         h.succeed();
     }
 
+    @GameTest(template = "territory_arena", timeoutTicks = 20)
+    public static void pardonPriceFollowsDepthAndPostersCutIt(GameTestHelper h) {
+        h.assertTrue(Bounties.price(-45, 0).equals(new Bounties.Price(4, 2, 0)), "light bounty");
+        h.assertTrue(Bounties.price(-75, 0).equals(new Bounties.Price(6, 4, 0)), "heavy bounty");
+        h.assertTrue(Bounties.price(-95, 0).equals(new Bounties.Price(8, 6, 0)), "worst bounty");
+        h.assertTrue(Bounties.price(-45, 1).equals(new Bounties.Price(2, 1, 1)), "a poster knocks off 2 food and 1 iron");
+        h.assertTrue(Bounties.price(-45, 5).equals(new Bounties.Price(0, 0, 2)), "only the posters needed are used");
+        h.succeed();
+    }
+
+    @GameTest(template = "territory_arena", timeoutTicks = 20)
+    public static void havenClearsAGangBountyOnceEveryFewDays(GameTestHelper h) {
+        ServerPlayer player = player(h, h.absolutePos(new BlockPos(2, 1, 2)));
+        String target = Bounties.gangTarget("Red Tape");
+        Bounties.setGangStanding(player, "Red Tape", -60);
+        h.assertTrue(Bounties.pardon(player, target).contains("costs 4 canned food, 2 iron"), "too poor: told the price");
+        h.assertTrue(Bounties.gangStanding(player, "Red Tape") == -60, "nothing changes unpaid");
+        CompoundTag poster = new CompoundTag();
+        poster.putString("Player", "BountyTest");
+        poster.putString("Target", target);
+        player.getInventory().add(Bounties.poster(poster));
+        player.getInventory().add(ApiSupport.stack(Bounties.FOOD, 2));
+        player.getInventory().add(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_INGOT, 1));
+        h.assertTrue(Bounties.pardon(player, target).contains("off their list"), "the poster covers half");
+        h.assertTrue(Bounties.gangStanding(player, "Red Tape") == Bounties.PARDONED, "back to just above enemy");
+        h.assertTrue(!Bounties.wanted(player).containsKey(target), "no longer wanted");
+        h.assertTrue(Bounties.posters(player, target) == 0 && player.getInventory().countItem(net.minecraft.world.item.Items.IRON_INGOT) == 0,
+                "paid with the poster, food and iron");
+        Bounties.setGangStanding(player, "Red Tape", -60);
+        h.assertTrue(Bounties.pardon(player, target).contains("not long ago"), "one pardon per group every few days");
+        player.discard();
+        h.succeed();
+    }
+
+    @GameTest(template = "territory_arena", timeoutTicks = 20)
+    public static void havenClearsAFactionBounty(GameTestHelper h) {
+        ServerPlayer player = player(h, h.absolutePos(new BlockPos(2, 1, 2)));
+        for (int i = 0; i < 9; i++) NpcApi.adjustReputation(player, "wardens", -10, Bounties.PARDON, null); // -90: a deep bounty
+        h.assertTrue(Bounties.wanted(player).containsKey(Bounties.factionTarget("wardens")), "wanted by the Wardens");
+        player.getInventory().add(ApiSupport.stack(Bounties.FOOD, 8));
+        player.getInventory().add(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_INGOT, 6));
+        h.assertTrue(Bounties.pardon(player, Bounties.factionTarget("wardens")).contains("off their list"), "paid the worst price");
+        h.assertTrue(NpcApi.reputation(player, "wardens") == Bounties.PARDONED, "Wardens: " + NpcApi.reputation(player, "wardens"));
+        player.discard();
+        h.succeed();
+    }
+
     private static void floor(GameTestHelper h) {
         for (int x = 0; x < 16; x++) for (int z = 0; z < 16; z++) {
             h.setBlock(new BlockPos(x, 0, z), Blocks.STONE);

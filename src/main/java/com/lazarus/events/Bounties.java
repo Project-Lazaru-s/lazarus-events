@@ -5,6 +5,11 @@ import com.lazarus.npcs.api.NpcApi;
 import com.lazarus.npcs.api.NpcFactions;
 import com.lazarus.npcs.api.ScenarioAssignment;
 import com.lazarus.npcs.api.ScenarioOrder;
+import com.lazarus.npcs.api.dialogue.DialogueContext;
+import com.lazarus.npcs.api.dialogue.DialogueDefinition;
+import com.lazarus.npcs.api.dialogue.DialogueOption;
+import com.lazarus.npcs.api.dialogue.DialoguePage;
+import com.lazarus.npcs.api.dialogue.DialogueTrigger;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.nbt.CompoundTag;
@@ -35,6 +40,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -50,6 +57,11 @@ import java.util.UUID;
  * Rewards (B2): the squad leader carries a wanted poster and some supplies; downing the whole squad earns standing with
  * the hunters' enemies: the rival faction (Rovers and Wardens), or the Wardens for a gang squad, as they pay for gang
  * patches. The Military has no rival.
+ *
+ * Clearing a bounty (B3): the Haven, neutral to everyone, brokers a pardon. Any Haven survivor offers to clear the
+ * player's name with a group hunting them, for canned food and iron by how deep the standing is; each wanted poster
+ * of that group the player brings knocks some off. The standing goes back to just above enemy, the hunt is called
+ * off, and the Haven vouches for the player with the same group once every few days.
  */
 final class Bounties {
     /** Same threshold as Lazarus NPCs' enemy standing (NpcHostility.ENEMY): factions attack on sight from here. */
@@ -70,6 +82,10 @@ final class Bounties {
     static final int RIVAL_REWARD = 6, GANG_REWARD = 4, LEADER_LOOT = 3;
     /** The faction that pays for downed gang hunters, as it pays for gang patches. */
     static final String GANG_ENEMY = "wardens";
+    static final ResourceLocation PARDON = ApiSupport.id("bounty_pardon");
+    static final int PARDONED = WANTED + 1, PARDON_DAYS = 3;
+    static final String FOOD = "apocalypsenow:canned_food", IRON = "minecraft:iron_ingot";
+    private static final String LATER = "LazarusEventsPardonLater";
 
     private Bounties() {}
 
@@ -157,6 +173,119 @@ final class Bounties {
     private static boolean looter(Entity entity) {
         var id = net.minecraftforge.registries.ForgeRegistries.ENTITY_TYPES.getKey(entity.getType());
         return id != null && "apocalypsenow".equals(id.getNamespace()) && id.getPath().startsWith("looter_");
+    }
+
+    // --- pardon (B3) ---
+
+    static void register() {
+        ApiSupport.log("bounty pardon dialogue", NpcApi.registerDialogue(new DialogueDefinition(
+                PARDON, Set.of(DialogueTrigger.INTERACT), 55, Bounties::pardonPage)));
+    }
+
+    /** What a pardon costs: canned food and iron by depth, less what the posters cover (posters used). */
+    record Price(int food, int iron, int posters) {
+        String text() {
+            return food + " canned food, " + iron + " iron" + (posters > 0 ? ", " + posters + " poster" + (posters > 1 ? "s" : "") : "");
+        }
+    }
+
+    static Price price(int standing, int posters) {
+        int tier = standing <= -90 ? 3 : standing <= -70 ? 2 : 1;
+        int food = 2 + 2 * tier, iron = 2 * tier, used = 0;
+        while (used < posters && (food > 0 || iron > 0)) {
+            food = Math.max(0, food - 2);
+            iron = Math.max(0, iron - 1);
+            used++;
+        }
+        return new Price(food, iron, used);
+    }
+
+    private static boolean poster(ItemStack stack, String target) {
+        return stack.is(Items.PAPER) && stack.hasTag() && target.equals(stack.getTag().getCompound("LazarusWanted").getString("Target"));
+    }
+
+    static int posters(ServerPlayer player, String target) {
+        int count = 0;
+        for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++)
+            if (poster(player.getInventory().getItem(slot), target)) count += player.getInventory().getItem(slot).getCount();
+        return count;
+    }
+
+    private static int count(ServerPlayer player, String id) {
+        var item = net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(new ResourceLocation(id));
+        return item == null ? 0 : player.getInventory().countItem(item);
+    }
+
+    private static void take(ServerPlayer player, java.util.function.Predicate<ItemStack> matches, int amount) {
+        for (int slot = 0; slot < player.getInventory().getContainerSize() && amount > 0; slot++) {
+            ItemStack stack = player.getInventory().getItem(slot);
+            if (!matches.test(stack)) continue;
+            int taken = Math.min(amount, stack.getCount());
+            stack.shrink(taken);
+            amount -= taken;
+        }
+    }
+
+    static boolean pardonedRecently(ServerPlayer player, String target) {
+        long last = root(player).getLong("Pardon_" + target);
+        return last > 0 && player.server.overworld().getGameTime() - last < PARDON_DAYS * 24_000L;
+    }
+
+    /** Pays for and grants the pardon; returns what the Haven says. */
+    static String pardon(ServerPlayer player, String target) {
+        int standing = standing(player, target);
+        if (standing > WANTED) return "You're not on their list. Nothing to clear.";
+        if (pardonedRecently(player, target)) return "We vouched for you with " + label(target) + " not long ago. Give it a few days.";
+        Price price = price(standing, posters(player, target));
+        if (count(player, FOOD) < price.food() || count(player, IRON) < price.iron())
+            return "Clearing your name with " + label(target) + " costs " + price.text() + ". Come back when you have it.";
+        take(player, stack -> FOOD.equals(String.valueOf(net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(stack.getItem()))), price.food());
+        take(player, stack -> stack.is(Items.IRON_INGOT), price.iron());
+        take(player, stack -> poster(stack, target), price.posters());
+        player.inventoryMenu.broadcastChanges();
+        if (isGang(target)) setGangStanding(player, name(target), PARDONED);
+        else raise(player, name(target), PARDONED - standing);
+        CompoundTag root = root(player);
+        root.putLong("Pardon_" + target, player.server.overworld().getGameTime());
+        save(player, root);
+        if (target.equals(root(player).getCompound("Hunt").getString("Target")))
+            end(player.serverLevel(), player, "The hunters from " + label(target) + " get the word and turn back.");
+        return "Word will reach " + label(target) + ": you're off their list. Don't make us regret vouching for you.";
+    }
+
+    /** Raises a faction standing by {@code amount}: Lazarus NPCs takes at most 10 points per call, so in steps. */
+    static void raise(ServerPlayer player, String faction, int amount) {
+        while (amount > 0) {
+            int step = Math.min(10, amount);
+            if (!NpcApi.adjustReputation(player, faction, step, PARDON, null).ok()) return;
+            amount -= step;
+        }
+    }
+
+    /** Haven survivors offer a pardon to a wanted player they still talk to. */
+    static Optional<DialoguePage> pardonPage(DialogueContext c) {
+        if (!"haven".equals(NpcApi.identity(c.npc()).map(identity -> identity.faction()).orElse(""))
+                || NpcApi.reputation(c.player(), "haven") <= -20) return Optional.empty();
+        CompoundTag persisted = c.player().getPersistentData().getCompound(Player.PERSISTED_NBT_TAG);
+        if (persisted.getLong(LATER) > c.player().level().getGameTime()) return Optional.empty();
+        List<DialogueOption> options = new ArrayList<>();
+        for (Map.Entry<String, Integer> wanted : wanted(c.player()).entrySet()) {
+            if (options.size() == DialoguePage.MAX_OPTIONS - 1) break;
+            String target = wanted.getKey();
+            if (pardonedRecently(c.player(), target)) continue;
+            Price price = price(wanted.getValue(), posters(c.player(), target));
+            options.add(new DialogueOption("pardon_" + options.size(), Component.literal("Clear my name with "
+                    + label(target) + " (" + price.text() + ")"),
+                    ctx -> ctx.player().displayClientMessage(Component.literal("\"" + pardon(ctx.player(), target) + "\""), false)));
+        }
+        if (options.isEmpty()) return Optional.empty();
+        options.add(new DialogueOption("later", Component.literal("Something else"), ctx -> {
+            CompoundTag tag = ctx.player().getPersistentData().getCompound(Player.PERSISTED_NBT_TAG);
+            tag.putLong(LATER, ctx.player().level().getGameTime() + 1_200);
+            ctx.player().getPersistentData().put(Player.PERSISTED_NBT_TAG, tag);
+        }));
+        return Optional.of(new DialoguePage(Component.literal("Word travels. People are hunting you. The Haven talks to everyone; "
+                + "for the right price, we can make it stop."), options));
     }
 
     // --- hunts ---

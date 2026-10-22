@@ -6,7 +6,7 @@
   <img alt="Minecraft 1.20.1" src="https://img.shields.io/badge/Minecraft-1.20.1-3c8527">
   <img alt="Forge 47.x" src="https://img.shields.io/badge/Forge-47.x-dd7d2b">
   <img alt="Java 17" src="https://img.shields.io/badge/Java-17-b07219">
-  <img alt="Versão 1.2.0" src="https://img.shields.io/badge/vers%C3%A3o-1.2.0-6b5b3e">
+  <img alt="Versão 1.3.0" src="https://img.shields.io/badge/vers%C3%A3o-1.3.0-6b5b3e">
 </p>
 
 # Lazarus Events
@@ -259,6 +259,16 @@ Quem chega a **reputação de inimigo (-40)** com uma facção ou uma gangue fic
   - **+4** com os **Wardens** quando o grupo é de uma gangue, como já acontece com os distintivos de gangue.
 - Os **Militares** não têm rival: derrubá-los rende só o loot.
 - `bounty status` mostra quantos grupos o jogador já derrubou.
+
+**Limpar a ficha** (1.3.0)
+- O **Haven**, neutro com todos, intermedeia um perdão. Qualquer sobrevivente do Haven oferece "limpar seu nome" com até três grupos que caçam o jogador, desde que o Haven ainda fale com ele (reputação acima de -20).
+- **Preço** pela gravidade:
+  - até -69: **4 latas de comida e 2 barras de ferro**;
+  - até -89: **6 e 4**;
+  - abaixo disso: **8 e 6**.
+- Cada **cartaz de procurado** daquele grupo que o jogador leva abate 2 latas e 1 barra.
+- **Efeito:** a reputação volta para **-39**, logo acima de inimigo, e a caçada ativa daquele grupo é cancelada.
+- O Haven intercede pelo jogador com o mesmo grupo **uma vez a cada 3 dias**.
 
 ---
 
