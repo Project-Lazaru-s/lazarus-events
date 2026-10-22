@@ -62,6 +62,11 @@ import java.util.UUID;
  * player's name with a group hunting them, for canned food and iron by how deep the standing is; each wanted poster
  * of that group the player brings knocks some off. The standing goes back to just above enemy, the hunt is called
  * off, and the Haven vouches for the player with the same group once every few days.
+ *
+ * Tracking (B4): hunters head for the player's last known position, which moves only when one of them perceives the
+ * player (Lazarus Stealth: investigating a noise, alerted or pursuing; without it, line of sight within 32 blocks).
+ * When nobody has perceived the player for a while, an informant tips them off with a rough position, so hiding
+ * slows a hunt down but does not end it.
  */
 final class Bounties {
     /** Same threshold as Lazarus NPCs' enemy standing (NpcHostility.ENEMY): factions attack on sight from here. */
@@ -86,6 +91,10 @@ final class Bounties {
     static final int PARDONED = WANTED + 1, PARDON_DAYS = 3;
     static final String FOOD = "apocalypsenow:canned_food", IRON = "minecraft:iron_ingot";
     private static final String LATER = "LazarusEventsPardonLater";
+    static final long TIP_TICKS = 2_400;
+    static final int TIP_SPREAD = 20, SIGHT = 32, ARRIVED = 6;
+    private static final boolean STEALTH = net.minecraftforge.fml.ModList.get() != null
+            && net.minecraftforge.fml.ModList.get().isLoaded("lazarusstealth");
 
     private Bounties() {}
 
@@ -406,6 +415,8 @@ final class Bounties {
         hunt.putString("Target", target);
         hunt.putInt("Size", squad.size());
         hunt.putLong("Expires", level.getGameTime() + HUNT_TICKS);
+        hunt.putLong("Known", player.blockPosition().asLong());
+        hunt.putLong("SeenAt", level.getGameTime());
         long[] members = new long[squad.size() * 2];
         for (int i = 0; i < squad.size(); i++) {
             members[i * 2] = squad.get(i).getUUID().getMostSignificantBits();
@@ -536,10 +547,7 @@ final class Bounties {
                 end(level, player, "You lost the hunters from " + label(target) + ", for now.");
                 return;
             }
-            UUID id = hunt.getUUID("Id");
-            for (Mob mob : squad)
-                if (mob.getTarget() == null)
-                    NpcApi.setTravelRoute(mob, OWNER, id, trail(level, mob.blockPosition(), player.blockPosition()));
+            track(level, player, hunt, squad);
             return;
         }
         if (!LazarusEvents.bountiesEnabled() || player.isCreative() || player.isSpectator()) return;
@@ -548,6 +556,44 @@ final class Bounties {
             if (level.getGameTime() >= root.getLong("Next_" + entry.getKey())
                     && (next == null || entry.getValue() < wanted.get(next))) next = entry.getKey();
         if (next != null) start(level, player, next);
+    }
+
+    /** A hunter hears or sees the player: Lazarus Stealth perception, or plain line of sight without it. */
+    static boolean perceives(Mob hunter, ServerPlayer player) {
+        if (STEALTH) return StealthHook.onTrail(hunter, player);
+        return hunter.distanceToSqr(player) <= SIGHT * SIGHT && hunter.hasLineOfSight(player);
+    }
+
+    /** No hunter has perceived the player for {@link #TIP_TICKS}, and no tip was given in that time either. */
+    static boolean tipDue(long now, long seenAt, long tipAt) {
+        return now - seenAt >= TIP_TICKS && now - tipAt >= TIP_TICKS;
+    }
+
+    /** An informant's rough position: within {@link #TIP_SPREAD} blocks of the player. */
+    static BlockPos tip(BlockPos player, net.minecraft.util.RandomSource random) {
+        return player.offset(random.nextInt(2 * TIP_SPREAD + 1) - TIP_SPREAD, 0, random.nextInt(2 * TIP_SPREAD + 1) - TIP_SPREAD);
+    }
+
+    /** Moves the last known position when the squad perceives the player or a tip comes in, and sends them there. */
+    static void track(ServerLevel level, ServerPlayer player, CompoundTag hunt, List<Mob> squad) {
+        long now = level.getGameTime();
+        CompoundTag root = root(player);
+        if (squad.stream().anyMatch(mob -> perceives(mob, player))) {
+            hunt.putLong("Known", player.blockPosition().asLong());
+            hunt.putLong("SeenAt", now);
+        } else if (tipDue(now, hunt.getLong("SeenAt"), hunt.getLong("TipAt"))) {
+            hunt.putLong("Known", tip(player.blockPosition(), level.random).asLong());
+            hunt.putLong("TipAt", now);
+            player.sendSystemMessage(Component.literal("Someone sold you out: the hunters from " + label(hunt.getString("Target"))
+                    + " know roughly where you are.").withStyle(style -> style.withColor(0xD48968)));
+        }
+        root.put("Hunt", hunt);
+        save(player, root);
+        BlockPos known = BlockPos.of(hunt.getLong("Known"));
+        UUID id = hunt.getUUID("Id");
+        for (Mob mob : squad)
+            if (mob.getTarget() == null && mob.blockPosition().distSqr(known) > ARRIVED * ARRIVED)
+                NpcApi.setTravelRoute(mob, OWNER, id, trail(level, mob.blockPosition(), known));
     }
 
     private static String capitalize(String text) { return Character.toUpperCase(text.charAt(0)) + text.substring(1); }
@@ -560,7 +606,8 @@ final class Bounties {
         lines.add("Gang standing: " + root(player).getCompound("Gangs") + "; squads taken down: " + root(player).getInt("Defeated"));
         CompoundTag hunt = root(player).getCompound("Hunt");
         if (!hunt.isEmpty()) lines.add("Active hunt by " + label(hunt.getString("Target")) + ", "
-                + members(player.serverLevel(), hunt).size() + " alive");
+                + members(player.serverLevel(), hunt).size() + " alive; last known position "
+                + BlockPos.of(hunt.getLong("Known")).toShortString());
         return lines;
     }
 

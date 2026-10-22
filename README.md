@@ -6,7 +6,7 @@
   <img alt="Minecraft 1.20.1" src="https://img.shields.io/badge/Minecraft-1.20.1-3c8527">
   <img alt="Forge 47.x" src="https://img.shields.io/badge/Forge-47.x-dd7d2b">
   <img alt="Java 17" src="https://img.shields.io/badge/Java-17-b07219">
-  <img alt="Versão 1.3.0" src="https://img.shields.io/badge/vers%C3%A3o-1.3.0-6b5b3e">
+  <img alt="Versão 1.4.0" src="https://img.shields.io/badge/vers%C3%A3o-1.4.0-6b5b3e">
 </p>
 
 # Lazarus Events
@@ -269,6 +269,12 @@ Quem chega a **reputação de inimigo (-40)** com uma facção ou uma gangue fic
 - Cada **cartaz de procurado** daquele grupo que o jogador leva abate 2 latas e 1 barra.
 - **Efeito:** a reputação volta para **-39**, logo acima de inimigo, e a caçada ativa daquele grupo é cancelada.
 - O Haven intercede pelo jogador com o mesmo grupo **uma vez a cada 3 dias**.
+
+**Rastreamento e furtividade** (1.4.0)
+- Os caçadores vão até a **última posição conhecida** do jogador. Ela só muda quando algum caçador **percebe** o jogador: pela percepção do **Lazarus Stealth** (investigando um barulho, em alerta ou perseguindo), ou, sem esse mod, por linha de visão a até 32 blocos.
+- Tiros, passos e corrida atraem os caçadores. Andar agachado e se esconder faz com que eles cheguem a um lugar vazio.
+- Se ninguém percebe o jogador por **2 minutos**, um informante passa aos caçadores uma posição **aproximada** (a até 20 blocos). Se esconder atrasa a caçada, mas não a encerra.
+- `bounty status` mostra a última posição conhecida pelos caçadores.
 
 ---
 

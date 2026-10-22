@@ -190,6 +190,48 @@ public final class BountyGameTests {
         h.succeed();
     }
 
+    @GameTest(template = "territory_arena", timeoutTicks = 20)
+    public static void informantTipsComeOnlyAfterTheTrailGoesCold(GameTestHelper h) {
+        long t = Bounties.TIP_TICKS;
+        h.assertTrue(!Bounties.tipDue(t - 1, 0, -t), "seen recently: no tip");
+        h.assertTrue(Bounties.tipDue(t, 0, -t), "cold trail: tip");
+        h.assertTrue(!Bounties.tipDue(t * 2, 0, t + 10), "one tip per interval");
+        BlockPos player = new BlockPos(100, 64, -40);
+        for (int i = 0; i < 50; i++) {
+            BlockPos tip = Bounties.tip(player, h.getLevel().random);
+            h.assertTrue(Math.abs(tip.getX() - 100) <= Bounties.TIP_SPREAD && Math.abs(tip.getZ() + 40) <= Bounties.TIP_SPREAD
+                    && tip.getY() == 64, "rough position near the player: " + tip);
+        }
+        h.succeed();
+    }
+
+    @GameTest(template = "territory_arena", timeoutTicks = 20)
+    public static void huntersOnlyFollowWhatTheyPerceive(GameTestHelper h) {
+        floor(h);
+        for (int z = 0; z < 16; z++) for (int y = 1; y < 4; y++) h.setBlock(new BlockPos(8, y, z), Blocks.STONE);
+        ServerPlayer player = player(h, h.absolutePos(new BlockPos(2, 1, 8)));
+        UUID id = UUID.randomUUID();
+        String target = Bounties.gangTarget("Rust Dogs");
+        Bounties.setGangStanding(player, "Rust Dogs", -50);
+        List<Mob> squad = Bounties.spawnSquad(h.getLevel(), h.absolutePos(new BlockPos(13, 1, 8)), player, target, 2, id);
+        h.assertTrue(squad.size() == 2, "two hunters");
+        Bounties.record(h.getLevel(), player, target, squad, id);
+        String start = h.absolutePos(new BlockPos(2, 1, 8)).toShortString();
+        player.moveTo(h.absolutePos(new BlockPos(2, 1, 3)).getX() + .5, h.absolutePos(new BlockPos(2, 1, 3)).getY(),
+                h.absolutePos(new BlockPos(2, 1, 3)).getZ() + .5, 0, 0);
+        Bounties.update(h.getLevel(), player);
+        h.assertTrue(Bounties.status(player).stream().anyMatch(line -> line.endsWith("last known position " + start)),
+                "behind the wall the hunters keep the old position: " + Bounties.status(player));
+        for (int z = 0; z < 16; z++) for (int y = 1; y < 4; y++) h.setBlock(new BlockPos(8, y, z), Blocks.AIR);
+        Bounties.update(h.getLevel(), player);
+        String now = h.absolutePos(new BlockPos(2, 1, 3)).toShortString();
+        h.assertTrue(Bounties.status(player).stream().anyMatch(line -> line.endsWith("last known position " + now)),
+                "in sight the position follows the player: " + Bounties.status(player));
+        Bounties.end(h.getLevel(), player, null);
+        player.discard();
+        h.succeed();
+    }
+
     private static void floor(GameTestHelper h) {
         for (int x = 0; x < 16; x++) for (int z = 0; z < 16; z++) {
             h.setBlock(new BlockPos(x, 0, z), Blocks.STONE);

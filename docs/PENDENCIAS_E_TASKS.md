@@ -19,6 +19,7 @@ Legenda: `[x]` feito · `[ ]` a fazer · `[~]` feito, falta validar no jogo
 | B1 | Procurado: facções e gangues mandam caçadores (reputação de gangue própria) | Events 1.1.0 + NPCs 1.20.0 | `[x]` aprovada no jogo |
 | B2 | Recompensas: cartaz de procurado e loot do líder, reputação com os inimigos dos caçadores | Events 1.2.0 | `[x]` aprovada no jogo |
 | B3 | Limpar a ficha: perdão pelo Haven, pago em comida e ferro, com desconto por cartaz | Events 1.3.0 | `[x]` aprovada no jogo |
+| B4 | Rastreamento pela percepção (Lazarus Stealth) e dicas de informantes | Events 1.4.0 | `[x]` aprovada no jogo |
 
 ---
 
