@@ -82,6 +82,8 @@ public final class LazarusEvents {
     private static final ForgeConfigSpec.BooleanValue HELI_ENABLED;
     private static final ForgeConfigSpec.IntValue HELI_DAY;
     private static final ForgeConfigSpec.IntValue FACTION_EXPEDITION_DAYS;
+    private static final ForgeConfigSpec.BooleanValue BOUNTIES_ENABLED;
+    private static final ForgeConfigSpec.IntValue BOUNTY_DAYS;
     private static final ForgeConfigSpec.IntValue BASE_FALLBACK_DAY;
 
     static {
@@ -122,6 +124,11 @@ public final class LazarusEvents {
                 .define("enableFactionExpeditions", true);
         FACTION_EXPEDITION_DAYS = builder.comment("Minimum days between faction patrol attempts.")
                 .defineInRange("factionExpeditionDays", 5, 2, 30);
+        BOUNTIES_ENABLED = builder.comment("Wanted players: a faction (Rovers, Wardens, Military) or a gang at enemy standing (-40)",
+                        "sends a squad of hunters after the player. The Haven never hunts.")
+                .define("enableBounties", true);
+        BOUNTY_DAYS = builder.comment("Days between hunts by the same faction or gang.")
+                .defineInRange("bountyCooldownDays", 2, 1, 30);
         BASE_FALLBACK_DAY = builder.comment("From this world day, a faction without a base may also build it in already explored,",
                         "loaded chunks 72-128 blocks from a player and out of their sight. 0 keeps bases in new chunks only.")
                 .defineInRange("factionBaseFallbackDay", 3, 0, 100);
@@ -144,6 +151,7 @@ public final class LazarusEvents {
         MinecraftForge.EVENT_BUS.register(new InfestedZone.Listener());
         MinecraftForge.EVENT_BUS.register(new GasZone.Listener());
         MinecraftForge.EVENT_BUS.register(new HeliCrash.Listener());
+        MinecraftForge.EVENT_BUS.register(new Bounties.Listener());
         MinecraftForge.EVENT_BUS.register(new NaturalGas());
         if (net.minecraftforge.fml.ModList.get().isLoaded("tacz")) MinecraftForge.EVENT_BUS.register(new GasGunHook());
         HostileLore.init(net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext.get().getModEventBus());
@@ -174,6 +182,8 @@ public final class LazarusEvents {
     static int baseFallbackDay() { return BASE_FALLBACK_DAY.get(); }
 
     static long expeditionCooldown() { return FACTION_EXPEDITION_DAYS.get() * 24_000L; }
+    static boolean bountiesEnabled() { return BOUNTIES_ENABLED.get(); }
+    static long bountyCooldown() { return BOUNTY_DAYS.get() * 24_000L; }
 
     @SubscribeEvent
     public void onTick(TickEvent.ServerTickEvent event) {
@@ -311,7 +321,58 @@ public final class LazarusEvents {
                                 .executes(context -> locate(context.getSource(), StringArgumentType.getString(context, "id")))))
                 .then(Commands.literal("cancel")
                         .then(Commands.argument("id", StringArgumentType.word())
-                                .executes(context -> cancel(context.getSource(), StringArgumentType.getString(context, "id"))))));
+                                .executes(context -> cancel(context.getSource(), StringArgumentType.getString(context, "id")))))
+                .then(Commands.literal("bounty")
+                        .then(Commands.literal("status").executes(context -> bountyStatus(context.getSource())))
+                        .then(Commands.literal("hunt")
+                                .then(Commands.argument("target", StringArgumentType.greedyString())
+                                        .suggests((context, builder) -> SharedSuggestionProvider.suggest(
+                                                bountyTargets(context.getSource()), builder))
+                                        .executes(context -> bountyHunt(context.getSource(),
+                                                StringArgumentType.getString(context, "target")))))
+                        .then(Commands.literal("gang")
+                                .then(Commands.argument("standing", com.mojang.brigadier.arguments.IntegerArgumentType.integer(-100, 100))
+                                        .executes(context -> bountyGang(context.getSource(),
+                                                com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "standing")))))));
+    }
+
+    private static List<String> bountyTargets(net.minecraft.commands.CommandSourceStack source) {
+        List<String> targets = new java.util.ArrayList<>();
+        Bounties.FACTIONS.forEach(faction -> targets.add(Bounties.factionTarget(faction)));
+        com.lazarus.npcs.api.HostileGroups.GANGS.forEach(gang -> targets.add(Bounties.gangTarget(gang)));
+        return targets;
+    }
+
+    private static int bountyStatus(net.minecraft.commands.CommandSourceStack source) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        for (String line : Bounties.status(player)) source.sendSuccess(() -> Component.literal(line), false);
+        return 1;
+    }
+
+    /** Starts a hunt by a faction or gang now (the player must be wanted by it for faction hunters to attack). */
+    private static int bountyHunt(net.minecraft.commands.CommandSourceStack source, String target) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        if (!bountyTargets(source).contains(target)) {
+            source.sendFailure(Component.literal("Unknown target: " + target));
+            return 0;
+        }
+        if (player.level().dimension() != Level.OVERWORLD) {
+            source.sendFailure(Component.literal("Hunts only happen in the Overworld."));
+            return 0;
+        }
+        Bounties.end(player.serverLevel(), player, null);
+        String result = Bounties.start(player.serverLevel(), player, target);
+        source.sendSuccess(() -> Component.literal(result), false);
+        return 1;
+    }
+
+    /** Sets the player's standing with the gang that holds the streets they stand on. */
+    private static int bountyGang(net.minecraft.commands.CommandSourceStack source, int standing) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        String gang = com.lazarus.npcs.api.HostileGroups.gang(player.serverLevel(), player.blockPosition());
+        Bounties.setGangStanding(player, gang, standing);
+        source.sendSuccess(() -> Component.literal("Standing with the " + gang + ": " + standing), false);
+        return 1;
     }
 
     /** What CityWorld says about the player's position: territory, lot, depth, metro and the nearest station. */

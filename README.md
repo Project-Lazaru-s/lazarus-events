@@ -6,7 +6,7 @@
   <img alt="Minecraft 1.20.1" src="https://img.shields.io/badge/Minecraft-1.20.1-3c8527">
   <img alt="Forge 47.x" src="https://img.shields.io/badge/Forge-47.x-dd7d2b">
   <img alt="Java 17" src="https://img.shields.io/badge/Java-17-b07219">
-  <img alt="Versão 1.0.0" src="https://img.shields.io/badge/vers%C3%A3o-1.0.0-6b5b3e">
+  <img alt="Versão 1.1.0" src="https://img.shields.io/badge/vers%C3%A3o-1.1.0-6b5b3e">
 </p>
 
 # Lazarus Events
@@ -27,6 +27,7 @@ Os encontros são colocados em áreas já carregadas do *Overworld*. O mod não 
 - [Zonas de infecção (gás)](#zonas-de-infecção-gás)
 - [Refúgio do Haven](#refúgio-do-haven)
 - [Bases e rivalidade de facções](#bases-e-rivalidade-de-facções)
+- [Procurado: caçadores de recompensa](#procurado-caçadores-de-recompensa)
 - [Territórios (CityWorld)](#territórios-cityworld)
 - [Como aparecem](#como-aparecem)
 - [Comandos para testar](#comandos-para-testar)
@@ -234,6 +235,25 @@ O cache usa uma tabela de suprimentos; os barris militares usam tabelas de armas
 
 ---
 
+## Procurado: caçadores de recompensa
+
+Quem chega a **reputação de inimigo (-40)** com uma facção ou uma gangue fica **procurado** por ela. A facção ou a gangue põe um preço na cabeça do jogador e manda um grupo de caçadores atrás dele (1.1.0).
+
+**Quem caça**
+- **Rovers, Wardens e Militares**, pela reputação do Lazarus NPCs. O **Haven** nunca caça.
+- **Gangues** (Rust Dogs, Lantern Boys e as outras), com reputação própria: cada saqueador morto custa **8 pontos** com a gangue dona daquelas ruas, ou com a gangue para a qual o saqueador caçava. Cinco mortes deixam o jogador procurado. A reputação com gangues fica guardada mesmo depois de morrer e se recupera **5 pontos por dia**, até 0.
+
+**Como é a caçada**
+- O grupo surge a **56–80 blocos**, fora do campo de visão, e segue o rastro do jogador.
+- O tamanho cresce com a reputação: **2** caçadores até -69, **3** até -89 e **4** abaixo disso.
+- Os caçadores das facções são sobreviventes armados da facção (soldados do Apocalypse Now, no caso dos Militares) e atacam ao avistar o jogador.
+- Os das gangues são saqueadores armados que **não cobram pedágio**: atacam direto. O nome deles mostra a gangue para a qual caçam.
+- Uma caçada por jogador de cada vez. Ela termina quando todos os caçadores morrem, quando o jogador os despista (todos a mais de 160 blocos), quando passa um dia de jogo, quando o jogador morre ou quando sai do servidor.
+- Depois disso, o mesmo grupo só volta a caçar após **2 dias** (configurável). Se várias facções ou gangues querem o jogador, caça primeiro a de reputação mais baixa.
+- O jogador recebe avisos ao ficar procurado, quando uma caçada começa e quando deixa de ser procurado. Quem carrega rádio também ouve a interceptação.
+
+---
+
 ## Como aparecem
 
 - Após a primeira entrada no mundo, a primeira tentativa natural é programada para cerca de **um dia de jogo** depois. Após um encontro bem-sucedido, a próxima tentativa ocorre em **1 a 2 dias**, por padrão.
@@ -292,6 +312,9 @@ Os comandos exigem permissão de operador, e os testes de colocação devem ser 
 | `/lazarusevents kit <nome> [grupo]` | Monta um kit de móveis (`data/lazarusevents/kits`) na parede para a qual o jogador está olhando, a até 5 blocos, para revisão; com um grupo (`gang`, `smugglers`, `deserters`, `hollow`), aplica o estilo dele. |
 | `/lazarusevents locate <id>` | Mostra as coordenadas de um encontro registrado. O começo do ID é suficiente. |
 | `/lazarusevents cancel <id>` | Para de acompanhar o encontro e remove seus personagens identificados; blocos e loot permanecem. Tarefas abertas desse encontro falham sem recompensa para os jogadores online. |
+| `/lazarusevents bounty status` | Mostra por quem o jogador é procurado, a reputação com cada gangue e a caçada ativa. |
+| `/lazarusevents bounty hunt <alvo>` | Começa uma caçada agora (`faction:wardens`, `faction:rovers`, `faction:military` ou `gang:<nome>`). Os caçadores de facção só atacam quem está como inimigo dela. |
+| `/lazarusevents bounty gang <valor>` | Define a reputação com a gangue dona das ruas onde o jogador está (-100 a 100). |
 | `/lazarusbase list` | Lista as bases permanentes, guarnição e estoque. |
 | `/lazarusbase locate <rovers\|wardens>` | Mostra o ID e as coordenadas da base. |
 | `/lazarusbase inspect` | Inspeciona a base a até 32 blocos. |
@@ -310,7 +333,7 @@ Os comandos exigem permissão de operador, e os testes de colocação devem ser 
 
 ## Configuração
 
-O arquivo `config/lazarusevents-common.toml` é criado pelo Forge. Nele é possível ativar ou desativar o sistema e cada tipo de encontro, alterar o intervalo entre encontros, definir o primeiro dia de Military e os dias do colapso militar (`militaryDeclineDay` 21, `militaryCollapseDay` 36), ligar ou desligar os grupos novos (`enableHostileHideouts`, `enableZombieNests`, `enableInfectionZones`, `enableQuarantines`, `enableSmugglerDens`, `enableHeliCrashes`, `enableFactionExpeditions`), definir o início das quedas (`heliCrashFromDay` 15), ajustar o limite de encontros acompanhados e escolher a partir de que dia as bases podem surgir em áreas já exploradas (`factionBaseFallbackDay`, 0 desliga). O estado dos encontros e o resultado da última tentativa são salvos por mundo.
+O arquivo `config/lazarusevents-common.toml` é criado pelo Forge. Nele é possível ativar ou desativar o sistema e cada tipo de encontro, alterar o intervalo entre encontros, definir o primeiro dia de Military e os dias do colapso militar (`militaryDeclineDay` 21, `militaryCollapseDay` 36), ligar ou desligar os grupos novos (`enableHostileHideouts`, `enableZombieNests`, `enableInfectionZones`, `enableQuarantines`, `enableSmugglerDens`, `enableHeliCrashes`, `enableFactionExpeditions`, `enableBounties`), os dias entre caçadas do mesmo grupo (`bountyCooldownDays` 2), definir o início das quedas (`heliCrashFromDay` 15), ajustar o limite de encontros acompanhados e escolher a partir de que dia as bases podem surgir em áreas já exploradas (`factionBaseFallbackDay`, 0 desliga). O estado dos encontros e o resultado da última tentativa são salvos por mundo.
 
 ---
 

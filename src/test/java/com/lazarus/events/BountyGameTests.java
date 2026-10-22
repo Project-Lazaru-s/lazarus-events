@@ -1,0 +1,120 @@
+package com.lazarus.events;
+
+import java.util.List;
+import java.util.UUID;
+import com.lazarus.npcs.api.HostileGroups;
+import com.lazarus.npcs.api.NpcApi;
+import com.mojang.authlib.GameProfile;
+import net.minecraft.core.BlockPos;
+import net.minecraft.gametest.framework.GameTest;
+import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraftforge.common.util.FakePlayerFactory;
+import net.minecraftforge.gametest.GameTestHolder;
+import net.minecraftforge.gametest.PrefixGameTestTemplate;
+
+/** Wanted players (bounty B1): gang standing, wanted detection and hunter squads. */
+@GameTestHolder("lazarusevents")
+@PrefixGameTestTemplate(false)
+public final class BountyGameTests {
+    @GameTest(template = "territory_arena", timeoutTicks = 20)
+    public static void squadSizeAndGangRecoveryFollowTheStanding(GameTestHelper h) {
+        h.assertTrue(Bounties.squadSize(-40) == 2 && Bounties.squadSize(-70) == 3 && Bounties.squadSize(-95) == 4, "squad size by depth");
+        h.assertTrue(Bounties.recovered(-48, 0) == -48, "no recovery the same day");
+        h.assertTrue(Bounties.recovered(-48, 2) == -38, "5 a day");
+        h.assertTrue(Bounties.recovered(-12, 5) == 0, "never past 0");
+        h.assertTrue(Bounties.recovered(20, 3) == 20, "positive standing stays");
+        h.succeed();
+    }
+
+    @GameTest(template = "territory_arena", timeoutTicks = 20)
+    public static void killingLootersMakesTheGangWantYou(GameTestHelper h) {
+        floor(h);
+        ServerPlayer player = player(h, h.absolutePos(new BlockPos(2, 1, 2)));
+        BlockPos at = h.absolutePos(new BlockPos(6, 1, 6));
+        String gang = HostileGroups.gang(h.getLevel(), at);
+        h.assertTrue(Bounties.wanted(player).isEmpty(), "not wanted at first");
+        for (int i = 0; i < 5; i++) {
+            Mob looter = (Mob) LazarusEvents.spawn(h.getLevel(), at, "apocalypsenow:looter_1", UUID.randomUUID(), false);
+            h.assertTrue(looter != null, "looter spawned");
+            looter.hurt(player.damageSources().playerAttack(player), 1000);
+        }
+        h.assertTrue(Bounties.gangStanding(player, gang) == 5 * Bounties.GANG_KILL, "8 per looter: " + Bounties.gangStanding(player, gang));
+        h.assertTrue(Bounties.wanted(player).containsKey(Bounties.gangTarget(gang)), "five kills put a price on your head");
+        // standing is kept in the persisted tag, which survives death
+        h.assertTrue(player.getPersistentData().getCompound(net.minecraft.world.entity.player.Player.PERSISTED_NBT_TAG)
+                .contains("LazarusEventsBounty"), "kept through death");
+        player.discard();
+        h.succeed();
+    }
+
+    @GameTest(template = "territory_arena", timeoutTicks = 20)
+    public static void gangHuntersAreTaggedProvokedAndSentAfterThePlayer(GameTestHelper h) {
+        floor(h);
+        ServerPlayer player = player(h, h.absolutePos(new BlockPos(2, 1, 2)));
+        UUID id = UUID.randomUUID();
+        List<Mob> squad = Bounties.spawnSquad(h.getLevel(), h.absolutePos(new BlockPos(10, 1, 10)), player,
+                Bounties.gangTarget("Rust Dogs"), 3, id);
+        h.assertTrue(squad.size() == 3, "three hunters: " + squad.size());
+        for (Mob mob : squad) {
+            h.assertTrue("Rust Dogs".equals(mob.getPersistentData().getString(Bounties.GANG_TAG)), "hunts for its gang");
+            h.assertTrue(Bounties.gangOf(h.getLevel(), mob).equals("Rust Dogs"), "patches name the hunted-for gang");
+            CompoundTag state = mob.getPersistentData().getCompound("LazarusHumanEncounter").getCompound(player.getUUID().toString());
+            h.assertTrue(state.getBoolean("Provoked"), "attacks without the toll warning");
+            h.assertTrue(NpcApi.assignment(mob).isPresent(), "travelling after the player");
+            h.assertTrue(mob.isPersistenceRequired(), "does not despawn mid-hunt");
+        }
+        squad.forEach(Mob::discard);
+        player.discard();
+        h.succeed();
+    }
+
+    @GameTest(template = "territory_arena", timeoutTicks = 20)
+    public static void factionHuntersJoinTheirFaction(GameTestHelper h) {
+        floor(h);
+        ServerPlayer player = player(h, h.absolutePos(new BlockPos(2, 1, 2)));
+        for (String faction : new String[] {"wardens", "rovers", "military"}) {
+            List<Mob> squad = Bounties.spawnSquad(h.getLevel(), h.absolutePos(new BlockPos(10, 1, 10)), player,
+                    Bounties.factionTarget(faction), 2, UUID.randomUUID());
+            h.assertTrue(squad.size() == 2, faction + " squad: " + squad.size());
+            for (Mob mob : squad)
+                h.assertTrue(NpcApi.identity(mob).map(identity -> faction.equals(identity.faction())).orElse(false),
+                        faction + " hunter belongs to " + faction);
+            squad.forEach(Mob::discard);
+        }
+        player.discard();
+        h.succeed();
+    }
+
+    @GameTest(template = "territory_arena", timeoutTicks = 20)
+    public static void trailStepsTowardThePlayer(GameTestHelper h) {
+        floor(h);
+        BlockPos from = h.absolutePos(new BlockPos(1, 1, 1)), to = h.absolutePos(new BlockPos(13, 1, 13));
+        List<BlockPos> trail = Bounties.trail(h.getLevel(), from, to);
+        h.assertTrue(trail.get(trail.size() - 1).equals(to), "ends at the player");
+        BlockPos last = from;
+        for (BlockPos point : trail) {
+            h.assertTrue(Math.sqrt(point.distSqr(last)) <= 24, "steps of about 16 blocks");
+            last = point;
+        }
+        h.succeed();
+    }
+
+    private static void floor(GameTestHelper h) {
+        for (int x = 0; x < 16; x++) for (int z = 0; z < 16; z++) {
+            h.setBlock(new BlockPos(x, 0, z), Blocks.STONE);
+            for (int y = 1; y < 4; y++) h.setBlock(new BlockPos(x, y, z), Blocks.AIR);
+        }
+    }
+
+    private static ServerPlayer player(GameTestHelper h, BlockPos at) {
+        ServerPlayer p = FakePlayerFactory.get(h.getLevel(), new GameProfile(UUID.randomUUID(), "BountyTest"));
+        p.setGameMode(GameType.SURVIVAL);
+        p.moveTo(at.getX() + .5, at.getY(), at.getZ() + .5, 0, 0);
+        return p;
+    }
+}

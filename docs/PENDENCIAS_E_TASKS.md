@@ -16,6 +16,7 @@ Legenda: `[x]` feito · `[ ]` a fazer · `[~]` feito, falta validar no jogo
 | T3 | Esgotos: preferência de ninhos e gás, esconderijo de contrabandista | Events 0.23.0 | `[x]` aprovada no jogo |
 | T3+ | Esconderijos habitados (kits de móveis) | Events 0.23.x | `[x]` etapas 1 a 5 aprovadas no jogo, na branch `KaiD3v/T3-T4` |
 | T4 | Superfície: queda de helicóptero | Events 0.24.0 | `[x]` aprovada no jogo |
+| B1 | Procurado: facções e gangues mandam caçadores (reputação de gangue própria) | Events 1.1.0 + NPCs 1.20.0 | `[x]` aprovada no jogo |
 
 ---
 
