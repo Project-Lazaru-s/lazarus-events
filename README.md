@@ -6,7 +6,7 @@
   <img alt="Minecraft 1.20.1" src="https://img.shields.io/badge/Minecraft-1.20.1-3c8527">
   <img alt="Forge 47.x" src="https://img.shields.io/badge/Forge-47.x-dd7d2b">
   <img alt="Java 17" src="https://img.shields.io/badge/Java-17-b07219">
-  <img alt="Versão 1.4.0" src="https://img.shields.io/badge/vers%C3%A3o-1.4.0-6b5b3e">
+  <img alt="Versão 1.4.1" src="https://img.shields.io/badge/vers%C3%A3o-1.4.1-6b5b3e">
 </p>
 
 # Lazarus Events
@@ -118,7 +118,7 @@ Dois encontros novos mostram onde os hostis vivem. Quem tem walkie-talkie ouve a
 |---|:---:|---|---|
 | **Deserter camp** | dia 21 (mais comum a partir do 36) | O posto militar ocupado por 3 ou 4 desertores **armados**, barril de suprimentos militares e um bilhete de desertor no atril | +2 Military |
 | **Gang hideout** | dia 6 | Acampamento de 3 ou 4 saqueadores da gangue local, com o "caixa" da gangue: loot de suprimentos e uma insígnia garantida | +2 Wardens |
-| **Hollow den** | dia 10, **só à noite** | Um cômodo de prédio tomado pelo culto: ossos, crânio, velas acesas, fogueira apagada, 2 ou 3 canibais e um **sobrevivente preso** numa jaula de grades no canto. O rádio do Haven pede ajuda por alguém que não voltou | +2 Haven; o cativo é libertado e vai para o refúgio se houver vaga |
+| **Hollow den** | dia 12, **só à noite** | Um cômodo de prédio tomado pelo culto: ossos, crânio, velas acesas, fogueira apagada, 2 ou 3 canibais e um **sobrevivente preso** numa jaula de grades no canto. O rádio do Haven pede ajuda por alguém que não voltou | +2 Haven; o cativo é libertado e vai para o refúgio se houver vaga |
 | **Gang building hideout** | dia 6 | Um cômodo de um prédio já existente (CityWorld ou qualquer construção coberta) tomado pela gangue local: barril do "caixa" com insígnia, caixotes, colchonetes, um lampião e uma placa "TURF / KEEP OUT" com o nome da gangue, sem mexer nas paredes | +2 Wardens |
 
 O esconderijo conta como limpo quando um jogador viu os ocupantes e nenhum restou vivo; quem estiver a até 32 blocos recebe a reputação, uma vez só. A opção `enableHostileHideouts` desliga os dois.
@@ -281,7 +281,7 @@ Quem chega a **reputação de inimigo (-40)** com uma facção ou uma gangue fic
 ## Como aparecem
 
 - Após a primeira entrada no mundo, a primeira tentativa natural é programada para cerca de **um dia de jogo** depois. Após um encontro bem-sucedido, a próxima tentativa ocorre em **1 a 2 dias**, por padrão.
-- Cache, Gunfire, Flare e Rescue podem aparecer desde o começo; Last Defense a partir do **dia 3**; False Radio a partir do **dia 6**, junto com os saqueadores; e Military a partir do **dia 10**, por padrão. Pesos de sorteio entre os tipos liberados: Cache 9, Gunfire 6, Flare 4, Rescue 4, Last Defense 3, False Radio 3, Military 1 (0,5 a partir do dia 21 e 0,15 a partir do dia 36), Abandoned 1 (1,5 a partir do dia 36), Gang hideout 2 e Gang building hideout 2 (dia 6), Smuggler den 1,5 (dia 6, só com o CityWorld), Deserter camp 1 (1,5 a partir do dia 36), Hollow den 1,5 (dia 10, só à noite), Zombie nest 1,5 (dia 8), Infection zone 1,5 (dia 12) , Military quarantine 1 (dia 21) e Helicopter crash 1 (dia 15 por padrão).
+- Cache, Gunfire, Flare e Rescue podem aparecer desde o começo; Last Defense a partir do **dia 3**; False Radio a partir do **dia 6**, junto com os saqueadores; e Military a partir do **dia 10**, por padrão. Pesos de sorteio entre os tipos liberados: Cache 9, Gunfire 6, Flare 4, Rescue 4, Last Defense 3, False Radio 3, Military 1 (0,5 a partir do dia 21 e 0,15 a partir do dia 36), Abandoned 1 (1,5 a partir do dia 36), Gang hideout 2 e Gang building hideout 2 (dia 6), Smuggler den 1,5 (dia 6, só com o CityWorld), Deserter camp 1 (1,5 a partir do dia 36), Hollow den 1,5 (dia 12, só à noite), Zombie nest 1,5 (dia 8), Infection zone 1,5 (dia 12) , Military quarantine 1 (dia 21) e Helicopter crash 1 (dia 15 por padrão).
 - O mod procura um local adequado em chunks carregados, de 40 a 78 blocos do jogador, fora da direção para a qual ele está olhando. O terreno precisa ser seguro para a construção.
 - Um local inválido adia a tentativa em vez de consumir o intervalo inteiro. O limite padrão é de **quatro encontros acompanhados** ao mesmo tempo; registros antigos expiram depois de sete dias de jogo.
 - Ao chegar a 24 blocos de um encontro, o jogador recebe uma mensagem de descoberta. Quem carrega o *walkie-talkie* do Immersive Frequencies no inventário pode receber pelo rádio coordenadas aproximadas de um encontro recém-criado, se estiver a até 192 blocos.

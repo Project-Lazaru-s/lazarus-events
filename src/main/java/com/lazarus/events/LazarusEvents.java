@@ -267,7 +267,7 @@ public final class LazarusEvents {
             if (hideouts[1] > 0) weights.put(HostileHideouts.GANG_HIDEOUT, hideouts[1]);
             if (hideouts[2] > 0) weights.put(BuildingHideout.TYPE, hideouts[2]);
             long time = now % 24000;
-            if (day >= 10 && time >= 13000 && time < 23000) weights.put(HollowDen.TYPE, 1.5); // the Hollow moves at night
+            if (day >= 12 && time >= 13000 && time < 23000) weights.put(HollowDen.TYPE, 1.5); // the Hollow moves at night
             if (SMUGGLERS_ENABLED.get() && day >= 6 && CityWorldSites.available()) weights.put(SmugglerDen.TYPE, 1.5);
         }
         if (NESTS_ENABLED.get() && day >= 8) weights.put(ZombieNest.TYPE, 1.5);
