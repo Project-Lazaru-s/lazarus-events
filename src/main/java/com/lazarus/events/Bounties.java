@@ -15,12 +15,19 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.living.LivingDropsEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
@@ -39,6 +46,10 @@ import java.util.UUID;
  * Faction standing is Lazarus NPCs' reputation. Gangs have their own standing here, kept with the player through death:
  * killing a looter costs standing with the gang that holds those streets (or the gang the looter hunts for), and it
  * recovers a little every day, like personal faction penalties.
+ *
+ * Rewards (B2): the squad leader carries a wanted poster and some supplies; downing the whole squad earns standing with
+ * the hunters' enemies: the rival faction (Rovers and Wardens), or the Wardens for a gang squad, as they pay for gang
+ * patches. The Military has no rival.
  */
 final class Bounties {
     /** Same threshold as Lazarus NPCs' enemy standing (NpcHostility.ENEMY): factions attack on sight from here. */
@@ -53,6 +64,12 @@ final class Bounties {
     private static final String HUMAN_STATE = "LazarusHumanEncounter";
     private static final String ROOT = "LazarusEventsBounty";
     static final ResourceLocation OWNER = ApiSupport.id("bounty_hunt");
+    static final ResourceLocation DEFEATED = ApiSupport.id("bounty_defeated");
+    /** On every hunter: the hunt and the hunted player; on the leader, also what the poster says. */
+    static final String HUNT_TAG = "LazarusBountyHunt", PREY_TAG = "LazarusBountyPrey", LEADER_TAG = "LazarusBountyLeader";
+    static final int RIVAL_REWARD = 6, GANG_REWARD = 4, LEADER_LOOT = 3;
+    /** The faction that pays for downed gang hunters, as it pays for gang patches. */
+    static final String GANG_ENEMY = "wardens";
 
     private Bounties() {}
 
@@ -173,6 +190,15 @@ final class Bounties {
                 break;
             }
             squad.add(mob);
+            mob.getPersistentData().putUUID(HUNT_TAG, id);
+            mob.getPersistentData().putUUID(PREY_TAG, player.getUUID());
+            if (i == 0) {
+                CompoundTag poster = new CompoundTag();
+                poster.putString("Player", player.getGameProfile().getName());
+                poster.putString("Target", target);
+                poster.putInt("Standing", standing(player, target));
+                mob.getPersistentData().put(LEADER_TAG, poster);
+            }
             // Apocalypse Now soldiers already belong to the Military; survivors are assigned to their faction
             if (faction != null && !"military".equals(group) && !ok("bounty hunter faction", NpcApi.assignFaction(mob, group))) break;
             if (isGang(target)) {
@@ -236,10 +262,20 @@ final class Bounties {
         UUID id = UUID.randomUUID();
         List<Mob> squad = spawnSquad(level, center, player, target, squadSize(standing), id);
         if (squad.isEmpty()) return "Could not place the squad at " + center.toShortString();
+        record(level, player, target, squad, id);
+        player.sendSystemMessage(Component.literal("You are being hunted: " + squad.size() + " of " + label(target)
+                + " are on your trail.").withStyle(style -> style.withColor(0xD46868)));
+        LazarusEvents.radio(level, center, "Hunters from " + label(target) + " are tracking someone. Stay off the roads");
+        return "Hunt " + id + " (" + squad.size() + " from " + label(target) + ") at " + center.toShortString();
+    }
+
+    /** Remembers the squad as the player's hunt and starts this group's cooldown. */
+    static void record(ServerLevel level, ServerPlayer player, String target, List<Mob> squad, UUID id) {
         CompoundTag root = root(player);
         CompoundTag hunt = new CompoundTag();
         hunt.putUUID("Id", id);
         hunt.putString("Target", target);
+        hunt.putInt("Size", squad.size());
         hunt.putLong("Expires", level.getGameTime() + HUNT_TICKS);
         long[] members = new long[squad.size() * 2];
         for (int i = 0; i < squad.size(); i++) {
@@ -250,10 +286,74 @@ final class Bounties {
         root.put("Hunt", hunt);
         root.putLong("Next_" + target, level.getGameTime() + LazarusEvents.bountyCooldown());
         save(player, root);
-        player.sendSystemMessage(Component.literal("You are being hunted: " + squad.size() + " of " + label(target)
-                + " are on your trail.").withStyle(style -> style.withColor(0xD46868)));
-        LazarusEvents.radio(level, center, "Hunters from " + label(target) + " are tracking someone. Stay off the roads");
-        return "Hunt " + id + " (" + squad.size() + " from " + label(target) + ") at " + center.toShortString();
+    }
+
+    /** Who pays for a downed squad, and how much. */
+    static Map<String, Integer> rewards(String target) {
+        Map<String, Integer> rewards = new LinkedHashMap<>();
+        if (isGang(target)) rewards.put(GANG_ENEMY, GANG_REWARD);
+        else {
+            NpcFactions.Definition faction = NpcFactions.get(name(target));
+            if (faction != null) faction.rivals().forEach(rival -> rewards.put(rival, RIVAL_REWARD));
+        }
+        return rewards;
+    }
+
+    /** A hunter died: counts it against the prey's hunt and pays out when the whole squad is down. */
+    static void hunterDown(ServerLevel level, Mob hunter) {
+        CompoundTag data = hunter.getPersistentData();
+        if (!data.hasUUID(HUNT_TAG) || !data.hasUUID(PREY_TAG)) return;
+        ServerPlayer player = level.getServer().getPlayerList().getPlayer(data.getUUID(PREY_TAG));
+        if (player != null) hunterDown(level, hunter, player);
+    }
+
+    static void hunterDown(ServerLevel level, Mob hunter, ServerPlayer player) {
+        CompoundTag data = hunter.getPersistentData();
+        if (!data.hasUUID(HUNT_TAG) || !player.getUUID().equals(data.getUUID(PREY_TAG))) return;
+        CompoundTag root = root(player);
+        CompoundTag hunt = root.getCompound("Hunt");
+        if (!hunt.hasUUID("Id") || !hunt.getUUID("Id").equals(data.getUUID(HUNT_TAG))) return;
+        int downed = hunt.getInt("Downed") + 1;
+        hunt.putInt("Downed", downed);
+        root.put("Hunt", hunt);
+        save(player, root);
+        if (downed < hunt.getInt("Size")) return;
+        String target = hunt.getString("Target");
+        List<String> paid = new ArrayList<>();
+        rewards(target).forEach((faction, amount) -> {
+            if (NpcApi.adjustReputation(player, faction, amount, DEFEATED, hunt.getUUID("Id")).ok())
+                paid.add(NpcFactions.get(faction).label() + " +" + amount);
+        });
+        root = root(player);
+        root.putInt("Defeated", root.getInt("Defeated") + 1);
+        save(player, root);
+        end(level, player, "You took down the hunters from " + label(target) + "."
+                + (paid.isEmpty() ? "" : " Word gets around: " + String.join(", ", paid) + "."));
+    }
+
+    /** The wanted poster the squad leader carries. */
+    static ItemStack poster(CompoundTag data) {
+        ItemStack poster = new ItemStack(Items.PAPER);
+        poster.setHoverName(Component.literal("Wanted: " + data.getString("Player")).withStyle(style -> style.withItalic(false)));
+        net.minecraft.nbt.ListTag lore = new net.minecraft.nbt.ListTag();
+        for (String line : new String[] {"Dead or alive.", "Posted by " + label(data.getString("Target")) + ".",
+                "Standing: " + data.getInt("Standing")})
+            lore.add(net.minecraft.nbt.StringTag.valueOf(Component.Serializer.toJson(Component.literal(line)
+                    .withStyle(style -> style.withColor(0xB0A27A).withItalic(true)))));
+        poster.getOrCreateTagElement("display").put("Lore", lore);
+        poster.getOrCreateTag().put("LazarusWanted", data.copy());
+        return poster;
+    }
+
+    /** Up to {@link #LEADER_LOOT} items of the current tier's supply loot. */
+    static List<ItemStack> leaderLoot(ServerLevel level, Vec3 at) {
+        int tier = Math.min(5, 1 + (int) (level.getDayTime() / 24_000) / 10);
+        List<ItemStack> rolled = new ArrayList<>(level.getServer().getLootData()
+                .getLootTable(new ResourceLocation("dyairdrop", "chests/smallairdrop" + tier))
+                .getRandomItems(new LootParams.Builder(level).withParameter(LootContextParams.ORIGIN, at)
+                        .create(LootContextParamSets.CHEST)));
+        java.util.Collections.shuffle(rolled);
+        return rolled.subList(0, Math.min(LEADER_LOOT, rolled.size()));
     }
 
     private static List<Mob> members(ServerLevel level, CompoundTag hunt) {
@@ -298,7 +398,8 @@ final class Bounties {
             List<Mob> squad = members(level, hunt);
             String target = hunt.getString("Target");
             if (squad.isEmpty()) {
-                end(level, player, "The hunters from " + label(target) + " are down. More will come while you are wanted.");
+                // deaths end the hunt in hunterDown; an empty squad here was unloaded, out of reach
+                end(level, player, "You lost the hunters from " + label(target) + ", for now.");
                 return;
             }
             boolean lost = squad.stream().allMatch(mob -> mob.distanceToSqr(player) > LOST_DISTANCE * LOST_DISTANCE);
@@ -327,16 +428,17 @@ final class Bounties {
         List<String> lines = new ArrayList<>();
         Map<String, Integer> wanted = wanted(player);
         lines.add(wanted.isEmpty() ? "Not wanted." : "Wanted by: " + wanted);
-        lines.add("Gang standing: " + root(player).getCompound("Gangs"));
+        lines.add("Gang standing: " + root(player).getCompound("Gangs") + "; squads taken down: " + root(player).getInt("Defeated"));
         CompoundTag hunt = root(player).getCompound("Hunt");
         if (!hunt.isEmpty()) lines.add("Active hunt by " + label(hunt.getString("Target")) + ", "
                 + members(player.serverLevel(), hunt).size() + " alive");
         return lines;
     }
 
+    /** Handler names are unique in the mod: Forge names its generated handlers after the simple class and method. */
     static final class Listener {
         @SubscribeEvent
-        public void tick(TickEvent.ServerTickEvent event) {
+        public void bountyTick(TickEvent.ServerTickEvent event) {
             if (event.phase != TickEvent.Phase.END || event.getServer().getTickCount() % CHECK_TICKS != 71) return;
             ServerLevel level = event.getServer().overworld();
             for (ServerPlayer player : level.players())
@@ -345,20 +447,32 @@ final class Bounties {
 
         /** Killing a looter costs standing with its gang; the hunted player dying ends the hunt. */
         @SubscribeEvent
-        public void death(LivingDeathEvent event) {
+        public void bountyDeath(LivingDeathEvent event) {
             if (!(event.getEntity().level() instanceof ServerLevel level)) return;
             if (event.getEntity() instanceof ServerPlayer player) {
                 end(level, player, null);
                 return;
             }
+            if (event.getEntity() instanceof Mob hunter) hunterDown(level, hunter);
             if (looter(event.getEntity()) && event.getSource().getEntity() instanceof ServerPlayer killer) {
                 String gang = gangOf(level, event.getEntity());
                 setGangStanding(killer, gang, gangStanding(killer, gang) + GANG_KILL);
             }
         }
 
+        /** The squad leader drops the wanted poster and some supplies. */
         @SubscribeEvent
-        public void loggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
+        public void bountyLeaderDrops(LivingDropsEvent event) {
+            LivingEntity victim = event.getEntity();
+            if (!(victim.level() instanceof ServerLevel level) || !victim.getPersistentData().contains(LEADER_TAG)) return;
+            List<ItemStack> items = new ArrayList<>(leaderLoot(level, victim.position()));
+            items.add(poster(victim.getPersistentData().getCompound(LEADER_TAG)));
+            for (ItemStack stack : items)
+                event.getDrops().add(new ItemEntity(level, victim.getX(), victim.getY() + 0.5, victim.getZ(), stack));
+        }
+
+        @SubscribeEvent
+        public void bountyLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
             if (event.getEntity() instanceof ServerPlayer player && player.level().dimension() == Level.OVERWORLD)
                 end(player.serverLevel(), player, null);
         }

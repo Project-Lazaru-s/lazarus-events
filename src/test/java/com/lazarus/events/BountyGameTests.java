@@ -104,6 +104,45 @@ public final class BountyGameTests {
         h.succeed();
     }
 
+    @GameTest(template = "territory_arena", timeoutTicks = 20)
+    public static void rivalsPayForDownedSquads(GameTestHelper h) {
+        h.assertTrue(Bounties.rewards(Bounties.factionTarget("rovers")).equals(java.util.Map.of("wardens", Bounties.RIVAL_REWARD)), "Wardens pay for Rovers");
+        h.assertTrue(Bounties.rewards(Bounties.factionTarget("wardens")).equals(java.util.Map.of("rovers", Bounties.RIVAL_REWARD)), "Rovers pay for Wardens");
+        h.assertTrue(Bounties.rewards(Bounties.factionTarget("military")).isEmpty(), "the Military has no rival");
+        h.assertTrue(Bounties.rewards(Bounties.gangTarget("Red Tape")).equals(java.util.Map.of("wardens", Bounties.GANG_REWARD)), "Wardens pay for gang hunters");
+        h.succeed();
+    }
+
+    @GameTest(template = "territory_arena", timeoutTicks = 20)
+    public static void leaderDropsThePosterAndDownedSquadPaysTheWardens(GameTestHelper h) {
+        floor(h);
+        ServerPlayer player = player(h, h.absolutePos(new BlockPos(2, 1, 2)));
+        UUID id = UUID.randomUUID();
+        String target = Bounties.gangTarget("Rust Dogs");
+        List<Mob> squad = Bounties.spawnSquad(h.getLevel(), h.absolutePos(new BlockPos(10, 1, 10)), player, target, 2, id);
+        h.assertTrue(squad.size() == 2, "two hunters");
+        Bounties.record(h.getLevel(), player, target, squad, id);
+        int before = NpcApi.reputation(player, "wardens");
+        Mob leader = squad.get(0);
+        BlockPos at = leader.blockPosition();
+        leader.hurt(player.damageSources().playerAttack(player), 1000);
+        Bounties.hunterDown(h.getLevel(), leader, player); // a test player is not in the server list the listener reads
+        List<net.minecraft.world.entity.item.ItemEntity> drops = h.getLevel().getEntitiesOfClass(
+                net.minecraft.world.entity.item.ItemEntity.class, new net.minecraft.world.phys.AABB(at).inflate(3));
+        h.assertTrue(drops.stream().anyMatch(item -> item.getItem().hasTag() && item.getItem().getTag().contains("LazarusWanted")
+                && item.getItem().getHoverName().getString().contains("BountyTest")), "the leader carries a wanted poster");
+        h.assertTrue(Bounties.status(player).stream().anyMatch(line -> line.contains("Active hunt")), "one hunter left: still hunted");
+        squad.get(1).hurt(player.damageSources().playerAttack(player), 1000);
+        Bounties.hunterDown(h.getLevel(), squad.get(1), player);
+        h.assertTrue(Bounties.status(player).stream().noneMatch(line -> line.contains("Active hunt")), "squad down ends the hunt");
+        h.assertTrue(NpcApi.reputation(player, "wardens") == before + Bounties.GANG_REWARD,
+                "Wardens pay " + Bounties.GANG_REWARD + ": " + NpcApi.reputation(player, "wardens"));
+        h.assertTrue(Bounties.status(player).stream().anyMatch(line -> line.contains("squads taken down: 1")), "counted");
+        drops.forEach(net.minecraft.world.entity.Entity::discard);
+        player.discard();
+        h.succeed();
+    }
+
     private static void floor(GameTestHelper h) {
         for (int x = 0; x < 16; x++) for (int z = 0; z < 16; z++) {
             h.setBlock(new BlockPos(x, 0, z), Blocks.STONE);

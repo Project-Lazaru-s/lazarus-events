@@ -6,7 +6,7 @@
   <img alt="Minecraft 1.20.1" src="https://img.shields.io/badge/Minecraft-1.20.1-3c8527">
   <img alt="Forge 47.x" src="https://img.shields.io/badge/Forge-47.x-dd7d2b">
   <img alt="Java 17" src="https://img.shields.io/badge/Java-17-b07219">
-  <img alt="Versão 1.1.0" src="https://img.shields.io/badge/vers%C3%A3o-1.1.0-6b5b3e">
+  <img alt="Versão 1.2.0" src="https://img.shields.io/badge/vers%C3%A3o-1.2.0-6b5b3e">
 </p>
 
 # Lazarus Events
@@ -251,6 +251,14 @@ Quem chega a **reputação de inimigo (-40)** com uma facção ou uma gangue fic
 - Uma caçada por jogador de cada vez. Ela termina quando todos os caçadores morrem, quando o jogador os despista (todos a mais de 160 blocos), quando passa um dia de jogo, quando o jogador morre ou quando sai do servidor.
 - Depois disso, o mesmo grupo só volta a caçar após **2 dias** (configurável). Se várias facções ou gangues querem o jogador, caça primeiro a de reputação mais baixa.
 - O jogador recebe avisos ao ficar procurado, quando uma caçada começa e quando deixa de ser procurado. Quem carrega rádio também ouve a interceptação.
+
+**Recompensas** (1.2.0)
+- O **líder** do grupo carrega um **cartaz de procurado**, com o nome do jogador, quem paga e a reputação, e até **3 itens** do loot de suprimentos do tier atual.
+- Derrubar o **grupo inteiro** rende reputação com os inimigos dos caçadores:
+  - **+6** com a facção rival (Rovers e Wardens são rivais entre si);
+  - **+4** com os **Wardens** quando o grupo é de uma gangue, como já acontece com os distintivos de gangue.
+- Os **Militares** não têm rival: derrubá-los rende só o loot.
+- `bounty status` mostra quantos grupos o jogador já derrubou.
 
 ---
 
